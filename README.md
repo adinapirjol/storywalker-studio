@@ -58,6 +58,8 @@ The committed bundle contains:
 - a suggested rejection;
 - an uncertain Venice window that changes after Author input.
 
+The full deterministic proposal set remains available as an evidence ledger, not an equal-priority to-do list. The guided review follows a curated confirmation, rejection, and date-range revision, while the workspace surfaces the 18 most relevant active proposals first.
+
 ![Aurora Coast evidence timeline with eight fictional LifeEvents and twelve synthetic tracks](docs/screenshots/aurora-coast-timeline.png)
 
 ## Try it in under a minute
@@ -70,7 +72,7 @@ npm run demo:aurora-coast
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000), choose **Load Aurora Coast Demo**, verify the memory-only preview, then choose **Seed Author workspace**.
+When Next.js reports that it is ready, open the local address shown in the terminal. Choose **Load Aurora Coast Demo**, verify the memory-only preview, then choose **Seed Author workspace**.
 
 No Spotify account, credentials, network connection, private file, or local editorial export is required for the demo.
 
