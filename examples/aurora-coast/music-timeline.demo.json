@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "bundleRevision": "aurora-coast-r1-2027-07",
+  "label": "Fictional demonstration data",
+  "playlist": {
+    "id": "demo-playlist-aurora-coast-001",
+    "name": "Aurora Coast — Chapter One",
+    "owner": "fictional-author"
+  },
+  "tracks": [
+    {
+      "id": "demo-track-001",
+      "trackName": "Temporary Cities",
+      "artistName": "Mirror Static",
+      "albumName": "Soft Departures",
+      "durationMs": 224000,
+      "addedAt": "2027-07-18T15:42:00+02:00",
+      "sourceUri": "spotify:track:demoauroracoast001",
+      "privacy": "public"
+    },
+    {
+      "id": "demo-track-002",
+      "trackName": "Orange Wristband",
+      "artistName": "Luma North",
+      "albumName": "Gates Before Noon",
+      "durationMs": 198000,
+      "addedAt": "2027-07-19T08:10:00+02:00",
+      "sourceUri": "spotify:track:demoauroracoast002",
+      "privacy": "friends-only"
+    },
+    {
+      "id": "demo-track-003",
+      "trackName": "Fence Lights",
+      "artistName": "Soft Relay",
+      "albumName": "Temporary Architecture",
+      "durationMs": 246000,
+      "addedAt": "2027-07-19T18:35:00+02:00",
+      "sourceUri": "spotify:track:demoauroracoast003",
+      "privacy": "friends-only"
+    },
+    {
+      "id": "demo-track-004",
+      "trackName": "Rain on Canvas",
+      "artistName": "Inland Ghosts",
+      "albumName": "Weatherproof",
+      "durationMs": 271000,
+      "addedAt": "2027-07-20T22:05:00+02:00",
+      "sourceUri": "spotify:track:demoauroracoast004",
+      "privacy": "private"
+    },
+    {
+      "id": "demo-track-005",
+      "trackName": "Same Name, Different Map",
+      "artistName": "Paper Satellites",
+      "albumName": "Useful Coincidences",
+      "durationMs": 213000,
+      "addedAt": "2027-07-21T12:28:00+02:00",
+      "sourceUri": "spotify:track:demoauroracoast005",
+      "privacy": "friends-only"
+    },
+    {
+      "id": "demo-track-006",
+      "trackName": "Borrowed Lanyard",
+      "artistName": "Cobalt Hours",
+      "albumName": "Trust Exercises",
+      "durationMs": 205000,
+      "addedAt": "2027-07-21T16:19:00+02:00",
+      "sourceUri": "spotify:track:demoauroracoast006",
+      "privacy": "public"
+    },
+    {
+      "id": "demo-track-007",
+      "trackName": "Last Vaporetto",
+      "artistName": "June Arcade",
+      "albumName": "Lagoon Signals",
+      "durationMs": 238000,
+      "addedAt": "2027-07-22T22:18:00+02:00",
+      "sourceUri": "spotify:track:demoauroracoast007",
+      "privacy": "public"
+    },
+    {
+      "id": "demo-track-008",
+      "trackName": "Salt on the Camera",
+      "artistName": "The Warm Exit",
+      "albumName": "Coastal Proofs",
+      "durationMs": 229000,
+      "addedAt": "2027-07-23T09:30:00+02:00",
+      "sourceUri": "spotify:track:demoauroracoast008",
+      "privacy": "friends-only"
+    },
+    {
+      "id": "demo-track-009",
+      "trackName": "Piran at Blue Hour",
+      "artistName": "Holiday Receiver",
+      "albumName": "Small Horizons",
+      "durationMs": 257000,
+      "addedAt": "2027-07-23T20:16:00+02:00",
+      "sourceUri": "spotify:track:demoauroracoast009",
+      "privacy": "public"
+    },
+    {
+      "id": "demo-track-010",
+      "trackName": "Platform Seventeen",
+      "artistName": "Glass Atlas",
+      "albumName": "Interchange Studies",
+      "durationMs": 201000,
+      "addedAt": "2027-07-26T17:22:00+02:00",
+      "sourceUri": "spotify:track:demoauroracoast010",
+      "privacy": "friends-only"
+    },
+    {
+      "id": "demo-track-011",
+      "trackName": "Night Bus North",
+      "artistName": "Minor Transit",
+      "albumName": "Seat 14A",
+      "durationMs": 284000,
+      "addedAt": "2027-07-27T22:58:00+02:00",
+      "sourceUri": "spotify:track:demoauroracoast011",
+      "privacy": "public"
+    },
+    {
+      "id": "demo-track-012",
+      "trackName": "Birthday Weather",
+      "artistName": "Static Bloom",
+      "albumName": "Another Latitude",
+      "durationMs": 232000,
+      "addedAt": "2027-07-27T23:48:00+02:00",
+      "sourceUri": "spotify:track:demoauroracoast012",
+      "privacy": "private"
+    }
+  ]
+}

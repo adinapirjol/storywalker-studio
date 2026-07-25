@@ -1,0 +1,31 @@
+# Dependencies and framework output
+/node_modules/
+/.next/
+/out/
+/coverage/
+
+# Environment and credentials
+/.env
+/.env.*
+!/.env.example
+/.spotify-token.local.json
+
+# Private inputs and local imports
+/private-data/
+/private-spotify-exports/
+/*.private.json
+**/*.private.json
+/exports/private-inputs/
+/exports/*-seed-prep/
+
+# Local output and caches
+/tmp/
+*.log
+*.tsbuildinfo
+.DS_Store
+
+# Editors
+/.idea/
+/.vscode/
+*.swp
+*~

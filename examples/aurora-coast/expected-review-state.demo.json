@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "bundleRevision": "aurora-coast-r1-2027-07",
+  "label": "Fictional demonstration data",
+  "afterGuidedReview": {
+    "lifeEventStatus": "confirmed",
+    "confirmedProposalIds": [
+      "proposal-demo-track-007-demo-event-006-within-range"
+    ],
+    "rejectedProposalIds": [
+      "proposal-demo-track-004-demo-event-004-within-24-hours"
+    ],
+    "revisedEvent": {
+      "id": "demo-event-006",
+      "startAt": "2027-07-22T20:30:00+02:00",
+      "endAt": "2027-07-22T23:45:00+02:00",
+      "certainty": "range-approximate"
+    },
+    "invalidatedProposalIds": [
+      "proposal-demo-track-008-demo-event-006-within-range"
+    ],
+    "exportPrivacy": "public"
+  }
+}

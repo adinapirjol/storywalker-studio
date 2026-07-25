@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "bundleRevision": "aurora-coast-r1-2027-07",
+  "label": "Fictional demonstration data",
+  "events": [
+    {
+      "id": "demo-event-001",
+      "title": "Arrival under a moving sky",
+      "location": "Ljubljana, Slovenia",
+      "startAt": "2027-07-18T15:10:00+02:00",
+      "endAt": "2027-07-18T16:05:00+02:00",
+      "certainty": "exact",
+      "privacy": "public",
+      "category": "travel",
+      "description": "A sudden shower caught Rowan outside the station with too much equipment and a route plan still folded shut.",
+      "authorNote": "The first useful fact is fatigue. The uncertainty is what came next, not whether the rain happened."
+    },
+    {
+      "id": "demo-event-002",
+      "title": "Building the way through Afterlight Fields",
+      "location": "Outside Ljubljana, Slovenia",
+      "startAt": "2027-07-19T00:00:00+02:00",
+      "endAt": "2027-07-19T23:59:59+02:00",
+      "certainty": "day",
+      "privacy": "friends-only",
+      "category": "creative",
+      "description": "Volunteer build day: painting wayfinding, dressing temporary barriers, marking important routes, and watering plants before the fictional festival opened.",
+      "authorNote": "Clock times are deliberately absent. The day is certain; the sequence of small tasks is composite."
+    },
+    {
+      "id": "demo-event-003",
+      "title": "First shift, wet canvas, borrowed trust",
+      "location": "Afterlight Fields, Slovenia",
+      "startAt": "2027-07-20T07:40:00+02:00",
+      "endAt": "2027-07-20T23:20:00+02:00",
+      "certainty": "range-exact",
+      "privacy": "private",
+      "category": "community",
+      "description": "A long opening shift gave way to a crowded camp and rain. Rowan left a camera tablet with Jules, a newly trusted volunteer at the badge-printing booth.",
+      "authorNote": "Trust is the emotional fact. The person, device, role, and timing are fictional composites."
+    },
+    {
+      "id": "demo-event-004",
+      "title": "The same name on a different map",
+      "location": "Afterlight Fields, Slovenia",
+      "startAt": "2027-07-21T12:15:00+02:00",
+      "endAt": "2027-07-21T13:05:00+02:00",
+      "certainty": "exact",
+      "privacy": "friends-only",
+      "category": "community",
+      "description": "Rowan met another traveller also called Rowan after both reached for the same handmade zine and discovered an overlap in experimental radio and image-making.",
+      "authorNote": "The coincidence deserves review because memory tends to make coincidence feel causal."
+    },
+    {
+      "id": "demo-event-005",
+      "title": "A route redrawn at the station",
+      "location": "Ljubljana, Slovenia",
+      "startAt": "2027-07-21T16:42:00+02:00",
+      "endAt": "2027-07-21T17:10:00+02:00",
+      "certainty": "exact",
+      "privacy": "public",
+      "category": "travel",
+      "description": "Instead of following the unopened plan, Rowan bought a train ticket toward Venice and let the intended destination fall out of the chapter.",
+      "authorNote": "A confirmed decision, but not proof of what caused it."
+    },
+    {
+      "id": "demo-event-006",
+      "title": "Humidity and the last vaporetto",
+      "location": "Venice, Italy",
+      "startAt": "2027-07-22T17:00:00+02:00",
+      "endAt": "2027-07-23T12:00:00+02:00",
+      "certainty": "range-approximate",
+      "privacy": "private",
+      "category": "travel",
+      "description": "An uncertain evening window of humid streets, the last vaporetto, and a decision to leave Venice sooner than planned.",
+      "authorNote": "Initial memory window only. The guided review narrows this to the late evening of 22 July."
+    },
+    {
+      "id": "demo-event-007",
+      "title": "Blue-hour contact sheet",
+      "location": "Piran, Slovenia",
+      "startAt": "2027-07-23T00:00:00+02:00",
+      "endAt": "2027-07-23T23:59:59+02:00",
+      "certainty": "day",
+      "privacy": "public",
+      "category": "creative",
+      "description": "A quieter coastal day became a contact sheet: photographs, music history, and unresolved route decisions reviewed beside the water.",
+      "authorNote": "Stillness is recorded as a contrast, not as a conclusion."
+    },
+    {
+      "id": "demo-event-008",
+      "title": "Northbound before the birthday",
+      "location": "Vienna, Austria",
+      "startAt": "2027-07-27T22:40:00+02:00",
+      "endAt": "2027-07-27T23:59:00+02:00",
+      "certainty": "range-exact",
+      "privacy": "friends-only",
+      "category": "travel",
+      "description": "Rowan boarded an overnight bus from Vienna to Berlin as a birthday approached, with the next chapter intentionally unresolved.",
+      "authorNote": "The chapter ends at boarding. Arrival belongs to whatever follows."
+    }
+  ]
+}
