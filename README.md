@@ -39,7 +39,7 @@ flowchart LR
 
 No demo data is persisted during preview. Seeding is explicit. LifeEvents begin pending. Editing an uncertain event window regenerates temporal proposals and retains invalidated proposals as audit history.
 
-![A proposed music connection with its confidence, evidence, privacy, and decision controls](docs/screenshots/author-review.png)
+![The Review desk before any decision: eight pending fictional LifeEvents, twelve synthetic tracks, and zero proposed connections](docs/screenshots/aurora-coast-timeline.png)
 
 ## Explore Aurora Coast
 
@@ -60,7 +60,7 @@ The committed bundle contains:
 
 The full deterministic proposal set remains available as an evidence ledger, not an equal-priority to-do list. The guided review follows a curated confirmation, rejection, and date-range revision, while the workspace surfaces the 18 most relevant active proposals first.
 
-![Aurora Coast evidence timeline with eight fictional LifeEvents and twelve synthetic tracks](docs/screenshots/aurora-coast-timeline.png)
+![After the guided review: one connection confirmed, one rejected, and the Venice window revised, with invalidated proposals kept as audit history](docs/screenshots/author-review.png)
 
 ## Try it in under a minute
 
@@ -163,6 +163,17 @@ CI runs the same checks from a lockfile-enforced install and requires no Spotify
 - **Privacy is structural.** Filter at ingestion, persistence, and export boundaries.
 - **Provenance survives edits.** Revised proposals leave an audit trail.
 - **A notebook, not a dashboard.** The interface favors reading, attention, and editorial calm.
+
+## What this project demonstrates
+
+Every claim below is checkable in this repository:
+
+- **Deterministic data systems** — a pure correlation pass in `lib/correlation.ts` produces identical proposal IDs and ordering for identical confirmed input, verified in `lib/demo.test.ts`.
+- **Temporal uncertainty modelling** — exact, day-level, and ranged evidence stay distinct from schema (`lib/schema.ts`) through review to export, and are never silently promoted to facts.
+- **Human-in-the-loop interaction design** — `lib/review-state.ts` and the workspace in `components/` make Author confirmation, rejection, and date revision the only path from evidence to narrative.
+- **Privacy-aware architecture** — explicit filters at ingestion, persistence, and export boundaries (`lib/export.ts`), documented in [the privacy model](docs/privacy-model.md).
+- **Server-side API integration** — the optional Spotify importer lives in Node-only modules, with `lib/browser-boundary.test.ts` proving credentials never reach the browser bundle.
+- **Reproducible verification** — credential-free CI, a deterministic fixture check, and a public-repository audit script in `scripts/`.
 
 ## Roadmap
 

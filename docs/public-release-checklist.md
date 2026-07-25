@@ -42,5 +42,6 @@ npm run audit:public
 - [ ] README commands match the package scripts.
 - [ ] Screenshot links and documentation links resolve.
 - [ ] Final `git diff --cached` and `git ls-files` have been manually reviewed.
+- [ ] `docs/social-preview.png` (a 1280×640 crop of the fictional Aurora Coast hero) has been uploaded manually under GitHub → Settings → General → Social preview. Committing the file does not configure GitHub.
 
 The audit script is intentionally focused. It reduces common release mistakes but cannot prove that prose or imagery is safe. Human editorial review remains required.
