@@ -1,4 +1,4 @@
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
@@ -15,8 +15,13 @@ describe("private editorial candidates", () => {
     const root = mkdtempSync(path.join(tmpdir(), "storywalker-editorial-candidates-"));
     temporaryRoots.push(root);
     mkdirSync(path.join(root, "nested"));
-    writeFileSync(path.join(root, "draft.md"), "# Private draft\n\nUnpublished words.");
-    writeFileSync(path.join(root, "nested", "another.md"), "# Another draft");
+    const firstDraft = path.join(root, "draft.md"); const newerDraft = path.join(root, "nested", "another.md");
+    writeFileSync(firstDraft, "# Private draft\n\nUnpublished words.");
+    writeFileSync(newerDraft, "# Another draft");
+    // Filesystems differ in timestamp granularity. Set the ordering signal
+    // explicitly so this test verifies recency rather than directory order.
+    utimesSync(firstDraft, new Date("2026-01-01T00:00:00.000Z"), new Date("2026-01-01T00:00:00.000Z"));
+    utimesSync(newerDraft, new Date("2026-01-02T00:00:00.000Z"), new Date("2026-01-02T00:00:00.000Z"));
     writeFileSync(path.join(root, "not-a-draft.txt"), "ignored");
 
     const candidates = privateEditorialCandidates([root]);
@@ -27,6 +32,16 @@ describe("private editorial candidates", () => {
     ]);
 
     expect(readPrivateEditorialCandidate(candidates[1].id, [root]).markdown).toContain("Unpublished words.");
+  });
+
+  it("uses the label as a stable tie-breaker for files with the same modification time", () => {
+    const root = mkdtempSync(path.join(tmpdir(), "storywalker-editorial-candidates-"));
+    temporaryRoots.push(root);
+    const firstDraft = path.join(root, "draft.md"); const secondDraft = path.join(root, "nested.md"); const sameTime = new Date("2026-01-01T00:00:00.000Z");
+    writeFileSync(firstDraft, "# First"); writeFileSync(secondDraft, "# Second");
+    utimesSync(firstDraft, sameTime, sameTime); utimesSync(secondDraft, sameTime, sameTime);
+
+    expect(privateEditorialCandidates([root]).map((candidate) => candidate.label)).toEqual(["public-voice/drafts/draft.md", "public-voice/drafts/nested.md"]);
   });
 
   it("refuses a candidate that is no longer in the selected folder", () => {
