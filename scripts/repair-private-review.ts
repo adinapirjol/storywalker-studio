@@ -1,0 +1,20 @@
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { isAbsolute, resolve } from "node:path";
+import { z } from "zod";
+import { collapseExactDuplicateDecisions, migrateStagedRecovery, setCurrentAuthorCorrection } from "../lib/private-recovery";
+
+const manifestSchema = z.object({ momentId: z.string().min(1), backupSha256: z.string().regex(/^[a-f0-9]{64}$/u), effective: z.object({ dateLabel: z.string().min(1), precision: z.string().min(1), factualSummary: z.array(z.string()).min(1), unknowns: z.array(z.string()), retainedDetails: z.array(z.string()) }) });
+const args = process.argv.slice(2); const index = args.indexOf("--manifest"); const manifestPath = index >= 0 ? args[index + 1] : undefined;
+if (!manifestPath || !isAbsolute(manifestPath)) throw new Error("Usage: npm run private:repair-review -- --manifest /absolute/path/repair.private.json [--write-private]");
+if (!existsSync(manifestPath)) throw new Error(`Missing private repair manifest: ${manifestPath}`);
+const output = resolve("private-data/storywalker/july-august-2026.recovery.private.json");
+const manifest = manifestSchema.parse(JSON.parse(readFileSync(manifestPath, "utf8")) as unknown); const current = migrateStagedRecovery(JSON.parse(readFileSync(output, "utf8")) as unknown);
+const state = current.review[manifest.momentId]; if (!state?.decisions.length) throw new Error("No decision audit exists for the requested Moment.");
+const identities = new Set(state.decisions.map((decision) => `${decision.action}:${decision.sourceRevision ?? current.schemaVersion}:${decision.payloadHash ?? "legacy"}`));
+if (identities.size !== 1) throw new Error("The requested audit contains non-identical decisions; no cleanup was performed.");
+const retained = state.decisions[0]; if (!retained.note) throw new Error("The retained decision has no correction text; no cleanup was performed.");
+const collapsed = collapseExactDuplicateDecisions(current, manifest.momentId, manifest.backupSha256);
+const kept = collapsed.document.review[manifest.momentId].decisions[0];
+const repaired = setCurrentAuthorCorrection(collapsed.document, manifest.momentId, { text: kept.note!, savedAt: kept.at, sourceRevision: kept.sourceRevision!, payloadHash: kept.payloadHash!, version: 1, effective: manifest.effective });
+console.log(JSON.stringify({ dryRun: !args.includes("--write-private"), momentId: manifest.momentId, before: state.decisions.length, after: repaired.review[manifest.momentId].decisions.length, collapsed: collapsed.removed, factualEvidenceStatus: repaired.review[manifest.momentId].factualEvidenceStatus, editorialProposalStatus: repaired.review[manifest.momentId].editorialProposalStatus, publicContentWritten: false }, null, 2));
+if (args.includes("--write-private")) writeFileSync(output, `${JSON.stringify(repaired, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });

@@ -9,14 +9,20 @@
 /.env.*
 !/.env.example
 /.spotify-token.local.json
+/.spotify-oauth-state.local.json
 
 # Private inputs and local imports
 /private-data/
+/private-spotify-raw/
+/private-google-timeline-raw/
+/private-memories/
+/private-storywalker-derivatives/
 /private-spotify-exports/
 /*.private.json
 **/*.private.json
 /exports/private-inputs/
 /exports/*-seed-prep/
+/PLAN.md
 
 # Local output and caches
 /tmp/

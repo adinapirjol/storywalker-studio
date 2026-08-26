@@ -1,8 +1,8 @@
 {
   "name": "storywalker-studio",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "An author-controlled studio for turning music history and life events into privacy-aware journey narratives.",
+  "description": "An author-controlled studio for private evidence, Atlas Now, and revisable scenario orientation.",
   "license": "MIT",
   "author": "Adina Pirjol",
   "engines": {
@@ -18,14 +18,24 @@
     "test:watch": "vitest",
     "demo:aurora-coast": "node --import tsx scripts/verify-demo.ts",
     "audit:public": "node scripts/audit-public-repo.mjs",
+    "audit": "node scripts/audit-public-repo.mjs",
     "spotify:authorize": "node --import tsx scripts/spotify-authorize.ts",
-    "spotify:import": "node --import tsx scripts/spotify-import.ts"
+    "spotify:import": "node --import tsx scripts/spotify-import.ts",
+    "private:import": "node --import tsx scripts/private-import.ts",
+    "private:prepare-takeout": "node --import tsx scripts/prepare-google-takeout.ts",
+    "private:apply-author-evidence": "node --import tsx scripts/apply-private-author-evidence.ts",
+    "private:repair-review": "node --import tsx scripts/repair-private-review.ts",
+    "private:delegate-review": "node --import tsx scripts/delegate-private-review.ts",
+    "private:playlist-baseline": "node --import tsx scripts/private-playlist-baseline.ts",
+    "linz:private-traces": "node --import tsx scripts/linz-private-traces.ts",
+    "audit:build-private": "node scripts/audit-build-private.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
     "next": "16.2.11",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "sql.js": "^1.14.2",
     "zod": "^3.24.1"
   },
   "devDependencies": {
@@ -41,9 +51,8 @@
     "vitest": "^4.1.10"
   },
   "overrides": {
-    "minimatch@10.2.5": {
-      "brace-expansion": "5.0.8"
-    },
+    "minimatch": "10.2.6",
+    "brace-expansion": "5.0.9",
     "postcss": "^8.5.10",
     "sharp": "^0.35.0"
   }

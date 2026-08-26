@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync, statSync } from "node:fs";
-import { extname } from "node:path";
+import { existsSync, readFileSync, statSync } from "node:fs";
+import { extname, join } from "node:path";
 
 const root = process.cwd();
 const listed = execFileSync(
@@ -17,10 +17,28 @@ const forbiddenTrackedPaths = [
   /(^|\/)\.spotify-token\.local\.json$/u,
   /(^|\/)private-data\//u,
   /(^|\/)private-spotify-exports\//u,
+  /(^|\/)private-spotify-raw\//u,
+  /(^|\/)private-google-timeline-raw\//u,
+  /(^|\/)private-memories\//u,
+  /(^|\/)private-storywalker-derivatives\//u,
   /(^|\/)exports\/private-inputs\//u,
   /(^|\/)exports\/[^/]+-seed-prep\//u,
   /\.private\.json$/u,
+  /(^|\/)storywalker-private-/u,
 ];
+
+const stagedRecoveryPath = join(root, "private-data", "storywalker", "july-august-2026.recovery.private.json");
+const privateMarkers = existsSync(stagedRecoveryPath)
+  ? (() => {
+    try {
+      const recovery = JSON.parse(readFileSync(stagedRecoveryPath, "utf8"));
+      return [
+        ...(recovery.moments ?? []).flatMap((moment) => [moment.id, moment.title, moment.authorStatement, ...(moment.provenance ?? []).flatMap((source) => [source.chatTitle, source.shortExcerpt])]),
+        ...(recovery.companions ? [] : []),
+      ].filter((value) => typeof value === "string" && value.trim().length >= 24);
+    } catch { failures.push("local private recovery guard could not be read"); return []; }
+  })()
+  : [];
 const forbiddenArtifactNames = [
   /^exports\/storywalker-life-timeline-/u,
   /^exports\/florianopolis-/u,
@@ -54,9 +72,15 @@ for (const file of listed) {
     failures.push(`${file}: absolute user path`);
   }
   if (file !== "scripts/audit-public-repo.mjs") {
-    if (/\b(?:Cluj(?:-Napoca)?|Bucharest|Romania|Electric Castle|Florianopolis)\b/iu.test(source)) {
+    if (/\b(?:Cluj(?:-Napoca)?|Electric Castle|Florian[oó]polis|Sziget|Ronqui[eè]res|Tom Misch|Fat Mama|Incubus)\b/iu.test(source)) {
       failures.push(`${file}: private-journey or Romanian-specific reference`);
     }
+    if (/open\.spotify\.com\/playlist\/[^\s?]+\?(?:[^\s#]*&)?(?:si|pt)=/iu.test(source)) {
+      failures.push(`${file}: Spotify share-link parameter`);
+    }
+  }
+  if (privateMarkers.some((marker) => source.includes(marker))) {
+    failures.push(`${file}: private recovery marker copied into a committable file`);
   }
   if (/(?:sk|ghp|glpat)-[A-Za-z0-9_-]{20,}/u.test(source)) {
     failures.push(`${file}: token-like credential value`);
@@ -77,6 +101,6 @@ if (failures.length) {
   process.exitCode = 1;
 } else {
   console.log(
-    `Public repository audit passed: ${listed.length} visible file(s), no forbidden paths, absolute user paths, private journey markers, or credential values found.`,
+    `Public repository audit passed: ${listed.length} visible file(s), no forbidden paths, absolute user paths, private journey markers, or credential values found${privateMarkers.length ? "; staged private marker guard checked" : ""}.`,
   );
 }

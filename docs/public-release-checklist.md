@@ -13,6 +13,7 @@ Run this checklist before every public release.
 
 - [ ] No `.env` file or token cache is tracked.
 - [ ] No `*.private.json` file or `private-data/` path is tracked.
+- [ ] No Vault SQLite database, selected import, private scenario, or editorial source is staged.
 - [ ] No absolute user path, personal email, real account identifier, or raw provider export is present.
 - [ ] Screenshots show only Aurora Coast fictional data.
 - [ ] Spotify credentials remain in Node-only modules and never use a `NEXT_PUBLIC_` variable.
@@ -25,6 +26,9 @@ Run this checklist before every public release.
 - [ ] Identical input produces identical proposal IDs and ordering.
 - [ ] Author confirmation, rejection, date revision, and invalidation work.
 - [ ] Public export omits private records and non-confirmed proposals.
+- [ ] Vault session cookie is HTTP-only/same-site and expires without sliding.
+- [ ] Atlas treats source overlap and Timeline/Maps proximity as evidence, not claims.
+- [ ] Scenario Studio lane removal changes only the selected stable lane ID.
 
 ## Quality gates
 
@@ -36,6 +40,7 @@ npm run typecheck
 npm run lint
 npm run build
 npm run audit:public
+npm run audit:build-private
 ```
 
 - [ ] Application starts without personal files or provider credentials.

@@ -179,6 +179,12 @@ export function StorywalkerStudio() {
           <span>Storywalker <i>Studio</i></span>
         </a>
         <div className="header-actions">
+          <a className="quiet-button" href="/start">Make it mine</a>
+          <a className="quiet-button" href="/vault">Private Vault</a>
+          <a className="quiet-button" href="/atlas">Atlas of Now</a>
+          <a className="quiet-button" href="/scenario-studio">Scenario Studio</a>
+          <a className="quiet-button" href="/voice">Public Voice</a>
+          <a className="quiet-button" href="/research">Research Lab</a>
           <span className="fiction-label">Fictional demonstration data</span>
           {phase === "workspace" ? (
             <button className="quiet-button" onClick={resetDemo} type="button">
@@ -193,13 +199,11 @@ export function StorywalkerStudio() {
           <p className="eyebrow"><span /> Aurora Coast · Chapter One</p>
           <h1>What happened, what played, and what only <em>might</em> connect.</h1>
           <p className="hero-intro">
-            Storywalker Studio reconstructs personal journeys from fragmented digital
-            traces—without turning temporal proximity into objective truth.
+            A private notebook for the evidence behind your life, and a separate public
+            voice for the work you deliberately choose to take forward.
           </p>
           {phase === "empty" ? (
-            <button className="primary-button" onClick={loadPreview} type="button">
-              Load Aurora Coast Demo <ArrowRight size={17} />
-            </button>
+            <div className="hero-actions"><a className="primary-button" href="/start">Make this mine <ArrowRight size={17} /></a><button className="outline-button" onClick={loadPreview} type="button">See fictional demo <ArrowRight size={15} /></button></div>
           ) : phase === "preview" ? (
             <button className="primary-button" onClick={seedWorkspace} type="button">
               Seed Author workspace <ArrowRight size={17} />
@@ -210,7 +214,7 @@ export function StorywalkerStudio() {
             </a>
           )}
           <p className="microcopy">
-            <ShieldCheck size={14} /> Offline demo · no account · no Spotify credentials
+            <ShieldCheck size={14} /> Fictional demo first · account consent second · no automatic publishing
           </p>
         </div>
         <RoutePlate phase={phase} />

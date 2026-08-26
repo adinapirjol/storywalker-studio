@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 describe("browser credential boundary", () => {
   it("does not reference Spotify credentials or server importer code in browser modules", () => {
     const files = [
-      ...globSync("app/**/*.{ts,tsx}"),
+      ...globSync("app/**/*.{ts,tsx}").filter((file) => !file.startsWith("app/api/")),
       ...globSync("components/**/*.{ts,tsx}"),
       ...globSync("lib/**/*.{ts,tsx}").filter(
         (file) => !file.includes("spotify") && !file.endsWith(".test.ts"),
@@ -16,5 +16,7 @@ describe("browser credential boundary", () => {
     expect(browserSource).not.toMatch(/spotify-token\.local/u);
     expect(browserSource).not.toMatch(/scripts\/spotify/u);
     expect(browserSource).not.toMatch(/NEXT_PUBLIC_SPOTIFY/u);
+    expect(browserSource).not.toMatch(/private-playlist/u);
+    expect(browserSource).not.toMatch(/private-data\/research/u);
   });
 });
