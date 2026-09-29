@@ -1,7 +1,22 @@
+import {researchSessionSchema,researchPayload} from "@/lib/research-session";
+import { enrichWindowEvidence, eligibleArchiveRecord } from "@/lib/xr-enrichment";
+import { vaultRecordHeaders } from "@/lib/private-vault";
+import { calendarContextForEpisodes } from "@/lib/journey-identifiers";
+import { groundJourney } from "@/lib/journey-grounding";
+import { readTimelineWindows } from "@/lib/private-vault";
+import { mergeLastFmDelta } from "@/lib/lastfm-delta";
+import { minimisedLastFmHistorySchema } from "@/lib/private-ingest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { createHash } from "node:crypto";
+import { analyseListening } from "@/lib/xr-listening";
+import { buildListeningDraft, validateDraftReview, xrReviewSchema } from "@/lib/xr-draft";
+import { xrSceneSchema } from "@/lib/xr-scene";
+import { readVaultRecord } from "@/lib/private-vault";
 import { z } from "zod";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { closeVault, importEditorCut, importGoogleMapsSharedList, importLastFmHistory, importPreparedGoogleMapsSelectedList, importPreparedGoogleTakeout, importPrivateEditorialDraft, importSelectedPrivateSource, initialiseVault, migrateRecoveryIntoVault, openVault, openVaultWithKey, putVaultRecords, readPublicDrafts, readScenarioStudio, rebuildVaultRetrievalIndex, refreshVaultDerivedViews, retrieveVaultEvidence, searchVault, vaultDriverReady, vaultExists, vaultImportMarkers, vaultSummary, type OpenVault, type VaultRecord } from "@/lib/private-vault";
+import { closeVault, importEditorCut, importGoogleMapsSharedList, importLastFmHistory, importPreparedGoogleMapsSelectedList, importPreparedGoogleTakeout, importPrivateEditorialDraft, importSelectedPrivateSource, initialiseVault, migrateRecoveryIntoVault, openVault, openVaultWithKey, putVaultRecords, readAtlasNow, readPublicDrafts, readScenarioStudio, rebuildVaultRetrievalIndex, refreshVaultDerivedViews, retrieveVaultEvidence, searchVault, vaultDriverReady, vaultExists, vaultImportMarkers, vaultSummary, type OpenVault, type VaultRecord } from "@/lib/private-vault";
 import { prepareSideQuestVaultImport } from "@/lib/side-quest-import";
 import { buildDirectorModelBrief, buildDirectorPreview } from "@/lib/nova-director";
 import { lastFmEnvironmentSchema, readLastFmScrobbles } from "@/lib/lastfm-server";
@@ -79,8 +94,11 @@ const scenarioStudioSchema = z.object({
 });
 
 const requestSchema = z.object({
-  action: z.enum(["initialise", "unlock", "session-status", "lock-session", "migrate-recovery", "capture", "record-field-trace", "search", "build-evidence-pack", "rebuild-retrieval-index", "atlas-now", "scenario-studio", "save-scenario-studio", "director-preview", "director-model-proposal", "create-director-thread", "create-public-draft", "list-public-drafts", "list-private-editorial-candidates", "import-side-quest", "import-private-source", "import-private-editorial-draft", "import-lastfm-history", "import-google-maps-list", "import-prepared-google-maps-selected-list", "import-prepared-google-takeout", "probe"]),
+  action: z.enum(["save-research-session", "list-research-sessions", "enrich-xr-evidence", "enrich-xr-context", "ground-xr-journey", "sync-lastfm-delta", "prepare-xr-draft", "save-xr-review", "initialise", "unlock", "session-status", "lock-session", "migrate-recovery", "capture", "record-field-trace", "search", "build-evidence-pack", "rebuild-retrieval-index", "atlas-now", "scenario-studio", "save-scenario-studio", "director-preview", "director-model-proposal", "create-director-thread", "create-public-draft", "list-public-drafts", "list-private-editorial-candidates", "import-side-quest", "import-private-source", "import-private-editorial-draft", "import-lastfm-history", "import-google-maps-list", "import-prepared-google-maps-selected-list", "import-prepared-google-takeout", "probe"]),
   passphrase: z.string().min(12).max(512).optional(),
+  researchSession: researchSessionSchema.optional(),
+  xrReview: xrReviewSchema.optional(),
+  deltaUsername: z.string().trim().regex(/^[\p{L}\p{N}_-]{1,64}$/u).optional(),
   capture: captureSchema.optional(),
   publicDraft: publicDraftSchema.optional(),
   sideQuest: z.unknown().optional(),
@@ -106,7 +124,19 @@ function sessionResponse(body: unknown, token: string, expiresAt: string) {
 export async function GET() {
   const store = await cookies();
   const session = readVaultSession(store.get(VAULT_SESSION_COOKIE)?.value);
-  return noStore({ exists: vaultExists(), imports: await vaultImportMarkers(), session: session ? { active: true, expiresAt: session.expiresAt } : { active: false } });
+  let summary;
+  let coverage;
+  if (session) {
+    const vault = await openVaultWithKey(session.key);
+    try {
+      summary = vaultSummary(vault);
+      const atlas = readAtlasNow(vault) as { derivedAt?: string; imports?: unknown[] } | null;
+      coverage = atlas && typeof atlas.derivedAt === "string" && Array.isArray(atlas.imports) ? { derivedAt: atlas.derivedAt, imports: atlas.imports } : undefined;
+    } finally {
+      closeVault(vault);
+    }
+  }
+  return noStore({ exists: vaultExists(), imports: await vaultImportMarkers(), summary, coverage, session: session ? { active: true, expiresAt: session.expiresAt } : { active: false } });
 }
 
 export async function POST(request: Request) {
@@ -142,7 +172,7 @@ export async function POST(request: Request) {
       newSession = createVaultSession(vault.key);
     } else {
       const session = readVaultSession(sessionToken);
-      if (!session) throw new Error("Unlock the Vault from /vault first. This local browser session expires exactly 15 minutes after unlock.");
+      if (!session) return noStore({ code: "VAULT_LOCKED", error: "Unlock your Vault to continue. Your unsaved work is still here." }, 401);
       vault = await openVaultWithKey(session.key);
     }
     try {
@@ -152,6 +182,147 @@ export async function POST(request: Request) {
           return noStore({ summary: vaultSummary(vault), session: { active: true, expiresAt: session?.expiresAt } });
         }
         return sessionResponse({ summary: vaultSummary(vault), session: { active: true, expiresAt: newSession.expiresAt } }, newSession.token, newSession.expiresAt);
+      }
+      if (body.action === "save-research-session" || body.action === "list-research-sessions") {
+        if(request.headers.get("origin") !== new URL(request.url).origin) return noStore({error:"Use the local Storywalker page."},403);
+        const draft=readVaultRecord(vault,"xr:spatial-draft:v1");
+        const scene=draft?xrSceneSchema.parse((draft.payload as Record<string,unknown>).scene):undefined;
+        if(body.action === "list-research-sessions") return noStore({records:vaultRecordHeaders(vault).filter(r=>r.id.startsWith("research-session:")).map(r=>readVaultRecord(vault,r.id)),windows:(scene?.journeyEpisodes??[]).map(e=>({id:e.id,label:e.label,start:e.start}))});
+        if(!body.researchSession)return noStore({error:"Research snapshot required."},400);
+        if(body.researchSession.sourceWindowId&&!scene?.journeyEpisodes?.some(e=>e.id===body.researchSession!.sourceWindowId))return noStore({error:"That source window is no longer available. Load the scene windows again."},400);
+        const savedAt=new Date().toISOString(),id=`research-session:${crypto.randomUUID()}`;
+        putVaultRecords(vault,[{id,kind:"capture",capturedAt:savedAt,payload:researchPayload(body.researchSession,savedAt)}]);
+        return noStore({id,savedAt,derived:refreshVaultDerivedViews(vault)});
+      }
+      if (body.action === "enrich-xr-evidence") {
+        if (request.headers.get("origin") !== new URL(request.url).origin) return noStore({error:"Use the local Storywalker page."},403);
+        const existing=readVaultRecord(vault,"xr:spatial-draft:v1");
+        if(!existing||!body.xrReview)return noStore({error:"Load your private scene first."},400);
+        const previous=existing.payload as Record<string,unknown>;
+        const review=validateDraftReview(xrSceneSchema.parse(previous.scene),body.xrReview);
+        const sources=vaultRecordHeaders(vault).filter(eligibleArchiveRecord).map(h=>readVaultRecord(vault,h.id)!);
+        const evidenceArchive=enrichWindowEvidence(review.scene,sources);
+        const scene=xrSceneSchema.parse({...review.scene,evidenceArchive});
+        const now=new Date().toISOString(),payload={...previous,...review,scene,updatedAt:now,activated:false};
+        putVaultRecords(vault,[{...existing,id:`xr:spatial-draft:before-evidence:${now}`,payload:{...previous,...review,activated:false}},{...existing,payload}]);
+        return noStore({xrDraft:payload});
+      }
+      if (body.action === "enrich-xr-context") {
+        if (request.headers.get("origin") !== new URL(request.url).origin) return noStore({ error: "Use the local Storywalker page." }, 403);
+        const existing = readVaultRecord(vault, "xr:spatial-draft:v1");
+        if (!existing || !body.xrReview) return noStore({ error: "Load your geographic scene first." }, 400);
+        const previous = existing.payload as Record<string, unknown>;
+        const review = validateDraftReview(xrSceneSchema.parse(previous.scene), body.xrReview);
+        if (!review.scene.journeyEpisodes?.length) return noStore({ error: "Ground the journey first." }, 400);
+        const calendar = readVaultRecord(vault, "import:google-takeout-calendar:v1");
+        if (!calendar) return noStore({ error: "No existing Calendar source is available. No live integration was called." }, 404);
+        const document = (calendar.payload as { document: unknown }).document;
+        const fingerprint = createHash("sha256").update(JSON.stringify(document)).digest("hex");
+        const scene = xrSceneSchema.parse({ ...review.scene, journeyEpisodes: calendarContextForEpisodes(review.scene.journeyEpisodes, document, calendar.id, fingerprint) });
+        const now = new Date().toISOString(), payload = { ...previous, ...review, scene, updatedAt: now, activated: false };
+        putVaultRecords(vault, [{ ...existing, id: `xr:spatial-draft:before-context:${now}`, payload: { ...previous, ...review, activated: false } }, { ...existing, payload }]);
+        return noStore({ xrDraft: payload });
+      }
+      if (body.action === "ground-xr-journey") {
+        if (request.headers.get("origin") !== new URL(request.url).origin) return noStore({ error: "Use the local Storywalker page." }, 403);
+        const existing = readVaultRecord(vault, "xr:spatial-draft:v1");
+        if (!existing || !body.xrReview) return noStore({ error: "Load your accepted scene first." }, 400);
+        const previous = existing.payload as Record<string, unknown>;
+        const review = validateDraftReview(xrSceneSchema.parse(previous.scene), body.xrReview);
+        if (review.scene.journeyLayout) return noStore({ error: "This revision is already geographically grounded." }, 400);
+        const timeline = readVaultRecord(vault, "import:google-timeline:v1"), music = readVaultRecord(vault, "import:lastfm-history:v1");
+        if (!timeline || !music) return noStore({ error: "Existing Timeline and Last.fm sources are required." }, 400);
+        const timelinePayload = timeline.payload as { document: Record<string, unknown>; storage?: string };
+        const document = timelinePayload.storage === "timeline-chunk-manifest-v1" ? { ...timelinePayload.document, schemaVersion: 1, records: [...readTimelineWindows(vault)] } : timelinePayload.document;
+        const musicDocument = (music.payload as { document: unknown }).document;
+        const scene = groundJourney(review.scene, document, musicDocument, {
+          from: "2026-05-15T00:00:00+03:00", toExclusive: "2026-09-29T00:00:00+03:00", timelineToExclusive: "2026-08-27T00:00:00+03:00", timeZone: "Europe/Bucharest",
+          sources: [{ type: "timeline", id: timeline.id, capturedAt: timeline.capturedAt, fingerprint: createHash("sha256").update(JSON.stringify(document)).digest("hex") }, { type: "lastfm", id: music.id, capturedAt: music.capturedAt, fingerprint: createHash("sha256").update(JSON.stringify(musicDocument)).digest("hex") }],
+        });
+        const now = new Date().toISOString();
+        const payload = { ...previous, scene, decisions: review.decisions, updatedAt: now, activated: false, canonical: false };
+        putVaultRecords(vault, [{ ...existing, id: `xr:spatial-draft:before-geography:${now}`, payload: { ...previous, ...review, activated: false } }, { ...existing, payload }]);
+        return noStore({ xrDraft: payload });
+      }
+      if (body.action === "sync-lastfm-delta") {
+        const currentDraft = readVaultRecord(vault, "xr:spatial-draft:v1");
+        if ((currentDraft?.payload as { scene?: { journeyLayout?: unknown } } | undefined)?.scene?.journeyLayout) return noStore({ error: "This journey revision is grounded. Keep it intact; a new source interval requires a separately reviewed journey revision." }, 400);
+        if (request.headers.get("origin") !== new URL(request.url).origin) return noStore({ error: "Use the local Storywalker page." }, 403);
+        if (!body.deltaUsername) return noStore({ error: "Enter the source account username for this one-time delta read." }, 400);
+        const environment = lastFmEnvironmentSchema.parse(process.env);
+        const config = z.object({ from: z.string(), to: z.string(), toExclusive: z.string().datetime({ offset: true }), timeZone: z.string(), scene: xrSceneSchema }).parse(JSON.parse(readFileSync(join(process.cwd(), "private-data", "xr", "first-scene.private.json"), "utf8")));
+        const original = readVaultRecord(vault, "import:lastfm-history:v1");
+        if (!original) return noStore({ error: "An existing Last.fm source is required for a delta merge." }, 404);
+        const history = minimisedLastFmHistorySchema.parse((original.payload as { document: unknown }).document);
+        if (!history.records.length) return noStore({ error: "The existing Last.fm source is empty." }, 400);
+        const latest = Math.max(...history.records.map(row => Date.parse(row.playedAt)));
+        const originalPayload = original.payload as Record<string, unknown>;
+        const priorWindows = Array.isArray(originalPayload.deltaWindows) ? originalPayload.deltaWindows as Array<{ to: string }> : [];
+        const highWater = Math.max(latest, ...priorWindows.map(window => Date.parse(window.to)).filter(Number.isFinite));
+        const end = Math.min(Date.now(), Date.parse(config.toExclusive) - 1000);
+        if (highWater >= end) return noStore({ delta: { added: 0, total: history.records.length, message: "The requested interval is already covered by a completed delta read." } });
+        const from = new Date(highWater - 1000).toISOString(), to = new Date(Math.floor(end / 1000) * 1000).toISOString();
+        const raw = await readLastFmScrobbles(environment, { username: body.deltaUsername, from, to });
+        const importedAt = new Date().toISOString();
+        // Re-open after network I/O so unrelated writes during pagination are preserved.
+        const fresh = await openVaultWithKey(vault.key);
+        try {
+          const latestSource = readVaultRecord(fresh, original.id);
+          if (!latestSource) throw new Error("The source disappeared during the delta read; nothing was merged.");
+          const previous = latestSource.payload as Record<string, unknown>;
+          const merged = mergeLastFmDelta(previous.document, raw, from, to, importedAt);
+          const window = { from, to, fetchedAt: importedAt, pagesRead: raw.pagination.pagesRead, totalPages: raw.pagination.totalPages, complete: true, added: merged.added, overlap: merged.overlap };
+          const sourceFingerprint = createHash("sha256").update(JSON.stringify(merged.document)).digest("hex");
+          const analysis = analyseListening(merged.document, config.from, config.to, config.timeZone);
+          analysis.completedDeltaReads = [...(Array.isArray(previous.deltaWindows) ? previous.deltaWindows : []), window];
+          const scene = buildListeningDraft(config.scene, analysis, original.id);
+          const draftId = "xr:spatial-draft:v1", oldDraft = readVaultRecord(fresh, draftId);
+          const archiveId = `xr:spatial-draft:archive:${importedAt}`;
+          const payload = { scene, analysis, sourceFingerprint, sourceId: original.id, sourceCapturedAt: importedAt, decisions: {}, createdAt: importedAt, activated: false, canonical: false, priorDraftId: oldDraft ? archiveId : null };
+          const previousWindows = Array.isArray(previous.deltaWindows) ? previous.deltaWindows : [];
+          const records: VaultRecord[] = [
+            { ...latestSource, capturedAt: importedAt, payload: { ...previous, importedAt, document: merged.document, deltaWindows: [...previousWindows, window], summary: { retained: merged.total, total: merged.total, warnings: ["Merged completed Last.fm delta; earlier coverage is unverified."], discardedFields: merged.discardedFields } } },
+            { id: draftId, kind: "reference", capturedAt: importedAt, payload },
+            { ...latestSource, id: `lastfm:before-delta:${importedAt}` },
+            ...(oldDraft ? [{ ...oldDraft, id: archiveId }] : []),
+          ];
+          xrReviewSchema.parse({ scene, decisions: {} });
+          putVaultRecords(fresh, records);
+          return noStore({ xrDraft: payload, delta: { ...window, total: merged.total, previousCount: merged.previousCount, outsideWindow: merged.outsideWindow, priorDraftId: payload.priorDraftId } });
+        } finally { closeVault(fresh); }
+      }
+      if (body.action === "prepare-xr-draft" || body.action === "save-xr-review") {
+        const origin = request.headers.get("origin");
+        if (!origin || origin !== new URL(request.url).origin) return noStore({ error: "Use the local Storywalker page for this action." }, 403);
+        const recordId = "xr:spatial-draft:v1";
+        const existing = readVaultRecord(vault, recordId);
+        if (body.action === "save-xr-review") {
+          if (!existing || !body.xrReview) return noStore({ error: "Load a draft before saving its review." }, 400);
+          const previous = existing.payload as Record<string, unknown>;
+          const review = validateDraftReview(xrSceneSchema.parse(previous.scene), body.xrReview);
+          const payload = { ...previous, ...review, updatedAt: new Date().toISOString(), activated: false, canonical: false };
+          putVaultRecords(vault, [{ ...existing, payload }]);
+          return noStore({ xrDraft: payload });
+        }
+        if (existing) {
+          const payload = existing.payload as Record<string, unknown>;
+          const source = readVaultRecord(vault, "import:lastfm-history:v1");
+          const sourcePayload = source?.payload as { document?: unknown; deltaWindows?: unknown[] } | undefined;
+          const matches = sourcePayload?.document && createHash("sha256").update(JSON.stringify(sourcePayload.document)).digest("hex") === payload.sourceFingerprint;
+          return noStore({ xrDraft: matches ? { ...payload, analysis: { ...(payload.analysis as Record<string, unknown>), completedDeltaReads: sourcePayload.deltaWindows ?? [] } } : payload });
+        }
+        const config = z.object({ from: z.string(), to: z.string(), timeZone: z.string(), scene: xrSceneSchema }).parse(JSON.parse(readFileSync(join(process.cwd(), "private-data", "xr", "first-scene.private.json"), "utf8")));
+        const source = readVaultRecord(vault, "import:lastfm-history:v1");
+        if (!source) return noStore({ error: "No existing Last.fm record is available in this Vault. No live import was attempted." }, 404);
+        const document = (source.payload as { document?: unknown }).document;
+        const analysis = analyseListening(document, config.from, config.to, config.timeZone);
+        const sourceFingerprint = createHash("sha256").update(JSON.stringify(document)).digest("hex");
+        const scene = buildListeningDraft(config.scene, analysis, source.id);
+        const payload = { scene, analysis, sourceFingerprint, sourceId: source.id, sourceCapturedAt: source.capturedAt, decisions: {}, createdAt: new Date().toISOString(), activated: false, canonical: false };
+        // Validate before the only write; source record remains unchanged.
+        xrReviewSchema.parse({ scene, decisions: {} });
+        putVaultRecords(vault, [{ id: recordId, kind: "reference", capturedAt: payload.createdAt, payload }]);
+        return noStore({ xrDraft: payload });
       }
       if (body.action === "list-private-editorial-candidates") return Response.json({ editorialCandidates: privateEditorialCandidates() }, { headers: { "Cache-Control": "no-store" } });
       if (body.action === "migrate-recovery") return Response.json({ migration: migrateRecoveryIntoVault(vault), summary: vaultSummary(vault) }, { headers: { "Cache-Control": "no-store" } });

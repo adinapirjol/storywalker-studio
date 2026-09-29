@@ -119,7 +119,7 @@ export function processLocativePosition(
       if (wasInside) {
         return { echoId: echo.id, kind: "remaining" as const, distanceMeters, triggered: false };
       }
-      const mayTrigger = echo.triggerPolicy === "re-entry" || !triggered.has(echo.id);
+      const mayTrigger = !previous.refusedEchoIds.includes(echo.id) && (echo.triggerPolicy === "re-entry" || !triggered.has(echo.id));
       if (mayTrigger) triggered.add(echo.id);
       return { echoId: echo.id, kind: "entered" as const, distanceMeters, triggered: mayTrigger };
     });

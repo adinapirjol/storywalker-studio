@@ -1,11 +1,13 @@
 "use client";
+import {vaultFetch} from '@/lib/vault-access';
+import {VaultUnlockButton} from './vault-access';
 
 import { FormEvent, useState } from "react";
 
 type Atlas = {
   derivedAt: string;
   sourceRecordCount: number;
-  imports: Array<{ id: string; source: string; importedAt: string; retained: number }>;
+  imports: Array<{ id: string; source: string; label?: string; importedAt: string; retained: number }>;
   lanes: Array<{ id: string; title: string; evidenceCount: number; sourceRecordIds: string[]; matchedTerms: string[]; status: "evidence-window" | "working-thread"; note: string }>;
   whatChanged: Array<{ id: string; title: string; detail: string; sourceRecordIds: string[] }>;
   convergences: Array<{ id: string; title: string; detail: string; evidenceLayers: string[]; sourceRecordIds: string[] }>;
@@ -22,7 +24,7 @@ export function AtlasNow() {
   async function load(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true);
     try {
-      const response = await fetch("/api/vault", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "atlas-now" }) });
+      const response = await vaultFetch("/api/vault", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "atlas-now" }) });
       const result = await response.json() as { error?: string; atlas?: Atlas };
       if (!response.ok || result.error || !result.atlas) throw new Error(result.error ?? "Atlas could not be opened.");
       setAtlas(result.atlas); setMessage(`Atlas refreshed from ${result.atlas.sourceRecordCount} private records. It remains a map of available evidence, not a narrative or an Episode.`);
@@ -31,9 +33,9 @@ export function AtlasNow() {
   return <main className="research-main private-review-main">
     <section className="experiment-hero"><p className="eyebrow"><span /> Atlas of Now · private beta</p><h1>See the parallel work without forcing it into one story.</h1><p>Atlas refreshes after each local import or capture. It keeps source records, working Threads and explicit terms visible together, then leaves interpretation with you and NOVA.</p></section>
     <p className="live-notice" role="status">{message}</p>
-    <section className="notebook-card vault-card"><p className="section-kicker">Open the encrypted map</p><form onSubmit={load} className="vault-form"><button className="primary-button" disabled={busy}>{busy ? "Refreshing Atlas…" : "Open Atlas of Now"}</button></form><p className="small-note">Uses the active browser-wide Vault session. Unlock once at <a href="/vault">Vault</a>; it expires exactly 15 minutes after unlock. A successful future import refreshes the encrypted Atlas and retrieval index automatically. It does not create a Moment, Journey, Episode or public draft.</p></section>
+    <section className="notebook-card vault-card"><p className="section-kicker">Open the encrypted map</p><form onSubmit={load} className="vault-form"><button className="primary-button" disabled={busy}>{busy ? "Refreshing Atlas…" : "Open Atlas of Now"}</button></form><p className="small-note">Uses the active browser-wide Vault session. Unlock here: <VaultUnlockButton />. Access lasts 15 minutes; unlocking keeps you on this page. A successful future import refreshes the encrypted Atlas and retrieval index automatically. It does not create a Moment, Journey, Episode or public draft.</p></section>
     {atlas ? <>
-      <section className="notebook-card vault-card"><p className="section-kicker">Current coverage</p><h2>{atlas.sourceRecordCount} private source records in view</h2><p className="small-note">Last refreshed {new Date(atlas.derivedAt).toLocaleString()}. Imported sources: {atlas.imports.map((item) => `${item.source} (${item.retained})`).join(" · ") || "none yet"}.</p></section>
+      <section className="notebook-card vault-card"><p className="section-kicker">Current coverage</p><h2>{atlas.sourceRecordCount} private source records in view</h2><p className="small-note">Last refreshed {new Date(atlas.derivedAt).toLocaleString()}. Imported sources: {atlas.imports.map((item) => `${item.label ?? item.source} (${item.retained})`).join(" · ") || "none yet"}.</p></section>
       <section className="atlas-grid" aria-label="Atlas orientation updates">
         <article className="notebook-card atlas-card"><p className="section-kicker">What changed</p><h2>Since the prior Atlas</h2>{atlas.whatChanged.length ? <ul>{atlas.whatChanged.map((item) => <li key={item.id}><b>{item.title}</b><br />{item.detail}</li>)}</ul> : <p className="small-note">No new or count-changed source import since the last Atlas refresh.</p>}</article>
         <article className="notebook-card atlas-card"><p className="section-kicker">What converges</p><h2>Explicit overlap, held lightly</h2>{atlas.convergences.length ? <ul>{atlas.convergences.map((item) => <li key={item.id}><b>{item.title}</b><br />{item.detail}<br /><span className="small-note">Layers: {item.evidenceLayers.join(" · ")}</span></li>)}</ul> : <p className="small-note">No cross-layer wording overlap is currently visible. That is not a verdict about whether anything belongs together.</p>}</article>

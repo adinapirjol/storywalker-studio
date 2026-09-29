@@ -12,6 +12,12 @@ The system is deliberately deterministic first. It does not claim that a song ex
 
 > **Fictional demonstration data:** Aurora Coast is invented for this public repository. Every song, artist, person, event, note, identifier, and timestamp in the committed demo is fictional.
 
+## Current research: Spatial Rehearsal
+
+`/research/xr` develops WORLD / TIME / MEMORY: geographic calibration, a chronological archive of episode spaces, and Author recomposition with visible geographic ghosts. Private sources stay in the encrypted local Vault; passkey or recovery-passphrase access can resume an interrupted action on the same page.
+
+See the [29 September NOVA report and next tasks](docs/research/xr/nova-report-2026-09-29.md), [rehearsal guide](docs/research/xr/README.md), and [CTM research checkpoint](docs/research/ctm-2027/checkpoint-2026-09-29.md). The full fictional Aurora Coast immersive preview and new privacy-safe XR screenshots are planned; the screenshots below show the existing editorial demo.
+
 ## Why Storywalker exists
 
 Personal archives are fragmented across playlists, timestamps, photographs, notes, tickets, calendars, and memory. Automated storytelling tools often flatten those fragments into a smooth narrative, quietly turning an estimate into a date or proximity into meaning.

@@ -37,13 +37,16 @@ export async function readLastFmScrobbles(environment: z.infer<typeof lastFmEnvi
   do {
     const url = new URL("https://ws.audioscrobbler.com/2.0/");
     url.search = new URLSearchParams({ method: "user.getrecenttracks", user: username, api_key: environment.LASTFM_API_KEY, format: "json", from: String(from), to: String(to), limit: "200", page: String(page) }).toString();
-    const response = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store" });
+    const response = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store", signal: AbortSignal.timeout(30_000) });
     const parsed = lastFmResponseSchema.safeParse(await response.json());
     if (!response.ok || !parsed.success || parsed.data.error) {
       if (parsed.success && parsed.data.error === 17) throw new Error("Last.fm is keeping recent listening private. In Last.fm Settings → Privacy, turn off ‘Hide recent listening information’ to use this public-read importer, or keep it on and wait for a separate authenticated adapter.");
       throw new Error(parsed.success ? parsed.data.message ?? "Last.fm could not read this listening window." : "Last.fm returned an unexpected response.");
     }
-    const pageTracks = parsed.data.recenttracks?.track;
+    if (!parsed.data.recenttracks) throw new Error("Last.fm returned no recent-tracks envelope; nothing was imported.");
+    const pageCount = Number(parsed.data.recenttracks["@attr"]?.totalPages);
+    if (!Number.isInteger(pageCount) || pageCount < 0 || pageCount > 500) throw new Error("Last.fm pagination could not be verified; nothing was imported.");
+    const pageTracks = parsed.data.recenttracks.track;
     const items = Array.isArray(pageTracks) ? pageTracks : pageTracks ? [pageTracks] : [];
     tracks.push(...items);
     const reportedPages = Number(parsed.data.recenttracks?.["@attr"]?.totalPages ?? page);

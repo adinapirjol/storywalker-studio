@@ -11,7 +11,7 @@ describe("readLastFmScrobbles", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const result = await readLastFmScrobbles({ LASTFM_API_KEY: "test-key" }, { username: "blunaoo", from: "2026-08-01T00:00:00.000Z", to: "2026-08-02T00:00:00.000Z" });
+    const result = await readLastFmScrobbles({ LASTFM_API_KEY: "test-key" }, { username: "example-listener", from: "2026-08-01T00:00:00.000Z", to: "2026-08-02T00:00:00.000Z" });
 
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(result.recenttracks.track).toHaveLength(3);
@@ -25,6 +25,6 @@ describe("readLastFmScrobbles", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(readLastFmScrobbles({ LASTFM_API_KEY: "test-key" }, { username: "blunaoo", from: "2026-08-01T00:00:00.000Z", to: "2026-08-02T00:00:00.000Z" })).rejects.toThrow("before the selected window was complete");
+    await expect(readLastFmScrobbles({ LASTFM_API_KEY: "test-key" }, { username: "example-listener", from: "2026-08-01T00:00:00.000Z", to: "2026-08-02T00:00:00.000Z" })).rejects.toThrow("before the selected window was complete");
   });
 });

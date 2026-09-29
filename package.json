@@ -28,11 +28,14 @@
     "private:delegate-review": "node --import tsx scripts/delegate-private-review.ts",
     "private:playlist-baseline": "node --import tsx scripts/private-playlist-baseline.ts",
     "linz:private-traces": "node --import tsx scripts/linz-private-traces.ts",
-    "audit:build-private": "node scripts/audit-build-private.mjs"
+    "audit:build-private": "node scripts/audit-build-private.mjs",
+    "prebuild": "npm run arena:refresh",
+    "arena:refresh": "NODE_USE_ENV_PROXY=1 node --import tsx scripts/arena-build.ts"
   },
   "dependencies": {
+    "@simplewebauthn/server": "13.3.2",
     "lucide-react": "^0.468.0",
-    "next": "16.2.11",
+    "next": "16.3.6",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "sql.js": "^1.14.2",

@@ -1,4 +1,6 @@
 "use client";
+import {vaultFetch} from '@/lib/vault-access';
+import {VaultUnlockButton} from './vault-access';
 
 import { FormEvent, useState } from "react";
 
@@ -7,7 +9,7 @@ type DraftFormat = "note" | "medium" | "substack" | "portfolio";
 type PublicDraft = { id: string; capturedAt: string; payload: { title: string; body: string; format: DraftFormat; sourceRecordIds: string[]; publicationStatus: "draft" } };
 
 async function request(payload: Record<string, unknown>) {
-  const response = await fetch("/api/vault", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  const response = await vaultFetch("/api/vault", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
   const result = await response.json() as { error?: string; results?: SearchResult[]; drafts?: PublicDraft[] };
   if (!response.ok || result.error) throw new Error(result.error ?? "The Vault did not accept that request.");
   return result;
@@ -56,7 +58,7 @@ export function PublicVoiceStudio() {
     <section className="experiment-hero"><p className="eyebrow"><span /> Public voice studio</p><h1>Make something shareable without exposing the notebook behind it.</h1><p>A public draft is a deliberate promotion, not an automated reading of your private life. Its evidence references remain encrypted and local.</p></section>
     <p className="live-notice" role="status">{notice}</p>
     <section className="voice-split">
-      <section className="notebook-card vault-card"><p className="section-kicker">01 · Select evidence</p><h2>Unlock once, then search privately</h2><form className="vault-form" onSubmit={findEvidence}><label>Search the private notebook<input value={query} minLength={3} onChange={(event) => setQuery(event.target.value)} placeholder="festival, job, place, project…" required /></label><button className="primary-button" type="submit" disabled={busy || query.trim().length < 3}>Find private evidence</button></form><p className="small-note">Uses the active browser-wide Vault session. Unlock once at <a href="/vault">Vault</a>; it expires exactly 15 minutes after unlock.</p>
+      <section className="notebook-card vault-card"><p className="section-kicker">01 · Select evidence</p><h2>Unlock once, then search privately</h2><form className="vault-form" onSubmit={findEvidence}><label>Search the private notebook<input value={query} minLength={3} onChange={(event) => setQuery(event.target.value)} placeholder="festival, job, place, project…" required /></label><button className="primary-button" type="submit" disabled={busy || query.trim().length < 3}>Find private evidence</button></form><p className="small-note">Uses the active browser-wide Vault session. Unlock here: <VaultUnlockButton />. Access lasts 15 minutes; unlocking keeps you on this page.</p>
         {results.length ? <ol className="voice-evidence">{results.map((result) => <li key={result.id}><label><input type="checkbox" checked={selected.includes(result.id)} onChange={() => toggle(result.id)} /> <span><b>{result.kind}</b><small>{result.id} · {result.matchedTerms.join(", ")}</small><em>{result.snippet}</em></span></label></li>)}</ol> : <p className="small-note">Nothing is visible here until you unlock the Vault and run a local search.</p>}
       </section>
       <section className="notebook-card vault-card"><p className="section-kicker">02 · Write a public candidate</p><h2>Your words, your decision</h2><form className="vault-form" onSubmit={saveDraft}><label>Working title<input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={160} required placeholder="A story worth taking forward" /></label><label>Intended home<select value={format} onChange={(event) => setFormat(event.target.value as DraftFormat)}><option value="note">Private-to-public note</option><option value="medium">Medium draft</option><option value="substack">Substack draft</option><option value="portfolio">Portfolio idea</option></select></label><label>Draft<textarea value={body} onChange={(event) => setBody(event.target.value)} maxLength={10_000} required placeholder="Write it yourself, or bring an edited draft here. Storywalker will retain the evidence references—not publish for you." /></label><p className="small-note">{selected.length}/8 evidence record(s) intentionally attached. This does not copy private source material into the export.</p><button className="primary-button" type="submit" disabled={busy || !title.trim() || !body.trim() || !selected.length}>Save public candidate</button></form></section>

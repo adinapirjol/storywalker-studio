@@ -1,7 +1,7 @@
 import type { VaultRecord } from "@/lib/private-vault";
 
 export type AtlasLane = { id: string; title: string; evidenceCount: number; sourceRecordIds: string[]; matchedTerms: string[]; status: "evidence-window" | "working-thread"; note: string };
-export type AtlasImport = { id: string; source: string; importedAt: string; retained: number };
+export type AtlasImport = { id: string; source: string; label?: string; importedAt: string; retained: number };
 export type AtlasChange = { id: string; title: string; detail: string; sourceRecordIds: string[] };
 export type AtlasConvergence = { id: string; title: string; detail: string; evidenceLayers: string[]; sourceRecordIds: string[] };
 export type AtlasNeed = { id: string; title: string; detail: string; sourceRecordIds: string[] };
@@ -35,16 +35,19 @@ function titleFor(record: VaultRecord) { const title = payload(record).title; re
 function importRecord(record: VaultRecord): AtlasImport | undefined {
   const content = payload(record); const source = content.source; const importedAt = content.importedAt;
   if (record.kind !== "import" || typeof source !== "string") return undefined;
-  const document = content.document as { records?: unknown[] } | undefined; const snapshot = content.snapshot as { occurrences?: unknown[] } | undefined;
+  const document = content.document as { records?: unknown[] } | undefined; const snapshot = content.snapshot as { occurrences?: unknown[]; playlist?: { id?: unknown; name?: unknown } } | undefined;
   const summary = content.summary as { retained?: unknown } | undefined;
   const retained = Array.isArray(document?.records) ? document.records.length : Array.isArray(snapshot?.occurrences) ? snapshot.occurrences.length : typeof summary?.retained === "number" ? summary.retained : 0;
-  return { id: record.id, source, importedAt: typeof importedAt === "string" ? importedAt : record.capturedAt, retained };
+  const playlistName = typeof snapshot?.playlist?.name === "string" ? snapshot.playlist.name : undefined;
+  const playlistId = typeof snapshot?.playlist?.id === "string" ? snapshot.playlist.id : undefined;
+  const label = source === "spotify-playlist" && playlistName && playlistId ? `Spotify playlist: ${playlistName} (${playlistId})` : undefined;
+  return { id: record.id, source, label, importedAt: typeof importedAt === "string" ? importedAt : record.capturedAt, retained };
 }
 
 /** A Side Quest export is deliberately preserved as one snapshot plus many
  * source-recorded entities. Atlas should report that as one import, not repeat
  * the same source name for every preserved tracker row. */
-function importRecords(records: VaultRecord[]) {
+function importRecords(records: VaultRecord[]): AtlasImport[] {
   const standard = records.flatMap((record) => payload(record).source === "side-quest-control-room" ? [] : [importRecord(record)]).filter((item): item is AtlasImport => Boolean(item));
   const sideQuestGroups = new Map<string, VaultRecord[]>();
   for (const record of records) {
@@ -160,9 +163,10 @@ export function buildAtlasNow(records: VaultRecord[], derivedAt = new Date().toI
   const prior = new Map(acknowledgedImports.map((item) => [item.id, item]));
   const importChanges = imports.flatMap((item) => {
     const before = prior.get(item.id);
-    if (!before) return [{ id: `new:${item.id}`, title: `New source: ${item.source}`, detail: `${item.retained} minimised source row${item.retained === 1 ? "" : "s"} are now available to Atlas.`, sourceRecordIds: [item.id] }];
-    if (before.retained !== item.retained) return [{ id: `changed:${item.id}`, title: `Updated source: ${item.source}`, detail: `The retained row count changed from ${before.retained} to ${item.retained}.`, sourceRecordIds: [item.id] }];
-    if (before.importedAt !== item.importedAt) return [{ id: `refreshed:${item.id}`, title: `Refreshed source: ${item.source}`, detail: `${item.retained} minimised row${item.retained === 1 ? "" : "s"}; no count change was detected.`, sourceRecordIds: [item.id] }];
+    const name = item.label ?? item.source;
+    if (!before) return [{ id: `new:${item.id}`, title: `New source: ${name}`, detail: `${item.retained} minimised source row${item.retained === 1 ? "" : "s"} are now available to Atlas.`, sourceRecordIds: [item.id] }];
+    if (before.retained !== item.retained) return [{ id: `changed:${item.id}`, title: `Updated source: ${name}`, detail: `The retained row count changed from ${before.retained} to ${item.retained}.`, sourceRecordIds: [item.id] }];
+    if (before.importedAt !== item.importedAt) return [{ id: `refreshed:${item.id}`, title: `Refreshed source: ${name}`, detail: `${item.retained} minimised row${item.retained === 1 ? "" : "s"}; no count change was detected.`, sourceRecordIds: [item.id] }];
     return [];
   });
   const acknowledgedSourceIds = new Set(Array.isArray(previous?.acknowledgedSourceIds) ? previous.acknowledgedSourceIds : []);

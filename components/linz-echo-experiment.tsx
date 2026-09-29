@@ -1,5 +1,7 @@
 "use client";
 
+import { ResearchNotebook } from "./research-notebook";
+import type {ResearchSession} from "@/lib/research-session";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { applyLinzDecision, getLinzProposals, LINZ_PUBLIC_RECORDS, locativeManifest, type LinzDecision } from "@/lib/linz-experiment";
@@ -18,6 +20,7 @@ function saveManifest(records: LinzProposal[]) {
 }
 
 export function LinzEchoExperiment() {
+  const [responses,setResponses]=useState<ResearchSession["entries"]>([]);
   const [records, setRecords] = useState(initial);
   const [selectedId, setSelectedId] = useState(initial[0].id);
   const [revision, setRevision] = useState("");
@@ -26,6 +29,7 @@ export function LinzEchoExperiment() {
   const city = LINZ_PUBLIC_RECORDS.find((record) => record.id === selected.cityFragmentId)!;
 
   function decide(decision: LinzDecision) {
+    setResponses(old=>[...old,{action:decision,subject:selected.id,wording:revision||selected.proposal,at:new Date().toISOString()}]);
     setRecords((current) => current.map((record) => record.id === selected.id ? applyLinzDecision(record, decision, revision) : record));
     if (decision === "revised") setRevision("");
   }
@@ -33,6 +37,7 @@ export function LinzEchoExperiment() {
   return <main className="research-main">
     <header className="site-header"><Link className="wordmark" href="/research"><span className="wordmark-mark">S</span><span>Storywalker <i>Research Lab</i></span></Link><Link className="quiet-button" href="/">Studio</Link></header>
     <section className="experiment-hero"><p className="eyebrow"><span /> Storywalker Prototype 1 · Linz adapter</p><h1>Public City, Private Echoes</h1><p>A city can record what happened where. Platforms can record traces. This deterministic experiment proposes a relationship, then leaves its meaning open to the Author.</p><p className="small-note">Working demo combines public programme records with three versioned City of Linz fragments. Private cards are clearly marked synthetic until Author-selected local traces are loaded. No live GPS or AI service is required.</p></section>
+    <section className="private-audio-card notebook-card"><p className="section-kicker">An ongoing study · beyond the hackathon</p><h2>The city archive is still material.</h2><p>This prototype can continue as a study of how institutional descriptions of a city meet an Author’s choices. Programme records establish what was advertised; city records describe infrastructure. Neither establishes personal attendance.</p><ol><li>Choose one public fragment and inspect its source, date and missing information.</li><li>Accept, rewrite or refuse its proposed relationship. Add a reflection and save the research snapshot below.</li><li>Associate it with an XR source window only when you choose to compose that connection. Enrich the XR archive to bring the saved record into a chamber.</li></ol><p>The public manifest remains a portable study score. Use it for an off-site reading, a projection rehearsal or a comparison with another city’s public archive. The hackathon is not a prerequisite.</p></section>
     <section className="linz-workflow" aria-label="Locative interaction sequence"><span>Public place</span><i>→</i><span>Private trace</span><i>→</i><span>Proposed meaning</span><i>→</i><span>Human negotiation</span><i>→</i><span>Locative echo</span></section>
     <section className="linz-picker" aria-label="Simulated Linz locations">{records.map((record) => <button key={record.id} type="button" aria-pressed={selectedId === record.id} onClick={() => { setSelectedId(record.id); setRevision(""); }}><b>{record.location}</b><small>{record.ledger.authorDecision}</small></button>)}</section>
     <section className="linz-layout">
@@ -55,6 +60,7 @@ export function LinzEchoExperiment() {
         <p className="small-note">Export contains no private trace, coordinates or audio. Spotify metadata/URIs remain local-only; no copyrighted audio is redistributed.</p>
       </aside>
     </section>
+    <ResearchNotebook sourceContext={LINZ_PUBLIC_RECORDS.map(r=>`${r.sourceLabel} (${r.sourceId}): ${r.fragment}`).join("\n").slice(0,6000)} study="linz" entries={responses}/>
     <section className="linz-ledger notebook-card"><p className="section-kicker">Evidence ledger · visible before decision</p><h2>{selected.location}</h2><dl><div><dt>Source records</dt><dd>{selected.ledger.sourceRecords.map((source) => `${source.source} (${source.id})`).join(" · ")}</dd></div><div><dt>Time / zone</dt><dd>{selected.ledger.timestamps.map((time) => `${time.value} (${time.timezone}; ${time.certainty})`).join(" · ")}</dd></div><div><dt>Location / precision</dt><dd>{selected.ledger.location.label} / {selected.ledger.location.precision}</dd></div><div><dt>Missing information</dt><dd>{selected.ledger.missingInformation.join(" · ")}</dd></div><div><dt>Transformation history</dt><dd>{selected.ledger.transformationHistory.join(" → ")}</dd></div><div><dt>Current Author decision</dt><dd>{selected.ledger.authorDecision}</dd></div></dl></section>
     <aside className="safety-note"><b>Interaction contract:</b> simulation is the default. Live location remains opt-in in the separate Locative Echo Lab, has no background tracking or analytics, shows precision, and can be paused or reset. This demonstration makes no claim of immersive experience: the participant reads source fragments, hears no copyrighted audio, selects a location, and controls acceptance, revision or refusal.</aside>
     <footer><span>Recorded ≠ inferred ≠ authored ≠ refused</span><span>Private traces are local-only; this public demo contains synthetic stand-ins</span></footer>

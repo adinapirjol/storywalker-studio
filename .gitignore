@@ -35,3 +35,6 @@
 /.vscode/
 *.swp
 *~
+
+# Regenerated public Are.na snapshot (never credentials)
+/.arena/

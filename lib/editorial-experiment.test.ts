@@ -19,7 +19,7 @@ describe("fictional refusal experiment", () => {
     expect(refused.originalWording).toBe(initial.originalWording);
     expect(refused.revisedWording).toBe("Author wording.");
     expect(refused.canonical).toBe(false);
-    expect(refused.audit).toEqual([{ action: "revise", wording: "Author wording." }, { action: "refuse" }]);
+    expect(refused.audit).toMatchObject([{ action: "revise", wording: "Author wording.", at: expect.any(String) }, { action: "refuse", at: expect.any(String) }]);
     expect(editorialTranscript(refused)).toContain("non-canonical");
   });
 });

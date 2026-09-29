@@ -14,7 +14,7 @@ export interface EditorialExperiment {
   canonical: boolean;
   visualConsequence: "trace-open" | "trace-stable" | "trace-interrupted" | "trace-gap";
   audioConsequence: "waiting" | "motif-repeats" | "motif-transforms" | "intentional-silence";
-  audit: Array<{ action: EditorialAction; wording?: string }>;
+  audit: Array<{ action: EditorialAction; wording?: string; at?: string }>;
 }
 
 export const FICTIONAL_EDITORIAL_PROPOSAL =
@@ -44,7 +44,7 @@ export function applyEditorialAction(
       canonical: false,
       visualConsequence: "trace-stable",
       audioConsequence: "motif-repeats",
-      audit: [...current.audit, { action }],
+      audit: [...current.audit, { action, wording: revisedWording?.trim() || undefined, at: new Date().toISOString() }],
     };
   }
   if (action === "revise") {
@@ -56,7 +56,7 @@ export function applyEditorialAction(
       canonical: false,
       visualConsequence: "trace-interrupted",
       audioConsequence: "motif-transforms",
-      audit: [...current.audit, { action, wording }],
+      audit: [...current.audit, { action, wording, at: new Date().toISOString() }],
     };
   }
   return {
@@ -65,7 +65,7 @@ export function applyEditorialAction(
     canonical: false,
     visualConsequence: "trace-gap",
     audioConsequence: "intentional-silence",
-    audit: [...current.audit, { action }],
+    audit: [...current.audit, { action, wording: revisedWording?.trim() || undefined, at: new Date().toISOString() }],
   };
 }
 

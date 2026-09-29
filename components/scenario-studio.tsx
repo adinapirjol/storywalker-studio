@@ -1,4 +1,6 @@
 "use client";
+import {vaultFetch} from '@/lib/vault-access';
+import {VaultUnlockButton} from './vault-access';
 
 import { FormEvent, useMemo, useState } from "react";
 import { emptyConstellation, normaliseAtlasLaneSelections, sourceIdsForLaneSelections, toggleAtlasLaneSelection, type ScenarioConnection, type ScenarioConstellation, type ScenarioPathway } from "@/lib/scenario-studio";
@@ -22,7 +24,7 @@ export function ScenarioStudio() {
   async function open(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true);
     try {
-      const response = await fetch("/api/vault", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "scenario-studio" }) });
+      const response = await vaultFetch("/api/vault", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "scenario-studio" }) });
       const result = await response.json() as { error?: string; atlas?: Atlas; scenario?: ScenarioConstellation | null };
       if (!response.ok || result.error || !result.atlas) throw new Error(result.error ?? "Scenario Studio could not be opened.");
       setAtlas(result.atlas);
@@ -48,7 +50,7 @@ export function ScenarioStudio() {
       const evidenceLanes = atlas?.lanes.filter((lane) => lane.status === "evidence-window") ?? [];
       const atlasLaneSelections = normaliseAtlasLaneSelections(evidenceLanes, constellation.atlasSourceRecordIds, constellation.atlasLaneSelections);
       const scenario = { ...constellation, atlasLaneSelections, atlasSourceRecordIds: sourceIdsForLaneSelections(atlasLaneSelections) };
-      const response = await fetch("/api/vault", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "save-scenario-studio", scenario }) });
+      const response = await vaultFetch("/api/vault", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "save-scenario-studio", scenario }) });
       const result = await response.json() as { error?: string; scenario?: ScenarioConstellation };
       if (!response.ok || result.error || !result.scenario) throw new Error(result.error ?? "The constellation could not be saved.");
       setConstellation(scenario);
@@ -59,7 +61,7 @@ export function ScenarioStudio() {
   return <main className="research-main private-review-main scenario-main">
     <section className="experiment-hero"><p className="eyebrow"><span /> Scenario Studio · private beta</p><h1>Keep the routes entangled until time makes a difference.</h1><p>This is a constellation of possible routes, not a funnel. Name the paths that matter, mark dates and conditions, then make explicit the overlaps that are useful to you.</p></section>
     <p className="live-notice" role="status">{message}</p>
-    <section className="notebook-card vault-card"><p className="section-kicker">Open the private constellation</p><form onSubmit={open} className="vault-form"><button className="primary-button" disabled={busy}>{busy ? "Opening Scenario Studio…" : "Open Scenario Studio"}</button></form><p className="small-note">Uses the active browser-wide Vault session. Unlock once at <a href="/vault">Vault</a>; it expires exactly 15 minutes after unlock. Opening refreshes the local Atlas drawer. It does not save a scenario, create a Moment, Journey, Episode, or public draft.</p></section>
+    <section className="notebook-card vault-card"><p className="section-kicker">Open the private constellation</p><form onSubmit={open} className="vault-form"><button className="primary-button" disabled={busy}>{busy ? "Opening Scenario Studio…" : "Open Scenario Studio"}</button></form><p className="small-note">Uses the active browser-wide Vault session. Unlock here: <VaultUnlockButton />. Access lasts 15 minutes; unlocking keeps you on this page. Opening refreshes the local Atlas drawer. It does not save a scenario, create a Moment, Journey, Episode, or public draft.</p></section>
     {atlas ? <>
       <section className="scenario-shell"><div className="scenario-heading"><div><p className="section-kicker">Author-owned planning constellation</p><h2>{constellation.title}</h2><p>{constellation.framing}</p></div><div className="scenario-metrics"><span><b>{constellation.pathways.length}</b> possibilities</span><span><b>{connectionPairs.length}</b> explicit overlaps</span><span><b>{selectedEvidenceCount}</b> Atlas sources</span></div></div>
         <section className="notebook-card scenario-frame"><p className="section-kicker">Constellation frame</p><label>Title<input value={constellation.title} maxLength={160} onChange={(event) => setConstellation((current) => ({ ...current, title: event.target.value }))} /></label><label>How should this constellation be held?<textarea value={constellation.framing} maxLength={1_000} onChange={(event) => setConstellation((current) => ({ ...current, framing: event.target.value }))} /></label><p className="small-note">This is your planning frame, not a conclusion. Keep uncertainty, conditions and competing pulls visible.</p></section>

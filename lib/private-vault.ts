@@ -81,6 +81,30 @@ export async function openVaultWithKey(key: Buffer): Promise<OpenVault> {
   return { database: await openDatabase(), key: Buffer.from(key) };
 }
 
+/** Verify a passkey-unwrapped key against this Vault before issuing a session. */
+export async function verifyVaultKey(key: Buffer) {
+  if (!vaultExists() || key.length !== 32) throw new Error("Vault key unavailable.");
+  const database = await openDatabase();
+  try {
+    const meta = metadata(database);
+    if (!meta) throw new Error("Vault metadata missing.");
+    const expected = Buffer.from(meta.verifier, "base64url");
+    const actual = Buffer.from(keyVerifier(key), "base64url");
+    if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) throw new Error("Vault key mismatch.");
+  } finally { database.close(); }
+}
+
+/** Stable, non-secret binding; never includes record contents or the verifier. */
+export async function vaultKeyIdentity() {
+  if (!vaultExists()) throw new Error("Create the Vault first.");
+  const database = await openDatabase();
+  try {
+    const meta = metadata(database);
+    if (!meta) throw new Error("Vault metadata missing.");
+    return createHash("sha256").update(JSON.stringify([meta.schemaVersion, meta.salt, meta.createdAt])).digest("base64url");
+  } finally { database.close(); }
+}
+
 export function closeVault(vault: OpenVault) { vault.database.close(); }
 function writeVaultRecords(vault: OpenVault, records: VaultRecord[], removeRecordIds: string[] = []) {
   const insert = "INSERT INTO vault_records (record_id, kind, captured_at, content_hash, iv, auth_tag, ciphertext) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(record_id) DO UPDATE SET kind = excluded.kind, captured_at = excluded.captured_at, content_hash = excluded.content_hash, iv = excluded.iv, auth_tag = excluded.auth_tag, ciphertext = excluded.ciphertext";
@@ -93,7 +117,11 @@ function writeVaultRecords(vault: OpenVault, records: VaultRecord[], removeRecor
   return records.length;
 }
 export function putVaultRecords(vault: OpenVault, records: VaultRecord[]) { return writeVaultRecords(vault, records); }
-function readVaultRecord(vault: OpenVault, id: string) { const row = rows(vault.database, "SELECT ciphertext, iv, auth_tag FROM vault_records WHERE record_id = ?", [id])[0] as { ciphertext: Uint8Array; iv: Uint8Array; auth_tag: Uint8Array } | undefined; return row ? decrypt(vault.key, row) as VaultRecord : undefined; }
+export function readVaultRecord(vault: OpenVault, id: string) { const row = rows(vault.database, "SELECT ciphertext, iv, auth_tag FROM vault_records WHERE record_id = ?", [id])[0] as { ciphertext: Uint8Array; iv: Uint8Array; auth_tag: Uint8Array } | undefined; return row ? decrypt(vault.key, row) as VaultRecord : undefined; }
+/** Inspect source inventory without decrypting large archived scene revisions. */
+export function vaultRecordHeaders(vault: OpenVault) {
+  return rows(vault.database, "SELECT record_id AS id, kind, captured_at AS capturedAt FROM vault_records ORDER BY record_id") as Array<Pick<VaultRecord, "id" | "kind" | "capturedAt">>;
+}
 /** Timeline chunks are intentionally omitted from general derived views. They
  * are decrypted one small chunk at a time when Atlas needs a place reading. */
 export function readVaultRecords(vault: OpenVault, includeTimelineChunks = false) {
@@ -125,7 +153,7 @@ function ensureTimelineChunks(vault: OpenVault) {
   writeVaultRecords(vault, chunks, priorChunkIds);
 }
 
-function* readTimelineWindows(vault: OpenVault) {
+export function* readTimelineWindows(vault: OpenVault) {
   const statement = vault.database.prepare("SELECT ciphertext, iv, auth_tag FROM vault_records WHERE record_id LIKE ? ORDER BY record_id ASC");
   try { statement.bind([`${TIMELINE_CHUNK_PREFIX}%`]); while (statement.step()) { const record = decrypt(vault.key, statement.getAsObject() as { ciphertext: Uint8Array; iv: Uint8Array; auth_tag: Uint8Array }) as VaultRecord; const document = (record.payload as { document?: { records?: unknown[] } }).document; for (const window of document?.records ?? []) yield window; } } finally { statement.free(); }
 }

@@ -22,6 +22,13 @@ describe("Atlas of Now", () => {
     const refreshed = buildAtlasNow([{ ...record, payload: { ...record.payload as object, importedAt: "2026-08-26T13:00:00.000Z" } }], "2026-08-26T13:01:00.000Z", previous);
     expect(refreshed.whatChanged).toEqual([expect.objectContaining({ id: "refreshed:import:timeline" })]);
   });
+  it("identifies each Spotify playlist by its retained name and ID in coverage and changes", () => {
+    const playlist: VaultRecord = { id: "import:spotify-playlist:abc123", kind: "import", capturedAt, payload: { source: "spotify-playlist", importedAt: capturedAt, snapshot: { playlist: { id: "abc123", name: "Creative routes" }, occurrences: [{ sourcePosition: 0 }] } } };
+    const previous = buildAtlasNow([playlist], "2026-08-26T12:01:00.000Z");
+    const refreshed = buildAtlasNow([{ ...playlist, payload: { ...playlist.payload as object, importedAt: "2026-08-26T13:00:00.000Z" } }], "2026-08-26T13:01:00.000Z", previous);
+    expect(refreshed.imports).toEqual([expect.objectContaining({ id: playlist.id, source: "spotify-playlist", label: "Spotify playlist: Creative routes (abc123)" })]);
+    expect(refreshed.whatChanged).toEqual([expect.objectContaining({ title: "Refreshed source: Spotify playlist: Creative routes (abc123)" })]);
+  });
   it("keeps a private editorial draft visible as new until Atlas is opened and acknowledges it", () => {
     const draft: VaultRecord = { id: "editorial-draft:one", kind: "editorial-draft", capturedAt, payload: { title: "Private draft", publicationStatus: "unpublished" } };
     const before = buildAtlasNow([], "2026-08-26T12:00:00.000Z");

@@ -1,5 +1,6 @@
 "use client";
 
+import { ResearchNotebook } from "./research-notebook";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -66,7 +67,7 @@ export function RefusalExperiment() {
     const next = applyEditorialAction(experiment, action, revision);
     setExperiment(next);
     motif.play(next.audioConsequence);
-    setNotice(`${action === "refuse" ? "Refusal" : action[0].toUpperCase() + action.slice(1)} recorded in this experiment’s local audit. ${editorialTranscript(next)}`);
+    setNotice(`${action === "refuse" ? "Refusal" : action[0].toUpperCase() + action.slice(1)} recorded in this page’s session history, not yet saved to the Vault. ${editorialTranscript(next)}`);
   }
   function chooseLocalFile(file?: File) {
     if (!file) return;
@@ -78,7 +79,7 @@ export function RefusalExperiment() {
   return (
     <main className="research-main">
       <header className="site-header"><Link className="wordmark" href="/research"><span className="wordmark-mark">S</span><span>Storywalker <i>Research Lab</i></span></Link><Link className="quiet-button" href="/">Studio</Link></header>
-      <section className="experiment-hero"><p className="eyebrow"><span /> Experiment 01 · fictional Aurora Coast data</p><h1>Refusal is an editorial act.</h1><p>What must change when a proposed interpretation is accepted, revised, or refused?</p></section>
+      <section className="experiment-hero"><p className="eyebrow"><span /> Experiment 01 · fictional Aurora Coast data</p><h1>Refusal is an editorial act.</h1><p>What must change when a proposed interpretation is accepted, revised, or refused?</p><p>Refusal becomes part of the archive: a visible gap, retained wording and a recorded editorial boundary. The response tells us how to handle a proposal; it does not tell us what a life meant.</p></section>
       <section className="experiment-layout">
         <article className={`proposal-stage ${experiment.visualConsequence}`} aria-describedby="consequence-transcript">
           <p className="section-kicker">One fictional proposal · non-canonical experiment</p>
@@ -89,13 +90,14 @@ export function RefusalExperiment() {
         </article>
         <aside className="notebook-card experiment-controls">
           <h2>Author response</h2>
-          <label htmlFor="revision">Optional revised wording</label>
+          <label htmlFor="revision">Author response / revised wording</label>
           <textarea id="revision" value={revision} onChange={(event) => setRevision(event.target.value)} placeholder="Edit the proposed wording without erasing its original." />
-          <div className="experiment-actions"><button onClick={() => decide("accept")} type="button">Accept</button><button onClick={() => decide("revise")} type="button">Revise</button><button onClick={() => decide("refuse")} type="button">Refuse</button></div>
+          <p className="small-note">Accept keeps the proposal and records your response separately. Revise changes its wording. Refuse retains your response and the rejected proposal. None confirms the fictional event.</p><div className="experiment-actions"><button onClick={() => decide("accept")} type="button">Accept</button><button onClick={() => decide("revise")} type="button">Revise</button><button onClick={() => decide("refuse")} type="button">Refuse</button></div>
           <div className="audio-controls"><p><b>Synthetic consequence</b> · no autoplay</p><button type="button" onClick={() => motif.play(experiment.audioConsequence)} disabled={experiment.audioConsequence === "waiting" || experiment.audioConsequence === "intentional-silence"}>Play</button><button type="button" onClick={motif.pause} disabled={motif.status !== "playing"}>Pause</button><button type="button" onClick={motif.resume} disabled={motif.status !== "paused"}>Resume</button><button type="button" onClick={motif.stop}>Stop</button><label>Volume <input aria-label="Synthetic audio volume" type="range" min="0" max="1" step="0.05" value={motif.volume} onChange={(event) => motif.setVolume(Number(event.target.value))} /></label></div>
           <p id="consequence-transcript" className="transcript"><b>Textual equivalent:</b> {editorialTranscript(experiment)}</p>
         </aside>
       </section>
+      <ResearchNotebook sourceContext={`Fictional Aurora Coast proposal: ${experiment.originalWording}`} study="refusal" entries={experiment.audit.map(e=>({...e,subject:experiment.proposalId}))}/>
       <section className="private-audio-card notebook-card">
         <p className="section-kicker">Optional local-only sound layer</p>
         <p>Selecting a file makes an object URL in this browser session only. It is never uploaded or written to local storage; leaving this page releases it.</p>
