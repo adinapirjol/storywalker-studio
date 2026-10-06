@@ -23,5 +23,5 @@ export async function fetchWithVaultUnlock(input:RequestInfo|URL,init:RequestIni
  return send(input,init); // exactly one retry, including saves rejected before execution
 }
 export function vaultFetch(input:RequestInfo|URL,init?:RequestInit){return fetchWithVaultUnlock(input,init,requestVaultUnlock);}
-const returnPaths=new Set(['/','/atlas','/director','/field-trace','/voice','/scenario-studio','/private-review','/research','/research/xr','/research/refusal','/research/echo-lab','/research/linz']);
+const returnPaths=new Set(['/','/atlas','/director','/field-trace','/voice','/scenario-studio','/private-review','/research','/research/xr','/research/arena-field','/research/refusal','/research/echo-lab','/research/linz']);
 export function safeVaultReturn(value:unknown){return typeof value==='string'&&returnPaths.has(value)?value:undefined;}

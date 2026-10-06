@@ -11,9 +11,13 @@ import type { ListeningAnalysis } from "@/lib/xr-listening";
 import styles from "./xr-lab.module.css";
 
 type Voice = { oscillator: OscillatorNode; gain: GainNode; panner: PannerNode };
-export function XRLab() {
-  const [scene, setScene] = useState<XRScene>(DEMO_XR_SCENE);
-  const [decisions, setDecisions] = useState<Record<string, Decision>>({});
+export function XRLab({ initialScene = DEMO_XR_SCENE, initialDecisions = {}, fictionalPreview = false }: { initialScene?: XRScene; initialDecisions?: Record<string,Decision>; fictionalPreview?: boolean }) {
+  const [scene, setScene] = useState<XRScene>(initialScene);
+  const [decisions, setDecisions] = useState<Record<string, Decision>>(initialDecisions);
+  const [savedSignature, setSavedSignature] = useState(JSON.stringify({scene:initialScene,decisions:initialDecisions}));
+  const [savedLabel, setSavedLabel] = useState(fictionalPreview ? "Original fictional fixture" : "Demo only; no private scene loaded");
+  const dirty = JSON.stringify({scene,decisions}) !== savedSignature;
+  useEffect(()=>{if(!dirty)return;const warn=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue='';};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);},[dirty]);
   const [position, setPosition] = useState({ x: 0, z: 0 });
   const [heading, setHeading] = useState(0);
   const [budget, setBudget] = useState(15);
@@ -85,18 +89,20 @@ export function XRLab() {
     if (file.size > 10_000_000) { setMessage("Choose a selected scene JSON smaller than 10 MB, not a raw account export."); return; }
     try {
       const parsed = parseSceneFile(JSON.parse(await file.text()));
-      setActivated(false); setAnalysis(undefined); setProjecting(false); setScene(parsed.scene); setDecisions(parsed.decisions); setPosition({ x: 0, z: 0 });
+      setActivated(false); setAnalysis(undefined); setProjecting(false); setScene(parsed.scene); setDecisions(parsed.decisions); setSavedSignature(JSON.stringify(parsed)); setSavedLabel("Loaded from your selected file"); setPosition({ x: 0, z: 0 });
       setMessage("Scene loaded with its saved decisions and positions. Activation and sound remain off. Nothing was uploaded.");
     } catch { setMessage("This file is not a valid Storywalker XR scene. Use a current-scene download or a plain scene template; raw account exports and full analysis reports are not scene files."); }
   }
   async function vaultDraft(save = false) {
+    const submittedSignature = JSON.stringify({scene,decisions});
     stop(); setActivated(false); setProjecting(false); setBusy(true);
     try {
       const response = await vaultFetch("/api/vault", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(save ? { action: "save-xr-review", xrReview: { scene, decisions } } : { action: "prepare-xr-draft" }) });
       const result = await response.json();
       if (!response.ok || result.error) throw new Error(result.error ?? "The draft could not be loaded.");
       const parsed = xrSceneSchema.parse(result.xrDraft.scene);
-      setScene(parsed); setDecisions(result.xrDraft.decisions ?? {}); setAnalysis(result.xrDraft.analysis); setPosition({ x: 0, z: 0 });
+      if (!save) { setScene(parsed); setDecisions(result.xrDraft.decisions ?? {}); setAnalysis(result.xrDraft.analysis); setPosition({ x: 0, z: 0 }); }
+      setSavedSignature(save ? submittedSignature : JSON.stringify({scene:parsed,decisions:result.xrDraft.decisions ?? {}})); setSavedLabel("Saved in encrypted Vault");
       setMessage(save ? "Review saved in the encrypted Vault. Activation remains off." : "Private draft loaded with its saved selections. Inspect the mapping; activation remains off.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Could not reach the local Vault."); }
     finally { setBusy(false); }
@@ -107,7 +113,7 @@ export function XRLab() {
       const response = await vaultFetch("/api/vault", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: archive ? "enrich-xr-evidence" : contextOnly ? "enrich-xr-context" : "ground-xr-journey", xrReview: { scene, decisions } }) });
       const result = await response.json();
       if (!response.ok || result.error) throw new Error(result.error ?? "Geographic grounding failed.");
-      setScene(xrSceneSchema.parse(result.xrDraft.scene)); setDecisions(result.xrDraft.decisions);
+      setScene(xrSceneSchema.parse(result.xrDraft.scene)); setDecisions(result.xrDraft.decisions); setSavedSignature(JSON.stringify({scene:xrSceneSchema.parse(result.xrDraft.scene),decisions:result.xrDraft.decisions})); setSavedLabel("Saved in encrypted Vault");
       setMessage(archive ? "Vault evidence scanned and saved encrypted. Strong matches attached; ambiguous candidates await your review in the evidence inventory. Geography, listening and Author moves are unchanged." : contextOnly ? "Calendar context attached with source links. Positions and accepted selections are unchanged; saved encrypted." : "Geographic revision saved encrypted. Selections preserved; previous scene archived. WORLD and MEMORY start identical. Activation remains off.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Could not ground the journey."); }
     finally { setBusy(false); }
@@ -118,7 +124,7 @@ export function XRLab() {
       const response = await vaultFetch("/api/vault", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "sync-lastfm-delta", deltaUsername }) });
       const result = await response.json();
       if (!response.ok || result.error) throw new Error(result.error ?? "Delta read failed; no merge was made.");
-      if (result.xrDraft) { setScene(xrSceneSchema.parse(result.xrDraft.scene)); setDecisions(result.xrDraft.decisions); setAnalysis(result.xrDraft.analysis); }
+      if (result.xrDraft) { setScene(xrSceneSchema.parse(result.xrDraft.scene)); setDecisions(result.xrDraft.decisions); setSavedSignature(JSON.stringify({scene:xrSceneSchema.parse(result.xrDraft.scene),decisions:result.xrDraft.decisions})); setSavedLabel("Saved in encrypted Vault"); setAnalysis(result.xrDraft.analysis); }
       setDeltaUsername("");
       setMessage(result.delta.message ?? `Merged ${result.delta.added} new scrobbles; ${result.delta.overlap} overlapping rows removed; ${result.delta.total} total source records. Read ${result.delta.pagesRead}/${result.delta.totalPages} pages through ${result.delta.to}. Previous source and draft archived encrypted; new revision is pending and inactive.`);
     } catch (error) { setMessage(error instanceof Error ? error.message : "Delta read failed."); }
@@ -147,9 +153,10 @@ export function XRLab() {
   }
   return <main className={styles.main}>
     <header className={styles.header}><Link href="/research">Storywalker / Research</Link><span>03 — Installation rehearsal</span></header>
-    <section className={styles.hero}><p>XR SKETCHBOOK · ROOM-SCALE AUDIOVISUAL STUDY</p><h1>{scene.draft ? scene.title : <>A room for<br /><em>possible departures.</em></>}</h1><p>Bring a sound, a place, an afterimage. Decide what belongs around you.</p><small>{scene.journeyLayout ? "WORLD / TIME / MEMORY · walkable episode spaces · no headset tracking" : "Installation rehearsal · synthetic tones · manually positioned listener · no headset tracking"}</small></section>
+    <section className={styles.hero}><p>XR SKETCHBOOK · ROOM-SCALE AUDIOVISUAL STUDY</p><h1>{scene.draft || fictionalPreview ? scene.title : <>A room for<br /><em>possible departures.</em></>}</h1><p>Bring a sound, a place, an afterimage. Decide what belongs around you.</p><small>{scene.journeyLayout ? "WORLD / TIME / MEMORY · walkable episode spaces · no headset tracking" : "Installation rehearsal · synthetic tones · manually positioned listener · no headset tracking"}</small></section>
     <section className={styles.sources}>
-      <button disabled={busy} onClick={() => void vaultDraft()}>Load private draft / analyse existing Last.fm</button>{" "}<VaultUnlockButton />
+      {fictionalPreview ? <><p><b>Entirely fictional.</b> Invented visits, listening, notebook fragments and Author decisions. City anchors are public reference coordinates. No personal history and no Vault access.</p><a href="#xr-spatial-stage">Enter the passage ↓</a><p>TIME: approach → open a window → enter → leave. MEMORY: move a space and inspect its geographic ghost. Sound: activate, then open Sound &amp; samples to audition.</p><button onClick={()=>setActivated(true)}>Activate fictional sound choices</button></> : <><button disabled={busy} onClick={() => void vaultDraft()}>Load private draft / analyse existing Last.fm</button>{" "}<VaultUnlockButton /><p><Link href="/research/xr/aurora-coast">Try the full fictional Aurora Coast preview →</Link></p></>}
+      <p role="status">{dirty ? "Unsaved changes — download this scene or save its review before leaving." : savedLabel}. Refreshing discards unsaved composition changes.</p>
       <p role="status">{busy ? "Reading the existing local source…" : message}</p>
       {scene.draft && !scene.journeyLayout && <div className={styles.actions}><label>Last.fm username for delta read <input value={deltaUsername} onChange={event => setDeltaUsername(event.target.value)} autoComplete="off" maxLength={64} /></label><button disabled={busy || !deltaUsername.trim()} onClick={() => void syncDelta()}>Fetch missing Last.fm interval and merge</button></div>}
       {scene.draft && <><h2>Proposed mapping · activation {activated ? "on" : "off"}</h2><p>{scene.draft.assemblyReason}</p><p><b>Author-authored labels:</b> {scene.draft.authorLabels.join(" · ")}</p><p><b>Provenance:</b> {scene.draft.sourceRequest}</p><p>{scene.journeyLayout ? "WORLD positions derive from geographic evidence. MEMORY moves are separate Author decisions. The accepted selections are preserved independently of placement." : "Current cue positions are arbitrary proposals. Ground the journey to replace them with geographic episodes."}</p>
@@ -176,7 +183,7 @@ export function XRLab() {
         })}
       </svg><div className={styles.projectionBar}><span>Spatial score / {playing ? "sound enabled" : "silent visual rehearsal"}</span><button onClick={() => { setProjecting(false); if (document.fullscreenElement) void document.exitFullscreen(); }}>Close projection</button></div></>}
     </div>
-    <div className={scene.journeyLayout ? styles.experienceLayout : styles.layout}>
+    <div inert={busy} className={scene.journeyLayout ? styles.experienceLayout : styles.layout}>
       <section id="xr-spatial-stage" tabIndex={-1} className={styles.stage} aria-label="Spatial scene">
         <div className={styles.stageTitle}><span>{scene.title}</span><span>{scene.journeyLayout ? "WORLD / TIME / MEMORY" : "40 × 40 virtual metres"}</span></div>
         {scene.journeyLayout ? <XRJourneyRoom activated={activated} scene={scene} decisions={decisions} onChange={next => { stop(); setActivated(false); setScene(next); }} /> : <>
@@ -210,9 +217,9 @@ export function XRLab() {
       </details></aside>
     </div>
     <section className={styles.sources}><h2>Your installation, deliberately composed.</h2><p>Rehearse a room with headphones and a screen or projector. Accept one cue and move toward it, then turn: its direction changes while its visual field grows with proximity. Refusal removes both. Projection uses the same score as the audio; it is not audio-waveform analysis. The coordinate grid is a virtual score, not a measured floor plan.</p><p>Music history can provide references; Maps can provide chosen places; a film diary can provide motifs; your calendar can provide a time window. Episode spaces are deterministic presentation containers. Save review to Vault preserves your composition encrypted; downloading preserves a portable private copy. Unsaved changes remain only in this tab.</p>
-      <div className={styles.actions}><XRSceneDownload scene={scene} decisions={decisions} /><button onClick={() => download(DEMO_XR_SCENE, "storywalker-xr-template.json")}>Download blank demo template</button><label className={styles.file}>Load selected scene<input type="file" accept="application/json,.json" onChange={event => { void importScene(event.target.files?.[0]); event.target.value = ""; }} /></label><button onClick={() => download({ ...reviewExport(scene, decisions), ...(analysis ? { analysis } : {}) }, "storywalker-xr-local-review.json")}>Download full analysis report</button><button onClick={() => { stop(); setAnalysis(undefined); setActivated(false); setProjecting(false); setScene(DEMO_XR_SCENE); setDecisions({}); setPosition({ x: 0, z: 0 }); setHeading(0); setBudget(15); setMessage("Demo restored. Imported scene cleared from this study."); }}>Clear / restore demo</button></div>
+      <div className={styles.actions}><XRSceneDownload scene={scene} decisions={decisions} /><button onClick={() => download(DEMO_XR_SCENE, "storywalker-xr-template.json")}>Download blank demo template</button><label className={styles.file}>Load selected scene<input type="file" accept="application/json,.json" onChange={event => { void importScene(event.target.files?.[0]); event.target.value = ""; }} /></label><button onClick={() => download({ ...reviewExport(scene, decisions), ...(analysis ? { analysis } : {}) }, "storywalker-xr-local-review.json")}>Download full analysis report</button><button onClick={() => { stop(); setAnalysis(undefined); setActivated(false); setProjecting(false); setScene(initialScene); setDecisions(initialDecisions); setSavedSignature(JSON.stringify({scene:initialScene,decisions:initialDecisions})); setSavedLabel("Original demo restored"); setPosition({ x: 0, z: 0 }); setHeading(0); setBudget(15); setMessage("Demo restored. Imported scene cleared from this study."); }}>Clear / restore demo</button></div>
       <p><small>The saved review includes your selected scene and refusals. Keep it private. Vault data is read only by the explicit private-draft action; no model is running.</small></p>
-      {!scene.draft && <div className={styles.next}><div><h3>An optional outdoor edition</h3><p>Echoes supports geofenced audio walks. This scene uses relative positions; choosing real sites and preparing cleared audio comes before manual authoring there.</p><a href="https://echoes.xyz/" target="_blank" rel="noreferrer">Explore Echoes ↗</a></div><div><h3>A model that listens</h3><p>LAION CLAP is a candidate for matching your own recordings to text prompts. Its similarities would remain suggestions. Spotify content stays outside model inputs.</p><a href="https://huggingface.co/laion/larger_clap_music_and_speech" target="_blank" rel="noreferrer">Read the model card ↗</a></div><div><h3>Keep building</h3><p>Choose three fragments, test their positions, then record what you accepted, changed or refused. A small repeatable study can become installation research.</p><Link href="/research/echo-lab">Open the geolocation study →</Link></div></div>}
+      {!scene.draft && !fictionalPreview && <div className={styles.next}><div><h3>An optional outdoor edition</h3><p>Echoes supports geofenced audio walks. This scene uses relative positions; choosing real sites and preparing cleared audio comes before manual authoring there.</p><a href="https://echoes.xyz/" target="_blank" rel="noreferrer">Explore Echoes ↗</a></div><div><h3>A model that listens</h3><p>LAION CLAP is a candidate for matching your own recordings to text prompts. Its similarities would remain suggestions. Spotify content stays outside model inputs.</p><a href="https://huggingface.co/laion/larger_clap_music_and_speech" target="_blank" rel="noreferrer">Read the model card ↗</a></div><div><h3>Keep building</h3><p>Choose three fragments, test their positions, then record what you accepted, changed or refused. A small repeatable study can become installation research.</p><Link href="/research/echo-lab">Open the geolocation study →</Link></div></div>}
     </section>
   </main>;
 }

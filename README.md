@@ -16,7 +16,7 @@ The system is deliberately deterministic first. It does not claim that a song ex
 
 `/research/xr` develops WORLD / TIME / MEMORY: geographic calibration, a chronological archive of episode spaces, and Author recomposition with visible geographic ghosts. Private sources stay in the encrypted local Vault; passkey or recovery-passphrase access can resume an interrupted action on the same page.
 
-See the [29 September NOVA report and next tasks](docs/research/xr/nova-report-2026-09-29.md), [rehearsal guide](docs/research/xr/README.md), and [CTM research checkpoint](docs/research/ctm-2027/checkpoint-2026-09-29.md). The full fictional Aurora Coast immersive preview and new privacy-safe XR screenshots are planned; the screenshots below show the existing editorial demo.
+See the [29 September NOVA report and next tasks](docs/research/xr/nova-report-2026-09-29.md), [rehearsal guide](docs/research/xr/README.md), and [CTM research checkpoint](docs/research/ctm-2027/checkpoint-2026-10-06.md). The full fictional Aurora Coast immersive preview is available at `/research/xr/aurora-coast`; it needs no Vault. The earlier editorial demo remains available below.
 
 ## Why Storywalker exists
 
@@ -46,6 +46,22 @@ flowchart LR
 No demo data is persisted during preview. Seeding is explicit. LifeEvents begin pending. Editing an uncertain event window regenerates temporal proposals and retains invalidated proposals as audit history.
 
 ![The Review desk before any decision: eight pending fictional LifeEvents, twelve synthetic tracks, and zero proposed connections](docs/screenshots/aurora-coast-timeline.png)
+
+## Enter the fictional XR rehearsal
+
+Open `/research/xr/aurora-coast` on your local server. All visits, plays, notebook material and decisions are invented; the map uses public geographic anchors.
+
+1. In **TIME**, choose **Next**, then **Approach** and **Open first visible window**. Cross into the chamber and return to the same corridor.
+2. In **WORLD**, orbit the geographic baseline. In **MEMORY**, choose **Time-axis view** and move an episode; its geographic ghost remains visible.
+3. Inspect the source desk: an ambiguous calendar fragment stays pending, a refused association stays excluded, and an empty listening window remains sparse.
+4. Activate the fictional sound choices, then use **Sound & samples** to audition. Sound requires an explicit action; the sample palette is local Kenney CC0 material, not Spotify audio.
+5. Download the current scene to preserve your changes. Reload restores the deterministic fixture; it does not write to your private Vault.
+
+![Aurora Coast TIME passage: invented festival windows become entrances to evidence](docs/screenshots/aurora-xr-time.jpg)
+
+![Aurora Coast MEMORY: fictional visits, elapsed time and visible geographic ghosts](docs/screenshots/aurora-xr-memory.jpg)
+
+The private Are.na experiment lives at `/research/arena-field`: open an authenticated snapshot, orbit its references, hold two together, set others aside and save the composition encrypted. Private channel content is never embedded in these screenshots or the public build.
 
 ## Explore Aurora Coast
 

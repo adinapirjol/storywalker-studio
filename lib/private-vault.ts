@@ -8,7 +8,7 @@ import { inspectAndMinimiseTimeline, minimiseEchoesExport, minimisedGoogleCalend
 import { minimiseGoogleMapsSavedListCsv, minimisedGoogleMapsSavedListSchema, validateGoogleMapsListUrl } from "@/lib/google-maps-list";
 import { buildEvidencePack } from "@/lib/private-signal-engine";
 import { buildLocalRetrievalIndex } from "@/lib/private-retrieval-index";
-import { buildAtlasNow, type AtlasNow } from "@/lib/private-atlas";
+import { buildAtlasNow, isArchivedEvidence, isAtlasSource, type AtlasNow } from "@/lib/private-atlas";
 
 const VAULT_DIR = path.join(process.cwd(), "private-data", "vault");
 const VAULT_PATH = path.join(VAULT_DIR, "storywalker-vault.sqlite");
@@ -177,9 +177,9 @@ export function refreshVaultDerivedViews(vault: OpenVault, acknowledgeAtlasChang
   // the original encrypted source to a local manifest once, then keep chunks
   // out of the always-on retrieval snapshot and stream them only into Atlas.
   ensureTimelineChunks(vault);
-  const records = readVaultRecords(vault);
+  const records = vaultRecordHeaders(vault).filter(record => !isArchivedEvidence(record) && !record.id.startsWith(TIMELINE_CHUNK_PREFIX)).map(record => readVaultRecord(vault, record.id)!);
   const previousAtlas = records.find((record) => record.id === "atlas:now:v1" && record.kind === "atlas")?.payload as AtlasNow | undefined;
-  const retrievalIndex = buildLocalRetrievalIndex(records);
+  const retrievalIndex = buildLocalRetrievalIndex(records.filter(isAtlasSource));
   const derivedAtlas = buildAtlasNow(records, new Date().toISOString(), previousAtlas, { timelineWindows: readTimelineWindows(vault) });
   const atlas = acknowledgeAtlasChanges ? { ...derivedAtlas, acknowledgedImports: derivedAtlas.imports, acknowledgedSourceIds: records.filter((record) => record.kind === "editorial-draft" || record.kind === "capture").map((record) => record.id) } : { ...derivedAtlas, acknowledgedImports: previousAtlas?.acknowledgedImports, acknowledgedSourceIds: previousAtlas?.acknowledgedSourceIds };
   putVaultRecords(vault, [

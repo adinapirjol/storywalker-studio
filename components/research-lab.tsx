@@ -3,6 +3,8 @@ import { CTM_2027_TRACKER, RESEARCH_DIRECTION, RESEARCH_TEMPLATES } from "@/lib/
 import styles from "./research-lab.module.css";
 
 const experiments = [
+  { href: "/research/xr/aurora-coast", name: "Aurora Coast", tag: "Public XR preview · fictional", text: "Walk six invented episode spaces, enter their evidence, compare WORLD and MEMORY, and audition a cleared sample. No Vault needed." },
+  { href: "/research/arena-field", name: "A field of references", tag: "Are.na · private composition", text: "Orbit your channel fragments, hold a pair together, set material aside and save your composition encrypted. The relationship remains yours to author." },
   { href: "/research/linz", name: "Public City, Private Echoes", tag: "Linz · locative prototype", text: "A three-location rehearsal of public place data, private traces and the Author’s right to revise or refuse a proposal." },
   { href: "/research/refusal", name: "The consequence of refusal", tag: "Experiment 01 · editorial agency", text: "Accept, revise or refuse a proposed fragment. Explore how an editorial decision changes the work without turning a proposal into canon." },
   { href: "/research/echo-lab", name: "Locative Echo", tag: "Experiment 02 · movement & consent", text: "A bounded study of movement, uncertainty and consent. Location provides context; the Author decides what it means." },
@@ -22,7 +24,7 @@ export function ResearchLab() {
         <h1>An archive you can enter.<br /><em>A memory you can move.</em></h1>
         <p>Storywalker explores how evidence becomes an artistic space while the traveller remains its Author. Walk through time, encounter the sources, and compose a different arrangement.</p>
         <div className="research-links"><Link className="primary-button" href="/research/xr">Enter Spatial Rehearsal →</Link><a className="outline-button" href="#experiments">Explore the other studies</a></div>
-        <p className={styles.updated}>Research overview · 29 September 2026</p>
+        <p className={styles.updated}>Research overview · 6 October 2026</p>
       </section>
 
       <section className={styles.feature} aria-labelledby="spatial-title">

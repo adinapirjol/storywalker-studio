@@ -1,0 +1,7 @@
+import {z} from 'zod';
+const https=z.string().url().refine(value=>{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password;});
+export const arenaRehearsalSchema=z.object({version:z.literal(1),privacy:z.literal('private'),capturedAt:z.string().datetime(),method:z.string(),channels:z.array(z.object({slug:z.string(),title:z.string(),visibility:z.enum(['private','public','closed']),sourceUrl:https,fragments:z.array(z.object({id:z.number().int(),type:z.string(),title:z.string(),text:z.string().max(3000),position:z.number().int(),connectedAt:z.string().datetime(),url:https,image:https.optional(),source:https.optional(),branchSlug:z.string().optional()})).max(100)})).max(4)});
+export type ArenaRehearsal=z.infer<typeof arenaRehearsalSchema>;
+export const arenaCompositionSchema=z.object({selected:z.array(z.number().int()).max(2),hidden:z.array(z.number().int()).max(100),note:z.string().max(2000)}).strict();
+export type ArenaComposition=z.infer<typeof arenaCompositionSchema>;
+export function validateArenaComposition(value:unknown,snapshot:ArenaRehearsal){const composition=arenaCompositionSchema.parse(value),ids=new Set(snapshot.channels.flatMap(c=>c.fragments.map(f=>f.id)));if([...composition.selected,...composition.hidden].some(id=>!ids.has(id))||new Set(composition.selected).size!==composition.selected.length||new Set(composition.hidden).size!==composition.hidden.length||composition.selected.some(id=>composition.hidden.includes(id)))throw Error('Composition must use distinct visible source fragments.');return composition;}

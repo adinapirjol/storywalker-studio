@@ -53,9 +53,11 @@ The separate Are.na reader is included as an existing shared Vault/research depe
 
 ### Next increment — explicitly requested
 
-- [ ] **Refresh `/atlas` from current Vault evidence.** Reconcile retained sources with the derived Atlas view; show source import time separately from derivation time, coverage and gaps. Include current journey/research evidence where supported. Verify an explicit refresh is idempotent and does not turn plans or contextual labels into visits. Keep source records and review decisions intact.
-- [ ] **Build a full fictional Aurora Coast XR preview.** Use only invented JourneyEpisodes, source windows, listening observations, cultural fragments and Author decisions. Exercise WORLD / TIME / MEMORY, an evidence chamber, ambiguous/empty evidence, refusal, displacement and sound choice without unlocking a private Vault. Make the fixture deterministic and clearly labelled fictional.
-- [ ] **Capture README screenshots from that fictional preview.** Include TIME and MEMORY at the approved oblique angle; inspect every visible label and asset for personal information. Add a direct preview path and a short reproducible walkthrough. Do not sanitise the real scene by merely renaming its labels.
+Implementation update: see the [6 October checkpoint](../ctm-2027/checkpoint-2026-10-06.md). The historical verification counts below describe the September release.
+
+- [x] **Refresh `/atlas` from current Vault evidence.** Reconcile retained sources with the derived Atlas view; show source import time separately from derivation time, coverage and gaps. Include current journey/research evidence where supported. Verify an explicit refresh is idempotent and does not turn plans or contextual labels into visits. Keep source records and review decisions intact.
+- [x] **Build a full fictional Aurora Coast XR preview.** Use only invented JourneyEpisodes, source windows, listening observations, cultural fragments and Author decisions. Exercise WORLD / TIME / MEMORY, an evidence chamber, ambiguous/empty evidence, refusal, displacement and sound choice without unlocking a private Vault. Make the fixture deterministic and clearly labelled fictional.
+- [x] **Capture README screenshots from that fictional preview.** Include TIME and MEMORY at the approved oblique angle; inspect every visible label and asset for personal information. Add a direct preview path and a short reproducible walkthrough. Do not sanitise the real scene by merely renaming its labels.
 
 ### Then — rehearse the artwork
 
