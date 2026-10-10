@@ -35,14 +35,22 @@ Swift coverage is not measured by this job. Do not claim those checks are presen
 
 ## Security analysis
 
-CodeQL default setup scans GitHub Actions, JavaScript/TypeScript, Python, and
-Swift using the default query suite, with a weekly scheduled scan. All four
-languages passed the initial setup run on 10 October 2026. The branch rules require CodeQL results and
+The CodeQL workflow scans GitHub Actions, JavaScript/TypeScript, Python, and
+Swift using the default query suite on PRs, pushes to main, and a weekly schedule.
+The branch rules require CodeQL results and
 block errors and high-or-higher security findings. CodeQL is separate from code
 coverage and from the `quality` job's privacy audits.
 
-Before changing the rules or query configuration, verify the setup run finishes
-successfully for every configured language. Do not bypass a failed scan to merge.
+Swift uses an explicit simulator scheme build with signing disabled, followed by
+the fictional package tests. A build failure fails the job. Default setup's
+autobuild returned a green result despite a failed iPhone target build and only
+17 of 23 Swift files scanned, so a green badge alone was insufficient. The scheme
+build resolves the local CollectorCore package and includes the embedded Watch
+app; no app is installed or device data accessed. Default setup is disabled to
+avoid conflicting uploads from two configurations.
+
+Before changing the rules or query configuration, verify each analysis and its
+source-file coverage. Do not bypass a failed scan to merge.
 
 The `quality` job also runs the fictional demo, typecheck, lint, production build,
 public-repository audit, and generated-browser-bundle privacy audit. Repository
