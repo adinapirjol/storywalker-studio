@@ -1,4 +1,4 @@
-import { NovaDirector } from "@/components/nova-director";
+import { NovaDirector } from "@/components/studio/nova-director";
 
 export const dynamic = "force-dynamic";
 

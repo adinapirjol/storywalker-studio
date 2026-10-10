@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authorizationUrl, localSpotifyReturnUrl, newOAuthState, rememberSpotifyOAuthState, spotifyEnvironmentSchema } from "@/lib/spotify-server";
+import { authorizationUrl, localSpotifyReturnUrl, newOAuthState, rememberSpotifyOAuthState, spotifyEnvironmentSchema } from "@/lib/music/spotify-server";
 
 export const runtime = "nodejs";
 

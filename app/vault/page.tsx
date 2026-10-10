@@ -1,4 +1,4 @@
-import { PrivateVault } from "@/components/private-vault";
+import { PrivateVault } from "@/components/vault/private-vault";
 
 export const dynamic = "force-dynamic";
 

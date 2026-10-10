@@ -1,4 +1,4 @@
-import { ScenarioStudio } from "@/components/scenario-studio";
+import { ScenarioStudio } from "@/components/studio/scenario-studio";
 
 export const dynamic = "force-dynamic";
 

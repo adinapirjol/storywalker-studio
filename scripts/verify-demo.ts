@@ -1,6 +1,6 @@
 import expected from "../examples/aurora-coast/expected-review-state.demo.json";
-import { seedAuroraCoast, validateAuroraCoastDemo } from "../lib/demo";
-import { applyGuidedReview } from "../lib/review-state";
+import { seedAuroraCoast, validateAuroraCoastDemo } from "../lib/studio/demo";
+import { applyGuidedReview } from "../lib/studio/review-state";
 
 const preview = validateAuroraCoastDemo();
 const result = applyGuidedReview(seedAuroraCoast());

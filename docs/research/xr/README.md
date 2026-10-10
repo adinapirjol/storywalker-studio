@@ -64,7 +64,7 @@ Use **Download current scene** to export the displayed scene with all Accept/Rec
 
 ### Journey episode evidence
 
-`lib/journey-episode.ts` defines `JourneyEpisode`. Optional `journeyEpisodes` on
+`lib/xr/journey-episode.ts` defines `JourneyEpisode`. Optional `journeyEpisodes` on
 an XR scene round-trip through the existing scene/review import and export.
 Older scenes and their cue decisions are unchanged. This is a model and join
 foundation; it does not fetch Notion pages or generate physical routes.

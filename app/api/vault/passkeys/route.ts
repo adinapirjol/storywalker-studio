@@ -3,9 +3,10 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import type { AuthenticationResponseJSON, RegistrationResponseJSON } from "@simplewebauthn/server";
-import { vaultKeyIdentity, verifyVaultKey } from "@/lib/private-vault";
-import { createVaultSession, readVaultSession, VAULT_SESSION_COOKIE, vaultSessionCookie } from "@/lib/vault-session";
-import { authenticationOptions, changePasskeys, decodePrf, passkeyCeremonies, passkeyOrigin, readPasskeys, registrationOptions, requirePasskeyOrigin, unwrapVaultKey, verifyAssertion, verifyRegistration, wrapVaultKey } from "@/lib/vault-passkeys";
+import { vaultKeyIdentity, verifyVaultKey } from "@/lib/vault/private-vault";
+import { assertVaultSessionActive, rotateVaultSession, readVaultSession, VAULT_SESSION_COOKIE, vaultSessionCookie, vaultSessionFailure } from "@/lib/vault/vault-session";
+import { authenticationOptions, changePasskeys, decodePrf, passkeyAddressStatus, passkeyCeremonies, passkeyOrigin, readPasskeys, registrationOptions, requirePasskeyOrigin, unwrapVaultKey, verifyAssertion, verifyRegistration, wrapVaultKey } from "@/lib/vault/vault-passkeys";
+import { boundedText } from "@/lib/http/context-request";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,25 +19,26 @@ const bodySchema = z.object({ action: z.enum(["status", "begin-enroll", "verify-
 function json(value: unknown, status = 200) { return NextResponse.json(value, { status, headers: { "Cache-Control": "no-store", "Pragma": "no-cache" } }); }
 async function boundedBody(request: Request) {
   if (request.headers.get("content-type")?.split(";")[0] !== "application/json") throw new Error("JSON required.");
-  const reader = request.body?.getReader(); if (!reader) throw new Error("Missing request.");
-  const chunks: Uint8Array[] = []; let size = 0;
-  try { for (;;) { const { done, value } = await reader.read(); if (done) break; size += value.byteLength; if (size > 65_536) { await reader.cancel(); throw new Error("Request too large."); } chunks.push(value); } }
-  finally { reader.releaseLock(); }
-  return bodySchema.parse(JSON.parse(Buffer.concat(chunks).toString("utf8")));
+  return bodySchema.parse(JSON.parse(await boundedText(request, 65_536)));
 }
 export async function POST(request: Request) {
   let secret: Buffer | undefined, key: Buffer | undefined;
   try {
+    const address = passkeyAddressStatus(request);
+    const body = await boundedBody(request);
+    if (body.action === "status" && !address.supportedOrigin) return json({ ...address, credentials: [] });
     requirePasskeyOrigin(request);
-    const body = await boundedBody(request), jar = await cookies();
+    const jar = await cookies();
     const sessionToken = jar.get(VAULT_SESSION_COOKIE)?.value;
     const session = readVaultSession(sessionToken);
     // Keep one transient copy and erase it before returning, including errors.
     key = session?.key;
     const vaultId = await vaultKeyIdentity(), { origin } = passkeyOrigin();
     const available = () => readPasskeys().filter((item) => item.vaultId === vaultId && item.origin === origin);
-    if (body.action === "status") return json({ credentials: available().map(({ id, label, createdAt }) => ({ id, label, createdAt })), origin });
-    if (["begin-enroll", "verify-registration", "finish-enroll", "remove"].includes(body.action) && (!session || !sessionToken)) return json({ error: "Unlock the Vault before adding or removing a passkey." }, 401);
+    if (body.action === "status") return json({ credentials: available().map(({ id, label, createdAt }) => ({ id, label, createdAt })), ...address });
+    const requiresSession = ["begin-enroll", "verify-registration", "finish-enroll", "remove"].includes(body.action);
+    if (requiresSession && (!session || !sessionToken)) return json({ code: "VAULT_LOCKED", error: "Unlock the Vault before adding or removing a passkey." }, 401);
+    if (requiresSession) assertVaultSessionActive(sessionToken);
     if (body.action === "remove") {
       if (!body.credentialId) throw new Error("Missing credential.");
       changePasskeys((items) => items.filter((item) => !(item.id === body.credentialId && item.vaultId === vaultId && item.origin === origin)));
@@ -52,6 +54,7 @@ export async function POST(request: Request) {
       if (!body.recoveryAcknowledged || !body.label) return json({ error: "Keep your recovery passphrase and give this passkey a name first." }, 400);
       if (readPasskeys().length >= 10) return json({ error: "Remove an unused passkey before adding another." }, 400);
       const options = await registrationOptions(vaultId, available());
+      assertVaultSessionActive(sessionToken);
       const ceremonyId = passkeyCeremonies.put({ kind: "register", challenge: options.challenge, browser, vaultId, origin, sessionToken: sessionToken!, label: body.label });
       return reply({ options, ceremonyId });
     }
@@ -72,6 +75,7 @@ export async function POST(request: Request) {
       const credential = { id: result.registrationInfo.credential.id, publicKey: Buffer.from(result.registrationInfo.credential.publicKey).toString("base64url"), counter: result.registrationInfo.credential.counter,
         vaultId, origin, label: ceremony.label, createdAt: new Date().toISOString(), salt: randomBytes(32).toString("base64url") };
       const { options, salt } = await authenticationOptions(credential);
+      assertVaultSessionActive(sessionToken);
       const ceremonyId = passkeyCeremonies.put({ kind: "enroll", challenge: options.challenge, browser, vaultId, origin, credential, sessionToken: sessionToken! });
       return reply({ options, salt, ceremonyId });
     }
@@ -86,24 +90,26 @@ export async function POST(request: Request) {
       const wrapped = wrapVaultKey(key, secret, credential);
       const roundTrip = unwrapVaultKey(secret, { ...credential, wrapped });
       try { await verifyVaultKey(roundTrip); } finally { roundTrip.fill(0); }
-      if (!readVaultSession(sessionToken)) throw new Error("Session expired.");
+      assertVaultSessionActive(sessionToken);
+      request.signal.throwIfAborted();
       changePasskeys((items) => { if (items.some((item) => item.id === credential.id)) throw new Error("Already enrolled."); return [...items, { ...credential, counter, wrapped }]; });
       return reply({ enrolled: true });
     }
     key?.fill(0); key = unwrapVaultKey(secret, ceremony.credential);
     await verifyVaultKey(key);
     // Check the fresh store before granting access: removal/counter changes invalidate in-flight assertions.
+    request.signal.throwIfAborted();
     changePasskeys((items) => {
       const current = items.find((item) => item.id === credential.id && item.vaultId === vaultId && item.origin === origin);
       if (!current || JSON.stringify(current) !== JSON.stringify(credential)) throw new Error("Passkey changed. Start again.");
       return items.map((item) => item === current ? { ...item, counter } : item);
     });
-    const unlocked = createVaultSession(key);
+    const unlocked = rotateVaultSession(key, sessionToken);
     const result = reply({ session: { active: true, expiresAt: unlocked.expiresAt } });
     result.cookies.set(vaultSessionCookie(unlocked.token, unlocked.expiresAt));
     return result;
-  } catch {
+  } catch (error) {
     // Never include library diagnostics, PRF material, or request contents in logs or responses.
-    return json({ error: "Passkey verification did not complete. Retry from the Vault, or unlock with your recovery passphrase. Nothing was migrated." }, 400);
+    return vaultSessionFailure(error) ?? json({ error: "Passkey verification did not complete. Retry from the Vault, or unlock with your recovery passphrase. Nothing was migrated." }, 400);
   } finally { secret?.fill(0); key?.fill(0); }
 }

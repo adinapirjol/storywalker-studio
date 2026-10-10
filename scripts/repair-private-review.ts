@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { isAbsolute, resolve } from "node:path";
 import { z } from "zod";
-import { collapseExactDuplicateDecisions, migrateStagedRecovery, setCurrentAuthorCorrection } from "../lib/private-recovery";
+import { collapseExactDuplicateDecisions, migrateStagedRecovery, setCurrentAuthorCorrection } from "../lib/evidence/private-recovery";
 
 const manifestSchema = z.object({ momentId: z.string().min(1), backupSha256: z.string().regex(/^[a-f0-9]{64}$/u), effective: z.object({ dateLabel: z.string().min(1), precision: z.string().min(1), factualSummary: z.array(z.string()).min(1), unknowns: z.array(z.string()), retainedDetails: z.array(z.string()) }) });
 const args = process.argv.slice(2); const index = args.indexOf("--manifest"); const manifestPath = index >= 0 ? args[index + 1] : undefined;

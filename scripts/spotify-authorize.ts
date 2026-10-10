@@ -6,7 +6,7 @@ import {
   spotifyEnvironmentSchema,
   verifyOAuthState,
   writeSpotifyToken,
-} from "../lib/spotify-server";
+} from "../lib/music/spotify-server";
 
 const environment = spotifyEnvironmentSchema.parse(process.env);
 const redirect = new URL(environment.SPOTIFY_REDIRECT_URI);

@@ -16,6 +16,10 @@ Storywalker Studio treats privacy as a data-flow rule, not a decorative label.
 | Linz raw Spotify/Timeline/private-memory inputs | No | Never | Never |
 | Linz minimised trace derivative | No | Local adapter only after Author selection | Never by default |
 | Encrypted Vault / private scenarios / editorial candidates | No | Local Vault only during an active browser-wide local session | No automatic export or promotion |
+| Native HealthKit queue and reviewed BODY evidence | No | Explicit local collection/review | Raw observations stay local; encrypted paired delivery is separate from review |
+| Temporary incoming Watch preview | No | Active local viewer and unlocked Vault | Ephemeral paired feed; not automatically accepted evidence |
+| Reviewed-health aggregate summaries | No | Current session enable plus explicit per-batch export consent | Only accepted surviving evidence; maximum BPM, counts, source category, opaque summary ID and app receipt range sent to the dedicated EU Logfire project |
+| Unreviewed live research telemetry | No | Separate explicit current-session consent, off by default | Fresh preview threshold candidates only; historical pending batches never feed it |
 
 Aurora Coast is labelled **Fictional demonstration data** throughout the application and documentation.
 
@@ -39,11 +43,17 @@ Source events begin pending. Temporal connections also begin pending. Confirmati
 - exported Markdown;
 - Author decisions.
 
-The application has no analytics, cloud persistence, or hosted authentication. A separately configured Director model can be called only after the Author selects source records and explicitly consents; its proposal is non-canonical, unsaved by default, and is not sent when no local model key is configured.
+The application has no default analytics or hosted authentication. Optional research operation metrics and separately opted-in health aggregates can be exported to configured Logfire projects. A separately configured Director model can be called only after the Author selects source records and explicitly consents; its proposal is non-canonical, unsaved by default, and is not sent when no local model key is configured. Health records and receiver credentials are excluded from general Atlas/Director source selection.
+
+Health aggregates remain sensitive personal data. Maximum BPM and app receipt timestamps are not anonymous merely because individual readings, device/source identifiers, location and notes are omitted. The summary feed runs independently of evidence acceptance, because it describes app-received data. Disabling it cancels pending work and requests; it cannot retract a request already received by Logfire or delete older exports. Export credentials and the enable flag live only in ignored, owner-only `.logfire/storywalker/` files. During the development freeze the summary feed is off.
 
 ## Vault, Atlas, and Scenario Studio
 
 The Vault passphrase is never stored in the browser. Unlocking creates a 15-minute, absolute local browser session: the browser receives an opaque HTTP-only, same-site cookie while the key is held only in the local server process. The session does not slide, can be explicitly locked, and is invalidated by a server restart.
+
+Private read routes check the loopback Host and reject cross-site browser requests; writes additionally require a matching Origin. Recovery review also requires an unlocked Vault, even though its older ignored staging document is plaintext on disk. Vault payloads are encrypted, but record IDs, kinds, timestamps and hashes are plaintext SQLite metadata. File permissions and disk encryption remain part of local protection; this does not isolate data from another program running as the same macOS user.
+
+Owned session keys are overwritten on explicit lock or when expiry is checked, and open Vault keys are overwritten on close. This is best-effort buffer cleanup, not a guarantee that JavaScript strings, temporary runtime copies or OS memory contain no remnants. Concurrent saves detect changed disk snapshots and reject stale writes instead of replacing newer evidence. This protects the current single-server workflow; simultaneous writers in separate processes still require a shared lock before that deployment mode is supported.
 
 Atlas is a private derived view of retained source data. Its evidence lanes and place readings are retrieval aids: overlap is not causality, a saved place is not evidence of a visit or commitment, and a Timeline window is not autobiographical truth.
 

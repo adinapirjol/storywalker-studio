@@ -1,27 +1,31 @@
-import {researchSessionSchema,researchPayload} from "@/lib/research-session";
-import { enrichWindowEvidence, eligibleArchiveRecord } from "@/lib/xr-enrichment";
-import { vaultRecordHeaders } from "@/lib/private-vault";
-import { calendarContextForEpisodes } from "@/lib/journey-identifiers";
-import { groundJourney } from "@/lib/journey-grounding";
-import { readTimelineWindows } from "@/lib/private-vault";
-import { mergeLastFmDelta } from "@/lib/lastfm-delta";
-import { minimisedLastFmHistorySchema } from "@/lib/private-ingest";
+import {isLocalSameOrigin,isLocalRead} from "@/lib/http/local-origin";
+import {boundedText} from "@/lib/http/context-request";
+import {researchSessionSchema,researchPayload} from "@/lib/research/research-session";
+import { enrichWindowEvidence, eligibleArchiveRecord } from "@/lib/xr/xr-enrichment";
+import { vaultRecordHeaders } from "@/lib/vault/private-vault";
+import { calendarContextForEpisodes } from "@/lib/xr/journey-identifiers";
+import { groundJourney } from "@/lib/xr/journey-grounding";
+import { readTimelineWindows } from "@/lib/vault/private-vault";
+import { mergeLastFmDelta } from "@/lib/music/lastfm-delta";
+import { minimisedLastFmHistorySchema } from "@/lib/evidence/private-ingest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import { analyseListening } from "@/lib/xr-listening";
-import { buildListeningDraft, validateDraftReview, xrReviewSchema } from "@/lib/xr-draft";
-import { xrSceneSchema } from "@/lib/xr-scene";
-import { readVaultRecord } from "@/lib/private-vault";
+import { analyseListening } from "@/lib/xr/xr-listening";
+import { buildListeningDraft, validateDraftReview, xrReviewSchema } from "@/lib/xr/xr-draft";
+import { xrSceneSchema } from "@/lib/xr/xr-scene";
+import { readVaultRecord } from "@/lib/vault/private-vault";
 import { z } from "zod";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { closeVault, importEditorCut, importGoogleMapsSharedList, importLastFmHistory, importPreparedGoogleMapsSelectedList, importPreparedGoogleTakeout, importPrivateEditorialDraft, importSelectedPrivateSource, initialiseVault, migrateRecoveryIntoVault, openVault, openVaultWithKey, putVaultRecords, readAtlasNow, readPublicDrafts, readScenarioStudio, rebuildVaultRetrievalIndex, refreshVaultDerivedViews, retrieveVaultEvidence, searchVault, vaultDriverReady, vaultExists, vaultImportMarkers, vaultSummary, type OpenVault, type VaultRecord } from "@/lib/private-vault";
-import { prepareSideQuestVaultImport } from "@/lib/side-quest-import";
-import { buildDirectorModelBrief, buildDirectorPreview } from "@/lib/nova-director";
-import { lastFmEnvironmentSchema, readLastFmScrobbles } from "@/lib/lastfm-server";
-import { privateEditorialCandidates, readPrivateEditorialCandidate } from "@/lib/private-editorial-candidates";
-import { createVaultSession, deleteVaultSession, readVaultSession, VAULT_SESSION_COOKIE, vaultSessionCookie } from "@/lib/vault-session";
+import { closeVault, importEditorCut, importGoogleMapsSharedList, importLastFmHistory, importPreparedGoogleMapsSelectedList, importPreparedGoogleTakeout, importPrivateEditorialDraft, importSelectedPrivateSource, initialiseVault, migrateRecoveryIntoVault, openVault, openVaultWithKey, putVaultRecords, readAtlasNow, readPublicDrafts, readScenarioStudio, rebuildVaultRetrievalIndex, refreshVaultDerivedViews, retrieveVaultEvidence, searchVault, vaultDriverReady, vaultExists, vaultImportMarkers, vaultSummary, type OpenVault, type VaultRecord } from "@/lib/vault/private-vault";
+import { prepareSideQuestVaultImport } from "@/lib/evidence/side-quest-import";
+import { buildDirectorModelBrief, buildDirectorPreview } from "@/lib/studio/nova-director";
+import { lastFmEnvironmentSchema, readLastFmScrobbles } from "@/lib/music/lastfm-server";
+import { privateEditorialCandidates, readPrivateEditorialCandidate } from "@/lib/evidence/private-editorial-candidates";
+import { assertVaultSessionActive, rotateVaultSession, deleteVaultSession, readVaultSession, VAULT_SESSION_COOKIE, vaultSessionCookie, vaultSessionFailure } from "@/lib/vault/vault-session";
+import { setVaultAccessGuard } from "@/lib/vault/private-vault";
+import { VaultWriteBusyError, VaultWriteConflictError } from "@/lib/vault/vault-file-lock";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -121,32 +125,54 @@ function sessionResponse(body: unknown, token: string, expiresAt: string) {
   return response;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  if (!isLocalRead(request)) return noStore({code:"LOCAL_ORIGIN_REQUIRED"},403);
   const store = await cookies();
-  const session = readVaultSession(store.get(VAULT_SESSION_COOKIE)?.value);
+  const token = store.get(VAULT_SESSION_COOKIE)?.value;
+  const session = readVaultSession(token);
   let summary;
   let coverage;
   if (session) {
-    const vault = await openVaultWithKey(session.key);
+    const vault = await openVaultWithKey(session.key).finally(()=>session.key.fill(0));
     try {
+      assertVaultSessionActive(token);
       summary = vaultSummary(vault);
       const atlas = readAtlasNow(vault) as { derivedAt?: string; imports?: unknown[] } | null;
       coverage = atlas && typeof atlas.derivedAt === "string" && Array.isArray(atlas.imports) ? { derivedAt: atlas.derivedAt, imports: atlas.imports } : undefined;
+    } catch (error) {
+      const denied = vaultSessionFailure(error);
+      if (denied) return denied;
+      throw error;
     } finally {
       closeVault(vault);
     }
   }
-  return noStore({ exists: vaultExists(), imports: await vaultImportMarkers(), summary, coverage, session: session ? { active: true, expiresAt: session.expiresAt } : { active: false } });
+  const imports = await vaultImportMarkers();
+  try { if (session) assertVaultSessionActive(token); }
+  catch (error) {
+    const denied = vaultSessionFailure(error);
+    if (denied) return denied;
+    throw error;
+  }
+  return noStore({ exists: vaultExists(), imports, summary, coverage, session: session ? { active: true, expiresAt: session.expiresAt } : { active: false } });
 }
 
 export async function POST(request: Request) {
+  if (!isLocalSameOrigin(request)) return noStore({code:"LOCAL_ORIGIN_REQUIRED"},403);
   try {
-    const body = requestSchema.parse(await request.json());
+    let raw: string;
+    try { raw = await boundedText(request, 16_000_000); }
+    catch { return noStore({error:"Request too large or malformed."},413); }
+    const body = requestSchema.parse(JSON.parse(raw));
+    if (body.passphrase !== undefined && body.action !== "unlock" && body.action !== "initialise") {
+      return noStore({ code: "PASSPHRASE_ACTION_NOT_SUPPORTED" }, 400);
+    }
     const store = await cookies();
     const sessionToken = store.get(VAULT_SESSION_COOKIE)?.value;
     if (body.action === "probe") return Response.json({ driverReady: await vaultDriverReady() }, { headers: { "Cache-Control": "no-store" } });
     if (body.action === "session-status") {
       const session = readVaultSession(sessionToken);
+      session?.key.fill(0);
       return noStore({ session: session ? { active: true, expiresAt: session.expiresAt } : { active: false } });
     }
     if (body.action === "lock-session") {
@@ -160,7 +186,8 @@ export async function POST(request: Request) {
       const created = await initialiseVault(body.passphrase);
       const vault = await openVault(body.passphrase);
       try {
-        const session = createVaultSession(vault.key);
+        request.signal.throwIfAborted();
+        const session = rotateVaultSession(vault.key, sessionToken);
         return sessionResponse({ created, summary: vaultSummary(vault), session: { active: true, expiresAt: session.expiresAt } }, session.token, session.expiresAt);
       } finally { closeVault(vault); }
     }
@@ -169,22 +196,27 @@ export async function POST(request: Request) {
     let newSession: { token: string; expiresAt: string } | undefined;
     if (body.passphrase) {
       vault = await openVault(body.passphrase);
-      newSession = createVaultSession(vault.key);
     } else {
       const session = readVaultSession(sessionToken);
       if (!session) return noStore({ code: "VAULT_LOCKED", error: "Unlock your Vault to continue. Your unsaved work is still here." }, 401);
-      vault = await openVaultWithKey(session.key);
+      vault = await openVaultWithKey(session.key).finally(()=>session.key.fill(0));
     }
     try {
+      request.signal.throwIfAborted();
+      if (body.passphrase) newSession = rotateVaultSession(vault.key, sessionToken);
+      const assertAccess = () => assertVaultSessionActive(newSession?.token ?? sessionToken);
+      assertAccess();
+      setVaultAccessGuard(vault, assertAccess);
       if (body.action === "unlock") {
         if (!newSession) {
           const session = readVaultSession(sessionToken);
+          session?.key.fill(0);
           return noStore({ summary: vaultSummary(vault), session: { active: true, expiresAt: session?.expiresAt } });
         }
         return sessionResponse({ summary: vaultSummary(vault), session: { active: true, expiresAt: newSession.expiresAt } }, newSession.token, newSession.expiresAt);
       }
       if (body.action === "save-research-session" || body.action === "list-research-sessions") {
-        if(request.headers.get("origin") !== new URL(request.url).origin) return noStore({error:"Use the local Storywalker page."},403);
+        if(!isLocalSameOrigin(request)) return noStore({error:"Use the local Storywalker page."},403);
         const draft=readVaultRecord(vault,"xr:spatial-draft:v1");
         const scene=draft?xrSceneSchema.parse((draft.payload as Record<string,unknown>).scene):undefined;
         if(body.action === "list-research-sessions") return noStore({records:vaultRecordHeaders(vault).filter(r=>r.id.startsWith("research-session:")).map(r=>readVaultRecord(vault,r.id)),windows:(scene?.journeyEpisodes??[]).map(e=>({id:e.id,label:e.label,start:e.start}))});
@@ -195,7 +227,7 @@ export async function POST(request: Request) {
         return noStore({id,savedAt,derived:refreshVaultDerivedViews(vault)});
       }
       if (body.action === "enrich-xr-evidence") {
-        if (request.headers.get("origin") !== new URL(request.url).origin) return noStore({error:"Use the local Storywalker page."},403);
+        if (!isLocalSameOrigin(request)) return noStore({error:"Use the local Storywalker page."},403);
         const existing=readVaultRecord(vault,"xr:spatial-draft:v1");
         if(!existing||!body.xrReview)return noStore({error:"Load your private scene first."},400);
         const previous=existing.payload as Record<string,unknown>;
@@ -208,7 +240,7 @@ export async function POST(request: Request) {
         return noStore({xrDraft:payload});
       }
       if (body.action === "enrich-xr-context") {
-        if (request.headers.get("origin") !== new URL(request.url).origin) return noStore({ error: "Use the local Storywalker page." }, 403);
+        if (!isLocalSameOrigin(request)) return noStore({ error: "Use the local Storywalker page." }, 403);
         const existing = readVaultRecord(vault, "xr:spatial-draft:v1");
         if (!existing || !body.xrReview) return noStore({ error: "Load your geographic scene first." }, 400);
         const previous = existing.payload as Record<string, unknown>;
@@ -224,7 +256,7 @@ export async function POST(request: Request) {
         return noStore({ xrDraft: payload });
       }
       if (body.action === "ground-xr-journey") {
-        if (request.headers.get("origin") !== new URL(request.url).origin) return noStore({ error: "Use the local Storywalker page." }, 403);
+        if (!isLocalSameOrigin(request)) return noStore({ error: "Use the local Storywalker page." }, 403);
         const existing = readVaultRecord(vault, "xr:spatial-draft:v1");
         if (!existing || !body.xrReview) return noStore({ error: "Load your accepted scene first." }, 400);
         const previous = existing.payload as Record<string, unknown>;
@@ -247,7 +279,7 @@ export async function POST(request: Request) {
       if (body.action === "sync-lastfm-delta") {
         const currentDraft = readVaultRecord(vault, "xr:spatial-draft:v1");
         if ((currentDraft?.payload as { scene?: { journeyLayout?: unknown } } | undefined)?.scene?.journeyLayout) return noStore({ error: "This journey revision is grounded. Keep it intact; a new source interval requires a separately reviewed journey revision." }, 400);
-        if (request.headers.get("origin") !== new URL(request.url).origin) return noStore({ error: "Use the local Storywalker page." }, 403);
+        if (!isLocalSameOrigin(request)) return noStore({ error: "Use the local Storywalker page." }, 403);
         if (!body.deltaUsername) return noStore({ error: "Enter the source account username for this one-time delta read." }, 400);
         const environment = lastFmEnvironmentSchema.parse(process.env);
         const config = z.object({ from: z.string(), to: z.string(), toExclusive: z.string().datetime({ offset: true }), timeZone: z.string(), scene: xrSceneSchema }).parse(JSON.parse(readFileSync(join(process.cwd(), "private-data", "xr", "first-scene.private.json"), "utf8")));
@@ -263,10 +295,13 @@ export async function POST(request: Request) {
         if (highWater >= end) return noStore({ delta: { added: 0, total: history.records.length, message: "The requested interval is already covered by a completed delta read." } });
         const from = new Date(highWater - 1000).toISOString(), to = new Date(Math.floor(end / 1000) * 1000).toISOString();
         const raw = await readLastFmScrobbles(environment, { username: body.deltaUsername, from, to });
+        assertAccess();
         const importedAt = new Date().toISOString();
         // Re-open after network I/O so unrelated writes during pagination are preserved.
         const fresh = await openVaultWithKey(vault.key);
         try {
+          assertAccess();
+          setVaultAccessGuard(fresh, assertAccess);
           const latestSource = readVaultRecord(fresh, original.id);
           if (!latestSource) throw new Error("The source disappeared during the delta read; nothing was merged.");
           const previous = latestSource.payload as Record<string, unknown>;
@@ -292,8 +327,7 @@ export async function POST(request: Request) {
         } finally { closeVault(fresh); }
       }
       if (body.action === "prepare-xr-draft" || body.action === "save-xr-review") {
-        const origin = request.headers.get("origin");
-        if (!origin || origin !== new URL(request.url).origin) return noStore({ error: "Use the local Storywalker page for this action." }, 403);
+        if (!isLocalSameOrigin(request)) return noStore({ error: "Use the local Storywalker page for this action." }, 403);
         const recordId = "xr:spatial-draft:v1";
         const existing = readVaultRecord(vault, recordId);
         if (body.action === "save-xr-review") {
@@ -349,7 +383,8 @@ export async function POST(request: Request) {
         const brief = buildDirectorModelBrief(preview, selection.sourceIds);
         const response = await fetch("https://api.openai.com/v1/responses", { method: "POST", headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, body: JSON.stringify({ model: process.env.NOVA_DIRECTOR_MODEL ?? "gpt-5", store: false, input: JSON.stringify(brief) }) });
         const result = await response.json() as { error?: { message?: string }; output_text?: string };
-        if (!response.ok || !result.output_text) return Response.json({ error: result.error?.message ?? "The Director model did not return a proposal." }, { status: 502 });
+        assertAccess();
+        if (!response.ok || !result.output_text) return noStore({ error: "The Director model did not return a proposal." }, 502);
         return Response.json({ proposal: { text: result.output_text, sourceIds: selection.sourceIds, externalModelCalled: true, canonical: false, saved: false } }, { headers: { "Cache-Control": "no-store" } });
       }
       if (body.action === "create-director-thread") {
@@ -385,6 +420,7 @@ export async function POST(request: Request) {
         const environment = lastFmEnvironmentSchema.safeParse(process.env);
         if (!environment.success) return Response.json({ error: "Last.fm is not configured on this local machine. Add LASTFM_API_KEY to your local .env.local, then restart Storywalker." }, { status: 400 });
         const raw = await readLastFmScrobbles(environment.data, lastFm);
+        assertAccess();
         return Response.json({ import: { ...importLastFmHistory(vault, raw), pagination: raw.pagination }, derived: refreshVaultDerivedViews(vault), summary: vaultSummary(vault) }, { headers: { "Cache-Control": "no-store" } });
       }
       if (body.action === "import-google-maps-list") {
@@ -416,5 +452,5 @@ export async function POST(request: Request) {
       putVaultRecords(vault, [record]);
       return Response.json({ captured: { id: record.id, capturedAt }, derived: refreshVaultDerivedViews(vault), summary: vaultSummary(vault) }, { headers: { "Cache-Control": "no-store" } });
     } finally { closeVault(vault); }
-  } catch (error) { return Response.json({ error: error instanceof Error ? error.message : "Local Vault request failed." }, { status: 400 }); }
+  } catch (error) { return vaultSessionFailure(error) ?? noStore({ error: error instanceof VaultWriteBusyError || error instanceof VaultWriteConflictError ? error.message : "Local Vault request failed. Check your inputs and unlock state before retrying." }, 400); }
 }

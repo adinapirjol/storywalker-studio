@@ -1,6 +1,8 @@
 # Dependencies and framework output
 /node_modules/
+/next-env.d.ts
 /.next/
+/.next-review/
 /out/
 /coverage/
 
@@ -20,6 +22,13 @@
 /private-spotify-exports/
 /*.private.json
 **/*.private.json
+**/*.private.md
+**/*.private.txt
+**/*.local.xcconfig
+*.mobileprovision
+*.provisionprofile
+*.p12
+*.p8
 /exports/private-inputs/
 /exports/*-seed-prep/
 /PLAN.md
@@ -38,3 +47,11 @@
 
 # Regenerated public Are.na snapshot (never credentials)
 /.arena/
+
+# Local Logfire credentials and metadata
+/.logfire/
+
+# Regenerable Python bytecode and test caches, including root scripts.
+__pycache__/
+*.py[cod]
+.pytest_cache/

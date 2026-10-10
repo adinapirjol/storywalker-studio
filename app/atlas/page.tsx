@@ -1,4 +1,4 @@
-import { AtlasNow } from "@/components/atlas-now";
+import { AtlasNow } from "@/components/studio/atlas-now";
 
 export const dynamic = "force-dynamic";
 

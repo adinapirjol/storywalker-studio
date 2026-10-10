@@ -1,0 +1,386 @@
+{
+  "$defs": {
+    "Activity": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "activity",
+          "default": "activity",
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 100,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "label"
+      ],
+      "title": "Activity",
+      "type": "object"
+    },
+    "Heart": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "heart_rate",
+          "default": "heart_rate",
+          "title": "Kind",
+          "type": "string"
+        },
+        "value": {
+          "exclusiveMinimum": 0,
+          "maximum": 300,
+          "title": "Value",
+          "type": "number"
+        },
+        "unit": {
+          "const": "bpm",
+          "default": "bpm",
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "value",
+        "unit"
+      ],
+      "title": "Heart",
+      "type": "object"
+    },
+    "Listening": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "listening",
+          "default": "listening",
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 100,
+          "title": "Label",
+          "type": "string"
+        },
+        "policy": {
+          "enum": [
+            "original",
+            "author_marker",
+            "fictional"
+          ],
+          "title": "Policy",
+          "type": "string"
+        },
+        "tempo_bpm": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 400,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tempo Bpm"
+        }
+      },
+      "required": [
+        "kind",
+        "label",
+        "policy",
+        "tempo_bpm"
+      ],
+      "title": "Listening",
+      "type": "object"
+    },
+    "Location": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "location",
+          "default": "location",
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 100,
+          "title": "Label",
+          "type": "string"
+        },
+        "accuracy_m": {
+          "minimum": 0,
+          "title": "Accuracy M",
+          "type": "number"
+        },
+        "city": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "City"
+        },
+        "country": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Country"
+        }
+      },
+      "required": [
+        "kind",
+        "label",
+        "accuracy_m",
+        "city",
+        "country"
+      ],
+      "title": "Location",
+      "type": "object"
+    },
+    "Marker": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "marker",
+          "default": "marker",
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 200,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "label"
+      ],
+      "title": "Marker",
+      "type": "object"
+    },
+    "Observation": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "source_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_type": {
+          "default": "fictional",
+          "enum": [
+            "fictional",
+            "apple_health_export",
+            "healthkit",
+            "core_location",
+            "author",
+            "original_audio"
+          ],
+          "title": "Source Type",
+          "type": "string"
+        },
+        "source_revision": {
+          "default": "1",
+          "maxLength": 100,
+          "title": "Source Revision",
+          "type": "string"
+        },
+        "device_revision": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Device Revision"
+        },
+        "event_start": {
+          "format": "date-time",
+          "title": "Event Start",
+          "type": "string"
+        },
+        "event_end": {
+          "format": "date-time",
+          "title": "Event End",
+          "type": "string"
+        },
+        "received_at": {
+          "format": "date-time",
+          "title": "Received At",
+          "type": "string"
+        },
+        "original_offset": {
+          "maxLength": 30,
+          "title": "Original Offset",
+          "type": "string"
+        },
+        "semantics": {
+          "enum": [
+            "measurement",
+            "interval",
+            "author_marker"
+          ],
+          "title": "Semantics",
+          "type": "string"
+        },
+        "acquisition": {
+          "enum": [
+            "simulated",
+            "historical",
+            "live"
+          ],
+          "title": "Acquisition",
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "source_recorded",
+            "author_stated"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "quality": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Quality",
+          "type": "array"
+        },
+        "payload": {
+          "discriminator": {
+            "mapping": {
+              "activity": "#/$defs/Activity",
+              "heart_rate": "#/$defs/Heart",
+              "listening": "#/$defs/Listening",
+              "location": "#/$defs/Location",
+              "marker": "#/$defs/Marker"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Heart"
+            },
+            {
+              "$ref": "#/$defs/Activity"
+            },
+            {
+              "$ref": "#/$defs/Location"
+            },
+            {
+              "$ref": "#/$defs/Listening"
+            },
+            {
+              "$ref": "#/$defs/Marker"
+            }
+          ],
+          "title": "Payload"
+        }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "source_id",
+        "source_type",
+        "source_revision",
+        "device_revision",
+        "event_start",
+        "event_end",
+        "received_at",
+        "original_offset",
+        "semantics",
+        "acquisition",
+        "provenance",
+        "quality",
+        "payload"
+      ],
+      "title": "Observation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1,
+      "title": "Version",
+      "type": "integer"
+    },
+    "batch_id": {
+      "title": "Batch Id",
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "simulated",
+        "healthkit"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "observations": {
+      "items": {
+        "$ref": "#/$defs/Observation"
+      },
+      "maxItems": 200,
+      "title": "Observations",
+      "type": "array"
+    },
+    "deletions": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 200,
+      "title": "Deletions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "version",
+    "batch_id",
+    "mode",
+    "observations",
+    "deletions"
+  ],
+  "title": "ValidatedTransfer",
+  "type": "object"
+}

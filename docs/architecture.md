@@ -50,21 +50,21 @@ Stable Moment IDs drive idempotent merge. Identical records are unchanged. A cha
 
 Experiment 01 records an accept/revise/refuse state in component memory. The original wording is retained for revision, refusal remains in the experiment audit, and no experiment state enters `exportJourneyMarkdown` without a future explicit Author decision.
 
-Experiment 02 keeps geofence processing pure in `lib/locative.ts`. Simulation uses fictional coordinates. A live browser watcher begins only after an acknowledgement and explicit button press, keeps only the current position in memory, treats poor accuracy as uncertain rather than precisely triggered, and is cleared when paused or the component leaves.
+Experiment 02 keeps geofence processing pure in `lib/research/locative.ts`. Simulation uses fictional coordinates. A live browser watcher begins only after an acknowledgement and explicit button press, keeps only the current position in memory, treats poor accuracy as uncertain rather than precisely triggered, and is cleared when paused or the component leaves.
 
 The optional Spotify importer remains Node-only. It retains every source-positioned playlist occurrence (including duplicate tracks), reports null timestamps and unavailable items, stores raw provider order separately from a timestamp-sorted view, and writes its local snapshot/delta only under ignored `private-data/`.
 
 ## Public City, Private Echoes — Linz adapter
 
-`lib/public-context.ts` defines city-independent public-context and minimised-private-trace interfaces. `lib/linz-experiment.ts` is a bounded Linz configuration, not a second application: it exposes three public programme records, a replaceable City adapter boundary, and three synthetic private stand-ins for the public build. The locally exported `locative-echo` manifest carries only generalised labels and `null` coordinates.
+`lib/research/public-context.ts` defines city-independent public-context and minimised-private-trace interfaces. `lib/research/linz-experiment.ts` is a bounded Linz configuration, not a second application: it exposes three public programme records, a replaceable City adapter boundary, and three synthetic private stand-ins for the public build. The locally exported `locative-echo` manifest carries only generalised labels and `null` coordinates.
 
 Every Linz echo has an evidence ledger: stable source IDs, timezone, location precision, relationship type, uncertainty, missing information, transformation history and the current Author decision. `recorded`, `inferred`, `authored`, and `refused` remain distinct. Only explicit Accept or Revise can set an authored state; Refuse remains visible.
 
-`lib/linz-adapters.ts` preserves original and normalised street names, and returns matched, ambiguous or unmatched results. A street-history record gains geometry only through one unique geolocated record; no coordinate is inferred from a name.
+`lib/research/linz-adapters.ts` preserves original and normalised street names, and returns matched, ambiguous or unmatched results. A street-history record gains geometry only through one unique geolocated record; no coordinate is inferred from a name.
 
 ## Schemas
 
-`lib/schema.ts` is the runtime boundary. It validates:
+`lib/studio/schema.ts` is the runtime boundary. It validates:
 
 - a 12-record synthetic music timeline;
 - an 8-record fictional LifeEvent document;
@@ -76,7 +76,7 @@ All source documents must share one exact revision and match the counts declared
 
 ## Deterministic correlation
 
-`lib/correlation.ts` compares a track’s timestamp with Author-confirmed LifeEvent windows. It emits only four explainable bases:
+`lib/studio/correlation.ts` compares a track’s timestamp with Author-confirmed LifeEvent windows. It emits only four explainable bases:
 
 1. within the event range;
 2. on the same local day;
@@ -100,9 +100,9 @@ Rejection is also retained and never becomes canonical export material.
 
 ## Export boundary
 
-`lib/export.ts` applies the chosen maximum privacy level before rendering Markdown. A confirmed proposal is exportable only if both its track and LifeEvent are eligible at that privacy level. Pending, rejected, and invalidated proposals are omitted.
+`lib/studio/export.ts` applies the chosen maximum privacy level before rendering Markdown. A confirmed proposal is exportable only if both its track and LifeEvent are eligible at that privacy level. Pending, rejected, and invalidated proposals are omitted.
 
-The private recovery document and the encrypted Vault are not inputs to `lib/export.ts`, the public demo seed, or the browser bundle. Their local API routes are dynamic and require an explicit browser-wide Vault unlock.
+The private recovery document and the encrypted Vault are not inputs to `lib/studio/export.ts`, the public demo seed, or the browser bundle. Their local API routes are dynamic and require an explicit browser-wide Vault unlock.
 
 ## Persistence
 

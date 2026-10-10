@@ -1,5 +1,9 @@
+import {cookies} from 'next/headers';
+import {isLocalSameOrigin} from '@/lib/http/local-origin';
+import {assertVaultSessionActive,vaultSessionActive,vaultSessionFailure,VAULT_SESSION_COOKIE} from '@/lib/vault/vault-session';
+import {boundedText} from "@/lib/http/context-request";
 import { z } from "zod";
-import { readSpotifyPlaylistPresentations, spotifyEnvironmentSchema } from "@/lib/spotify-server";
+import { readSpotifyPlaylistPresentations, spotifyEnvironmentSchema } from "@/lib/music/spotify-server";
 
 export const runtime = "nodejs";
 
@@ -12,17 +16,23 @@ const inputSchema = z.object({
  * the selector. Nothing from this response is written to the Vault.
  */
 export async function POST(request: Request) {
+  if(!isLocalSameOrigin(request))return Response.json({code:"LOCAL_ORIGIN_REQUIRED"},{status:403});
+  const token = (await cookies()).get(VAULT_SESSION_COOKIE)?.value;
+  if(!vaultSessionActive(token))return Response.json({code:"VAULT_LOCKED"},{status:401,headers:{"Cache-Control":"no-store"}});
   try {
-    const input = inputSchema.parse(await request.json());
+    const input = inputSchema.parse(JSON.parse(await boundedText(request,4096)));
+    assertVaultSessionActive(token);
     const environment = spotifyEnvironmentSchema.parse(process.env);
+    const presentations = await readSpotifyPlaylistPresentations(environment, input.playlistIds);
+    assertVaultSessionActive(token);
     return Response.json(
-      await readSpotifyPlaylistPresentations(environment, input.playlistIds),
+      presentations,
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
-    return Response.json(
-      { error: error instanceof Error ? error.message : "Spotify playlist previews could not be read." },
-      { status: 400 },
+    return vaultSessionFailure(error) ?? Response.json(
+      { error: "Spotify playlist previews could not be read." },
+      { status: 400, headers: { "Cache-Control": "no-store" } },
     );
   }
 }

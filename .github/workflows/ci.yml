@@ -23,6 +23,21 @@ jobs:
       - name: Install from lockfile
         run: npm ci
 
+      - name: Install the Python validator runtime
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: "0.10.0"
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: research/rehearsal-dramaturg/uv.lock
+
+      - name: Install validator dependencies from lockfile
+        run: uv sync --frozen --project research/rehearsal-dramaturg
+
+      - name: Test local Python contracts
+        working-directory: research/rehearsal-dramaturg
+        run: .venv/bin/python -m pytest tests -q
+
       - name: Verify fictional demo
         run: npm run demo:aurora-coast
 
@@ -40,3 +55,6 @@ jobs:
 
       - name: Audit public repository
         run: npm run audit:public
+
+      - name: Audit generated browser bundles
+        run: npm run audit:build-private

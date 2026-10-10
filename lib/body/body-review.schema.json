@@ -1,0 +1,552 @@
+{
+  "$defs": {
+    "Activity": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "activity",
+          "default": "activity",
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 100,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "label"
+      ],
+      "title": "Activity",
+      "type": "object"
+    },
+    "Heart": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "heart_rate",
+          "default": "heart_rate",
+          "title": "Kind",
+          "type": "string"
+        },
+        "value": {
+          "exclusiveMinimum": 0,
+          "maximum": 300,
+          "title": "Value",
+          "type": "number"
+        },
+        "unit": {
+          "const": "bpm",
+          "default": "bpm",
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "value",
+        "unit"
+      ],
+      "title": "Heart",
+      "type": "object"
+    },
+    "Listening": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "listening",
+          "default": "listening",
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 100,
+          "title": "Label",
+          "type": "string"
+        },
+        "policy": {
+          "enum": [
+            "original",
+            "author_marker",
+            "fictional"
+          ],
+          "title": "Policy",
+          "type": "string"
+        },
+        "tempo_bpm": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 400,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tempo Bpm"
+        }
+      },
+      "required": [
+        "kind",
+        "label",
+        "policy",
+        "tempo_bpm"
+      ],
+      "title": "Listening",
+      "type": "object"
+    },
+    "Location": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "location",
+          "default": "location",
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 100,
+          "title": "Label",
+          "type": "string"
+        },
+        "accuracy_m": {
+          "minimum": 0,
+          "title": "Accuracy M",
+          "type": "number"
+        },
+        "city": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "City"
+        },
+        "country": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Country"
+        }
+      },
+      "required": [
+        "kind",
+        "label",
+        "accuracy_m",
+        "city",
+        "country"
+      ],
+      "title": "Location",
+      "type": "object"
+    },
+    "Marker": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "marker",
+          "default": "marker",
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 200,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "label"
+      ],
+      "title": "Marker",
+      "type": "object"
+    },
+    "Observation": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "source_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_type": {
+          "default": "fictional",
+          "enum": [
+            "fictional",
+            "apple_health_export",
+            "healthkit",
+            "core_location",
+            "author",
+            "original_audio"
+          ],
+          "title": "Source Type",
+          "type": "string"
+        },
+        "source_revision": {
+          "default": "1",
+          "maxLength": 100,
+          "title": "Source Revision",
+          "type": "string"
+        },
+        "device_revision": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Device Revision"
+        },
+        "event_start": {
+          "format": "date-time",
+          "title": "Event Start",
+          "type": "string"
+        },
+        "event_end": {
+          "format": "date-time",
+          "title": "Event End",
+          "type": "string"
+        },
+        "received_at": {
+          "format": "date-time",
+          "title": "Received At",
+          "type": "string"
+        },
+        "original_offset": {
+          "maxLength": 30,
+          "title": "Original Offset",
+          "type": "string"
+        },
+        "semantics": {
+          "enum": [
+            "measurement",
+            "interval",
+            "author_marker"
+          ],
+          "title": "Semantics",
+          "type": "string"
+        },
+        "acquisition": {
+          "enum": [
+            "simulated",
+            "historical",
+            "live"
+          ],
+          "title": "Acquisition",
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "source_recorded",
+            "author_stated"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "quality": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Quality",
+          "type": "array"
+        },
+        "payload": {
+          "discriminator": {
+            "mapping": {
+              "activity": "#/$defs/Activity",
+              "heart_rate": "#/$defs/Heart",
+              "listening": "#/$defs/Listening",
+              "location": "#/$defs/Location",
+              "marker": "#/$defs/Marker"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Heart"
+            },
+            {
+              "$ref": "#/$defs/Activity"
+            },
+            {
+              "$ref": "#/$defs/Location"
+            },
+            {
+              "$ref": "#/$defs/Listening"
+            },
+            {
+              "$ref": "#/$defs/Marker"
+            }
+          ],
+          "title": "Payload"
+        }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "source_id",
+        "source_type",
+        "source_revision",
+        "device_revision",
+        "event_start",
+        "event_end",
+        "received_at",
+        "original_offset",
+        "semantics",
+        "acquisition",
+        "provenance",
+        "quality",
+        "payload"
+      ],
+      "title": "Observation",
+      "type": "object"
+    },
+    "ReviewMarker": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "direction": {
+          "enum": [
+            "above",
+            "below"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        },
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "window_start": {
+          "format": "date-time",
+          "title": "Window Start",
+          "type": "string"
+        },
+        "window_end": {
+          "format": "date-time",
+          "title": "Window End",
+          "type": "string"
+        },
+        "context_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Context Ids",
+          "type": "array"
+        },
+        "status": {
+          "const": "awaiting-author",
+          "default": "awaiting-author",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "direction",
+        "start",
+        "end",
+        "evidence_ids",
+        "window_start",
+        "window_end",
+        "context_ids",
+        "status"
+      ],
+      "title": "ReviewMarker",
+      "type": "object"
+    },
+    "ReviewRule": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "lower_bpm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lower Bpm"
+        },
+        "upper_bpm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 130.0,
+          "title": "Upper Bpm"
+        },
+        "duration_s": {
+          "default": 60,
+          "maximum": 3600,
+          "minimum": 0,
+          "title": "Duration S",
+          "type": "integer"
+        },
+        "max_gap_s": {
+          "default": 30,
+          "maximum": 300,
+          "minimum": 1,
+          "title": "Max Gap S",
+          "type": "integer"
+        },
+        "min_samples": {
+          "default": 3,
+          "maximum": 200,
+          "minimum": 2,
+          "title": "Min Samples",
+          "type": "integer"
+        },
+        "hysteresis_bpm": {
+          "default": 5.0,
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Hysteresis Bpm",
+          "type": "number"
+        },
+        "cooldown_s": {
+          "default": 300,
+          "maximum": 86400,
+          "minimum": 0,
+          "title": "Cooldown S",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "lower_bpm",
+        "upper_bpm",
+        "duration_s",
+        "max_gap_s",
+        "min_samples",
+        "hysteresis_bpm",
+        "cooldown_s"
+      ],
+      "title": "ReviewRule",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "rule": {
+      "$ref": "#/$defs/ReviewRule"
+    },
+    "observations": {
+      "items": {
+        "$ref": "#/$defs/Observation"
+      },
+      "title": "Observations",
+      "type": "array"
+    },
+    "markers": {
+      "items": {
+        "$ref": "#/$defs/ReviewMarker"
+      },
+      "title": "Markers",
+      "type": "array"
+    },
+    "status": {
+      "default": "disabled",
+      "enum": [
+        "disabled",
+        "insufficient-context",
+        "no-crossing",
+        "awaiting-author"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "notifications": {
+      "const": 0,
+      "default": 0,
+      "title": "Notifications",
+      "type": "integer"
+    },
+    "canonical": {
+      "const": false,
+      "default": false,
+      "title": "Canonical",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "schema_version",
+    "rule",
+    "observations",
+    "markers",
+    "status",
+    "notifications",
+    "canonical"
+  ],
+  "title": "BodyReview",
+  "type": "object"
+}

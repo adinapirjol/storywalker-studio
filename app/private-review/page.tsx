@@ -1,4 +1,4 @@
-import { PrivateAuthorReview } from "@/components/private-author-review";
+import { PrivateAuthorReview } from "@/components/vault/private-author-review";
 
 export const dynamic = "force-dynamic";
 

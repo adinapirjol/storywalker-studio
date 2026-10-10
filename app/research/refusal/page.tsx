@@ -1,3 +1,3 @@
-import { RefusalExperiment } from "@/components/refusal-experiment";
+import { RefusalExperiment } from "@/components/research/refusal-experiment";
 
 export default function RefusalPage() { return <RefusalExperiment />; }

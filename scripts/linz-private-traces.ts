@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { selectedLinzTracesSchema } from "../lib/private-linz";
+import { selectedLinzTracesSchema } from "../lib/research/private-linz";
 
 const inputIndex = process.argv.indexOf("--input");
 const input = inputIndex >= 0 ? process.argv[inputIndex + 1] : undefined;

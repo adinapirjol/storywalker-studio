@@ -1,6 +1,6 @@
 import { chmodSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { applyDelegatedSourceReview, migrateStagedRecovery } from "../lib/private-recovery";
+import { applyDelegatedSourceReview, migrateStagedRecovery } from "../lib/evidence/private-recovery";
 
 const target = path.join(process.cwd(), "private-data", "storywalker", "july-august-2026.recovery.private.json");
 const source = migrateStagedRecovery(JSON.parse(readFileSync(target, "utf8")) as unknown);

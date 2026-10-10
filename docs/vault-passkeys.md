@@ -4,11 +4,41 @@ Passkey enrollment, unlock and removal are implemented at `/vault`. Real-device
 enrollment is an Author action; the compatibility check alone does not enable it.
 The existing passphrase remains the recovery method. No record migration occurs.
 
+## Biometric-assisted unlocking
+
+Use **Unlock with passkey** with an already enrolled credential. The shared modal
+shows it as the primary authentication action when an eligible credential exists;
+**Use recovery passphrase** remains available in the same dialog. No new account,
+OAuth flow, refresh token or separate login form is involved.
+
+WebAuthn authentication requires user verification. The operating system or
+authenticator chooses its supported method, such as a fingerprint, face, device
+PIN or security-key verification. Storywalker never requests, receives or stores
+biometric templates. A verified assertion establishes user verification; it does
+not tell Storywalker that Touch ID or Face ID specifically was used, so the
+button retains its neutral name.
+
+Authentication options provide ordered, non-binding hints: `client-device`,
+`hybrid`, then `security-key`. Supporting browsers can prefer a platform
+authenticator while compatible cross-device and security-key paths remain
+available. There is no platform attachment restriction or transport filter.
+Browsers may ignore the hints. Platform availability does not establish PRF
+compatibility: the selected existing passkey must still return the required
+32-byte PRF result and unwrap its saved Vault key. Unsupported PRF fails closed
+with recovery guidance; it never switches to signature-only Vault unlocking.
+
+These preferences follow the [WebAuthn hint definition](https://www.w3.org/TR/webauthn-3/#enumdef-publickeycredentialhint).
+Apple documents [using Touch ID to approve a Mac passkey](https://support.apple.com/en-gb/guide/passwords/mchl4af65d1a/mac);
+this does not prove that a particular browser/provider supports Storywalker's PRF
+requirements. Existing exact-origin verification, one-use challenges, counters,
+two-minute prompt timeout and five-minute server challenge expiry are preserved.
+
 ## Use
 
 On XR and other Vault-backed pages, **Unlock Vault** opens a dialog without
-leaving the page. If a protected action encounters an expired session, the same
-dialog opens and that action resumes once after a confirmed unlock. Cancel keeps
+leaving the page. If a protected action is denied before execution with `VAULT_LOCKED`, the same
+dialog opens and that action resumes once after a confirmed unlock. Expiry during
+an operation uses `VAULT_SESSION_EXPIRED` and requires an explicit retry. Cancel keeps
 the current page and does not save its pending work. Network failures do not
 trigger automatic retries. Passkey and recovery-passphrase access share this flow.
 
@@ -17,7 +47,7 @@ after unlocking. Return destinations are restricted to known local app routes;
 external URLs and API paths are rejected. This navigation path does not preserve
 unsaved state from a page that was left; use the inline dialog for continuity.
 
-1. Open `http://localhost:3011/vault` in a browser that supports WebAuthn PRF.
+1. Open `http://localhost:3000/vault` in a browser that supports WebAuthn PRF.
 2. Unlock with the existing passphrase. Under **Unlock with a passkey**, name it
    and acknowledge that the recovery passphrase is retained, then **Add passkey**.
 3. Complete your device/provider prompt. Click **Complete encryption check** and
@@ -62,7 +92,7 @@ verification. The browser's PRF extension result is not itself signed; trust in
 the browser and local server is the same boundary as entering a passphrase here.
 
 `private-data/vault/passkeys.json` is ignored by Git, mode 0600, and written with
-an atomic rename. It contains public credential material, counters, names,
+an exclusive filesystem lock and atomic rename; redirected storage is rejected. It contains public credential material, counters, names,
 per-credential salts, Vault identity and authenticated key wrappers. It never
 stores an unwrapped key, passphrase or PRF output. No secret is placed in URLs,
 localStorage, sessionStorage, logs or analytics. Buffers are cleared where possible;
@@ -71,11 +101,15 @@ The browser never receives the unwrapped Vault key. The passkey provider receive
 no scene/source material through this implementation; its usual credential sync
 behavior is controlled by that provider.
 
-The trusted origin defaults to `http://localhost:3011` (RP ID `localhost`). An
+The trusted origin defaults to `http://localhost:3000` (RP ID `localhost`). An
 explicit `STORYWALKER_PASSKEY_ORIGIN` can configure another HTTPS origin. The code
 never trusts a request's Host header as configuration. Non-local HTTP origins,
 cross-origin requests and bodies larger than 64 KiB are rejected. Keep using the
 same address: changing the origin requires passphrase access and new enrollment.
+At `127.0.0.1` the shared modal offers the saved-address link; recovery passphrase
+access remains available. Address-specific sessions are separate. Earlier-origin
+wrappers are preserved but not silently migrated; enroll again at the chosen
+address using recovery access. IP-address RP IDs are rejected.
 This is a single-process local Vault, not a multi-user or multi-server auth service.
 
 ## Verification
@@ -90,3 +124,57 @@ Sources:
 - https://www.w3.org/TR/webauthn-3/#prf-extension
 - https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API/WebAuthn_extensions
 - https://simplewebauthn.dev/docs/packages/server
+
+The shared responsibilities and future extension boundaries are documented in
+[the authentication architecture](auth-architecture.md).
+
+## Manual Mac/browser acceptance — 10 October
+
+The Author previously confirmed basic passkey and recovery access. Touch ID
+specifically and the cases below have not been confirmed. All boxes remain
+unchecked. Use the existing enrolled passkey; no enrollment or removal is needed.
+Record browser/macOS version, provider, date and outcome only, without credential
+IDs, biometric information, recovery phrases or private record contents.
+
+Later on 10 October, the Author confirmed that the existing phone-assisted
+passkey unlock works in both Safari and the Codex browser. The reported Codex
+Bluetooth wait was temporary. Retain that credential and recovery access; no
+enrollment or removal is requested. This confirms cross-device basic unlocking,
+not local Touch ID, enrollment, expiry, cancellation or the other cases below.
+
+- [ ] At the configured address (default `http://localhost:3000/vault`), open the
+  shared unlock dialog from locked state. **Unlock with passkey** is the primary
+  available action for an eligible credential; recovery is still reachable.
+- [ ] Choose the existing passkey and approve the operating system's prompt.
+  Note the method actually offered (Touch ID, another local method, or a nearby
+  device), without assuming a method from the device's model. Confirm successful
+  Vault access and unchanged existing evidence locally.
+- [ ] If a compatible cross-device credential is already available, choose the
+  browser's other-device option and verify it can still unlock with PRF. Mark
+  unavailable combinations as untested; do not enroll another credential for this
+  checklist or weaken origin/PRF checks to make it pass.
+- [ ] Cancel or reject the device prompt. The Vault stays locked, recovery remains
+  available and no automatic second prompt/request occurs. Retry only by pressing
+  the button again.
+- [ ] Using the keyboard, reach the passkey choice, primary action, recovery
+  disclosure and close control. Escape cancels; closing restores focus to the
+  opener. Navigation during a prompt must not continue the abandoned action.
+- [ ] Press **Lock Vault now** after successful access. Protected actions are
+  denied; unlock through the same dialog with the existing passkey again.
+- [ ] Observe the fixed 15-minute expiry while interacting. Private access must
+  end without silent renewal. An operation that expired after starting requires
+  a new explicit action after unlock; unlock alone must not repeat its provider
+  request. Use a fictional/local operation for this test.
+- [ ] From locked state, a wrong recovery passphrase fails. The correct recovery
+  passphrase succeeds when the passkey prompt is cancelled or unavailable.
+- [ ] At an alternate local address, the dialog gives saved-address guidance
+  without exposing credential labels or weakening the relying-party check.
+- [ ] If the existing provider lacks PRF in the tested browser, neutral recovery
+  guidance appears and the Vault stays locked. If that combination is unavailable,
+  record this case as synthetic-only coverage, not a manual pass.
+
+Automated coverage uses synthetic P-256 signatures, temporary Vaults and mocked
+browser prompts. It verifies required user verification, PRF rejection/cleanup,
+one-use challenges, exact origin/RP and counters, explicit lock/recovery,
+cancellation, fixed expiry and non-replayed expired mutations. It does not
+establish real biometric hardware or browser/provider compatibility.

@@ -1,6 +1,6 @@
 import { mkdir, rename, writeFile } from "node:fs/promises";
 import { loadEnvConfig } from "@next/env";
-import { buildArenaSnapshot } from "../lib/arena-build";
+import { buildArenaSnapshot } from "../lib/arena/arena-build";
 
 async function main() {
   loadEnvConfig(process.cwd());

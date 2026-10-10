@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import {VaultAccess} from "@/components/vault-access";
+import {VaultAccess} from "@/components/vault/vault-access";
 
 export const metadata: Metadata = {
   title: "Storywalker Studio",

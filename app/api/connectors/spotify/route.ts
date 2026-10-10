@@ -1,9 +1,11 @@
-import { spotifyAuthorised, spotifyEnvironmentSchema } from "@/lib/spotify-server";
+import {isLocalRead} from '@/lib/http/local-origin';
+import { spotifyAuthorised, spotifyEnvironmentSchema } from "@/lib/music/spotify-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request:Request) {
+  if(!isLocalRead(request))return Response.json({code:"LOCAL_ORIGIN_REQUIRED"},{status:403});
   const configured = spotifyEnvironmentSchema.safeParse(process.env).success;
   const baselinePlaylistLinks = (process.env.STORYWALKER_BASELINE_SPOTIFY_PLAYLISTS ?? "")
     .split(",")

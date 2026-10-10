@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, isAbsolute, join, resolve } from "node:path";
-import { inspectAndMinimiseTimeline, minimiseGoogleCalendarIcs, minimiseGoogleMapsLabeledPlaces, minimiseYouTubeWatchHistoryHtml } from "../lib/private-ingest";
-import { minimiseGoogleMapsSavedListCsv, minimiseGoogleMapsSavedListsCsv } from "../lib/google-maps-list";
+import { inspectAndMinimiseTimeline, minimiseGoogleCalendarIcs, minimiseGoogleMapsLabeledPlaces, minimiseYouTubeWatchHistoryHtml } from "../lib/evidence/private-ingest";
+import { minimiseGoogleMapsSavedListCsv, minimiseGoogleMapsSavedListsCsv } from "../lib/evidence/google-maps-list";
 
 const args = process.argv.slice(2);
 const roots = args.filter((value) => !value.startsWith("--"));

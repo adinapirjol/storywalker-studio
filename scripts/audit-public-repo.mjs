@@ -1,6 +1,7 @@
+import { privateAuditMarkers } from './private-audit-markers.mjs';
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, statSync } from "node:fs";
-import { extname, join } from "node:path";
+import { existsSync, readFileSync, statSync, lstatSync } from "node:fs";
+import { extname } from "node:path";
 
 const root = process.cwd();
 const listed = execFileSync(
@@ -16,6 +17,10 @@ const failures = [];
 const forbiddenTrackedPaths = [
   /(^|\/)\.spotify-token\.local\.json$/u,
   /(^|\/)private-data\//u,
+  /(^|\/)\.logfire(?:\/|$)/u,
+  /(^|\/)\.env(?:\.[^/]*)?$/u,
+  /(^|\/)(?:__pycache__|\.pytest_cache|\.build|xcuserdata)(?:\/|$)/u,
+  /\.py[co]$/u,
   /(^|\/)private-spotify-exports\//u,
   /(^|\/)private-spotify-raw\//u,
   /(^|\/)private-google-timeline-raw\//u,
@@ -24,21 +29,12 @@ const forbiddenTrackedPaths = [
   /(^|\/)exports\/private-inputs\//u,
   /(^|\/)exports\/[^/]+-seed-prep\//u,
   /\.private\.json$/u,
+  /\.private\.(?:md|txt)$/u,
+  /\.(?:local\.xcconfig|mobileprovision|provisionprofile|p12|p8)$/u,
   /(^|\/)storywalker-private-/u,
 ];
 
-const stagedRecoveryPath = join(root, "private-data", "storywalker", "july-august-2026.recovery.private.json");
-const privateMarkers = existsSync(stagedRecoveryPath)
-  ? (() => {
-    try {
-      const recovery = JSON.parse(readFileSync(stagedRecoveryPath, "utf8"));
-      return [
-        ...(recovery.moments ?? []).flatMap((moment) => [moment.id, moment.title, moment.authorStatement, ...(moment.provenance ?? []).flatMap((source) => [source.chatTitle, source.shortExcerpt])]),
-        ...(recovery.companions ? [] : []),
-      ].filter((value) => typeof value === "string" && value.trim().length >= 24);
-    } catch { failures.push("local private recovery guard could not be read"); return []; }
-  })()
-  : [];
+const privateMarkers = privateAuditMarkers(root);
 const forbiddenArtifactNames = [
   /^exports\/storywalker-life-timeline-/u,
   /^exports\/florianopolis-/u,
@@ -57,17 +53,22 @@ const textExtensions = new Set([
   ".txt",
   ".yml",
   ".yaml",
+  ".py", ".swift", ".pbxproj", ".plist", ".entitlements", ".xcscheme", ".xcworkspacedata", ".xcconfig", ".toml", ".env", ".xml",
 ]);
 
 for (const file of listed) {
-  if (forbiddenTrackedPaths.some((pattern) => pattern.test(file))) {
+  if (file !== ".env.example" && forbiddenTrackedPaths.some((pattern) => pattern.test(file))) {
     failures.push(`${file}: forbidden private or credential path`);
   }
   if (forbiddenArtifactNames.some((pattern) => pattern.test(file))) {
     failures.push(`${file}: known private artifact filename`);
   }
-  if (!textExtensions.has(extname(file)) || statSync(file).size > 2_000_000) continue;
+  if (!existsSync(file)) continue; // tracked deletions have no remaining content
+  if (lstatSync(file).isSymbolicLink()) { failures.push(`${file}: committable symlink requires explicit review`); continue; }
+  if (!textExtensions.has(extname(file))) continue;
+  if (statSync(file).size > 2_000_000) { failures.push(`${file}: large text input needs explicit privacy review`); continue; }
   const source = readFileSync(file, "utf8");
+  if (extname(file) === ".xml" && /<HealthData(?:\s|>)/u.test(source)) failures.push(`${file}: raw Apple Health export in a committable path`);
   if (/\/Users\//u.test(source)) {
     failures.push(`${file}: absolute user path`);
   }
@@ -82,7 +83,7 @@ for (const file of listed) {
   if (privateMarkers.some((marker) => source.includes(marker))) {
     failures.push(`${file}: private recovery marker copied into a committable file`);
   }
-  if (/(?:sk|ghp|glpat)-[A-Za-z0-9_-]{20,}/u.test(source)) {
+  if (/(?:sk-|gh[pousr]_|github_pat_|glpat-)[A-Za-z0-9_-]{20,}/u.test(source)) {
     failures.push(`${file}: token-like credential value`);
   }
   if (/SPOTIFY_CLIENT_SECRET[ \t]*=[ \t]*[^\s"']+/u.test(source) && file !== ".env.example") {
