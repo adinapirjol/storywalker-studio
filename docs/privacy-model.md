@@ -18,7 +18,8 @@ Storywalker Studio treats privacy as a data-flow rule, not a decorative label.
 | Encrypted Vault / private scenarios / editorial candidates | No | Local Vault only during an active browser-wide local session | No automatic export or promotion |
 | Native HealthKit queue and reviewed BODY evidence | No | Explicit local collection/review | Raw observations stay local; encrypted paired delivery is separate from review |
 | Temporary incoming Watch preview | No | Active local viewer and unlocked Vault | Ephemeral paired feed; not automatically accepted evidence |
-| Optional received-health aggregate summaries | No | Separate Connections & data opt-in | Maximum BPM, counts, source category, opaque summary ID and app receipt range sent to the dedicated EU Logfire project |
+| Reviewed-health aggregate summaries | No | Current session enable plus explicit per-batch export consent | Only accepted surviving evidence; maximum BPM, counts, source category, opaque summary ID and app receipt range sent to the dedicated EU Logfire project |
+| Unreviewed live research telemetry | No | Separate explicit current-session consent, off by default | Fresh preview threshold candidates only; historical pending batches never feed it |
 
 Aurora Coast is labelled **Fictional demonstration data** throughout the application and documentation.
 

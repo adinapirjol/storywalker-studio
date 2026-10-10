@@ -23,7 +23,7 @@ npm run audit:public
 PYTHONPATH=research/rehearsal-dramaturg uv run --project research/rehearsal-dramaturg python research/rehearsal-dramaturg/scripts/contracts.py
 ```
 
-`uv.lock` pins Python dependencies; package-lock.json pins frontend dependencies. Generated `lib/context-contract.ts` and `lib/context-contract.schema.json` come from Pydantic serialization schemas; do not edit them separately. Strict JSON-boundary validation rejects coercible invalid scalars, unknown fields, nonfinite numbers, naive timestamps and invalid references. An extreme finite heart reading is retained, not filtered as abnormal. Parsing Apple units/dates happens in its explicit adapter before validation.
+`uv.lock` pins Python dependencies; package-lock.json pins frontend dependencies. Generated `lib/context/context-contract.ts` and `lib/context/context-contract.schema.json` come from Pydantic serialization schemas; do not edit them separately. Strict JSON-boundary validation rejects coercible invalid scalars, unknown fields, nonfinite numbers, naive timestamps and invalid references. Heart readings must satisfy the research plausibility envelope 0 < BPM <= 300; these are data-quality bounds, not clinical alarm thresholds. Native HealthKit ingestion also enforces the documented 120-second clock-skew policy without rewriting source timestamps; see `docs/research/health-export-consent.md`. Parsing Apple units/dates happens in its explicit adapter before validation.
 
 ## Five-minute walkthrough
 
@@ -102,8 +102,8 @@ uncertainty, explicitly show absent BODY evidence, try a deliberate MEMORY move,
 then leave an open question. All source-linked content remains private; use the
 separate fictional scenario for a public presentation.
 
-Validation: `npx vitest run lib/vault-demo.test.ts lib/local-origin.test.ts
-lib/vault-session.test.ts lib/vault-access-route.test.ts`. No storage migration is
+Validation: `npx vitest run lib/vault/vault-demo.test.ts lib/http/local-origin.test.ts
+lib/vault/vault-session.test.ts lib/vault/vault-access-route.test.ts`. No storage migration is
 needed. Rolling back the panel and its API leaves a harmless encrypted selection
 reference; it does not require changing the Vault encryption or source records.
 
@@ -166,7 +166,7 @@ appear. No database or Vault encryption migration is needed. Roll back by removi
 the private BODY UI/adapter and `body-review` action; existing evidence is unchanged.
 Contracts are generated with the existing `scripts/contracts.py` command; dependencies
 and frozen lock remain unchanged. New tests: `tests/test_body_review.py`,
-`lib/private-body.test.ts` and the private BODY case in `lib/native-transfer.test.ts`.
+`lib/body/private-body.test.ts` and the private BODY case in `lib/native/native-transfer.test.ts`.
 
 The physical phone collector already supports saved opt-in, observer delivery,
 anchored recovery and stop. It must be installed and enabled on the paired iPhone.

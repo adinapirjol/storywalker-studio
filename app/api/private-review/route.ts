@@ -1,10 +1,10 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {cookies} from "next/headers";
-import {isLocalRead,isLocalSameOrigin} from "@/lib/local-origin";
-import {assertVaultSessionActive,vaultSessionActive,vaultSessionFailure,VAULT_SESSION_COOKIE} from "@/lib/vault-session";
-import {boundedText} from "@/lib/context-request";
-import { applyAuthorReviewAction, createNovaThreadProposal, directAuthorEvidenceInputSchema, migrateStagedRecovery, novaQuestionResolutionInputSchema, novaQuestionResponseInputSchema, novaThreadProposalInputSchema, processNovaInbox, recordDirectAuthorEvidence, recordNovaQuestionResponse, resolveNovaQuestionResponse, type RecoveryDecisionAction } from "@/lib/private-recovery";
+import {isLocalRead,isLocalSameOrigin} from "@/lib/http/local-origin";
+import {assertVaultSessionActive,vaultSessionActive,vaultSessionFailure,VAULT_SESSION_COOKIE} from "@/lib/vault/vault-session";
+import {boundedText} from "@/lib/http/context-request";
+import { applyAuthorReviewAction, createNovaThreadProposal, directAuthorEvidenceInputSchema, migrateStagedRecovery, novaQuestionResolutionInputSchema, novaQuestionResponseInputSchema, novaThreadProposalInputSchema, processNovaInbox, recordDirectAuthorEvidence, recordNovaQuestionResponse, resolveNovaQuestionResponse, type RecoveryDecisionAction } from "@/lib/evidence/private-recovery";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

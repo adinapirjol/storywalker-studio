@@ -1,5 +1,5 @@
-import { ArenaReader } from "@/components/arena-reader";
-import { readArenaSnapshot } from "@/lib/arena-snapshot";
+import { ArenaReader } from "@/components/arena/arena-reader";
+import { readArenaSnapshot } from "@/lib/arena/arena-snapshot";
 
 export const dynamic = "force-static";
 export const metadata = { title: "13A Forever · Reader", description: "An ordered walk through two Are.na research channels." };

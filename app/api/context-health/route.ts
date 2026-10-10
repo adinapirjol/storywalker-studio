@@ -1,9 +1,9 @@
-import {isLocalSameOrigin,isLocalRead} from '@/lib/local-origin';
+import {isLocalSameOrigin,isLocalRead} from '@/lib/http/local-origin';
 import { NextRequest, NextResponse } from 'next/server';
-import {boundedText} from '@/lib/context-request';
-import { vaultRecordHeaders, readVaultRecord, putVaultRecords, removeVaultRecords } from '@/lib/private-vault';
-import { vaultSessionActive, VAULT_SESSION_COOKIE, vaultSessionFailure } from '@/lib/vault-session';
-import {withBrowserVault} from '@/lib/vault-route-access';
+import {boundedText} from '@/lib/http/context-request';
+import { vaultRecordHeaders, readVaultRecord, putVaultRecords, removeVaultRecords } from '@/lib/vault/private-vault';
+import { vaultSessionActive, VAULT_SESSION_COOKIE, vaultSessionFailure } from '@/lib/vault/vault-session';
+import {withBrowserVault} from '@/lib/vault/vault-route-access';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 const json=(body:unknown,status=200)=>NextResponse.json(body,{status,headers:{'Cache-Control':'no-store'}});

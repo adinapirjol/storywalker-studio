@@ -1,11 +1,11 @@
 import {NextRequest,NextResponse} from 'next/server';
-import {isLocalSameOrigin} from '@/lib/local-origin';
-import {boundedText} from '@/lib/context-request';
-import {VAULT_SESSION_COOKIE,vaultSessionFailure} from '@/lib/vault-session';
-import {withBrowserVault} from '@/lib/vault-route-access';
-import {nativeTransaction} from '@/lib/native-transaction';
-import {configureReceiver,receiverStatus,receiverSessionActive,receiverPreview} from '@/lib/native-receiver';
-import {receiverErrorCode} from '@/lib/receiver-errors';
+import {isLocalSameOrigin} from '@/lib/http/local-origin';
+import {boundedText} from '@/lib/http/context-request';
+import {VAULT_SESSION_COOKIE,vaultSessionFailure} from '@/lib/vault/vault-session';
+import {withBrowserVault} from '@/lib/vault/vault-route-access';
+import {nativeTransaction} from '@/lib/native/native-transaction';
+import {configureReceiver,receiverStatus,receiverSessionActive,receiverPreview} from '@/lib/native/native-receiver';
+import {receiverErrorCode} from '@/lib/native/receiver-errors';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 const json=(value:unknown,status=200)=>NextResponse.json(value,{status,headers:{'Cache-Control':'no-store'}});

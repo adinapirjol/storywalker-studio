@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, isAbsolute, resolve } from "node:path";
-import { inspectAndMinimiseTimeline, minimiseSpotifyHistory } from "../lib/private-ingest";
-import { migrateStagedRecovery, sha256, stageRecovery, validateRecoveryLedger } from "../lib/private-recovery";
+import { inspectAndMinimiseTimeline, minimiseSpotifyHistory } from "../lib/evidence/private-ingest";
+import { migrateStagedRecovery, sha256, stageRecovery, validateRecoveryLedger } from "../lib/evidence/private-recovery";
 
 const args = process.argv.slice(2);
 const source = args[0] === "spotify" || args[0] === "timeline" || args[0] === "recovery" ? args[0] : undefined;

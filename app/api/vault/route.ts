@@ -1,31 +1,31 @@
-import {isLocalSameOrigin,isLocalRead} from "@/lib/local-origin";
-import {boundedText} from "@/lib/context-request";
-import {researchSessionSchema,researchPayload} from "@/lib/research-session";
-import { enrichWindowEvidence, eligibleArchiveRecord } from "@/lib/xr-enrichment";
-import { vaultRecordHeaders } from "@/lib/private-vault";
-import { calendarContextForEpisodes } from "@/lib/journey-identifiers";
-import { groundJourney } from "@/lib/journey-grounding";
-import { readTimelineWindows } from "@/lib/private-vault";
-import { mergeLastFmDelta } from "@/lib/lastfm-delta";
-import { minimisedLastFmHistorySchema } from "@/lib/private-ingest";
+import {isLocalSameOrigin,isLocalRead} from "@/lib/http/local-origin";
+import {boundedText} from "@/lib/http/context-request";
+import {researchSessionSchema,researchPayload} from "@/lib/research/research-session";
+import { enrichWindowEvidence, eligibleArchiveRecord } from "@/lib/xr/xr-enrichment";
+import { vaultRecordHeaders } from "@/lib/vault/private-vault";
+import { calendarContextForEpisodes } from "@/lib/xr/journey-identifiers";
+import { groundJourney } from "@/lib/xr/journey-grounding";
+import { readTimelineWindows } from "@/lib/vault/private-vault";
+import { mergeLastFmDelta } from "@/lib/music/lastfm-delta";
+import { minimisedLastFmHistorySchema } from "@/lib/evidence/private-ingest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import { analyseListening } from "@/lib/xr-listening";
-import { buildListeningDraft, validateDraftReview, xrReviewSchema } from "@/lib/xr-draft";
-import { xrSceneSchema } from "@/lib/xr-scene";
-import { readVaultRecord } from "@/lib/private-vault";
+import { analyseListening } from "@/lib/xr/xr-listening";
+import { buildListeningDraft, validateDraftReview, xrReviewSchema } from "@/lib/xr/xr-draft";
+import { xrSceneSchema } from "@/lib/xr/xr-scene";
+import { readVaultRecord } from "@/lib/vault/private-vault";
 import { z } from "zod";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { closeVault, importEditorCut, importGoogleMapsSharedList, importLastFmHistory, importPreparedGoogleMapsSelectedList, importPreparedGoogleTakeout, importPrivateEditorialDraft, importSelectedPrivateSource, initialiseVault, migrateRecoveryIntoVault, openVault, openVaultWithKey, putVaultRecords, readAtlasNow, readPublicDrafts, readScenarioStudio, rebuildVaultRetrievalIndex, refreshVaultDerivedViews, retrieveVaultEvidence, searchVault, vaultDriverReady, vaultExists, vaultImportMarkers, vaultSummary, type OpenVault, type VaultRecord } from "@/lib/private-vault";
-import { prepareSideQuestVaultImport } from "@/lib/side-quest-import";
-import { buildDirectorModelBrief, buildDirectorPreview } from "@/lib/nova-director";
-import { lastFmEnvironmentSchema, readLastFmScrobbles } from "@/lib/lastfm-server";
-import { privateEditorialCandidates, readPrivateEditorialCandidate } from "@/lib/private-editorial-candidates";
-import { assertVaultSessionActive, rotateVaultSession, deleteVaultSession, readVaultSession, VAULT_SESSION_COOKIE, vaultSessionCookie, vaultSessionFailure } from "@/lib/vault-session";
-import { setVaultAccessGuard } from "@/lib/private-vault";
-import { VaultWriteBusyError, VaultWriteConflictError } from "@/lib/vault-file-lock";
+import { closeVault, importEditorCut, importGoogleMapsSharedList, importLastFmHistory, importPreparedGoogleMapsSelectedList, importPreparedGoogleTakeout, importPrivateEditorialDraft, importSelectedPrivateSource, initialiseVault, migrateRecoveryIntoVault, openVault, openVaultWithKey, putVaultRecords, readAtlasNow, readPublicDrafts, readScenarioStudio, rebuildVaultRetrievalIndex, refreshVaultDerivedViews, retrieveVaultEvidence, searchVault, vaultDriverReady, vaultExists, vaultImportMarkers, vaultSummary, type OpenVault, type VaultRecord } from "@/lib/vault/private-vault";
+import { prepareSideQuestVaultImport } from "@/lib/evidence/side-quest-import";
+import { buildDirectorModelBrief, buildDirectorPreview } from "@/lib/studio/nova-director";
+import { lastFmEnvironmentSchema, readLastFmScrobbles } from "@/lib/music/lastfm-server";
+import { privateEditorialCandidates, readPrivateEditorialCandidate } from "@/lib/evidence/private-editorial-candidates";
+import { assertVaultSessionActive, rotateVaultSession, deleteVaultSession, readVaultSession, VAULT_SESSION_COOKIE, vaultSessionCookie, vaultSessionFailure } from "@/lib/vault/vault-session";
+import { setVaultAccessGuard } from "@/lib/vault/private-vault";
+import { VaultWriteBusyError, VaultWriteConflictError } from "@/lib/vault/vault-file-lock";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -164,6 +164,9 @@ export async function POST(request: Request) {
     try { raw = await boundedText(request, 16_000_000); }
     catch { return noStore({error:"Request too large or malformed."},413); }
     const body = requestSchema.parse(JSON.parse(raw));
+    if (body.passphrase !== undefined && body.action !== "unlock" && body.action !== "initialise") {
+      return noStore({ code: "PASSPHRASE_ACTION_NOT_SUPPORTED" }, 400);
+    }
     const store = await cookies();
     const sessionToken = store.get(VAULT_SESSION_COOKIE)?.value;
     if (body.action === "probe") return Response.json({ driverReady: await vaultDriverReady() }, { headers: { "Cache-Control": "no-store" } });

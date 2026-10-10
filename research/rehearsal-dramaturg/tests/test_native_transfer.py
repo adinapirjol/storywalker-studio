@@ -1,3 +1,4 @@
+from datetime import datetime
 import base64
 import json
 import subprocess
@@ -11,10 +12,10 @@ def wire(observation=None, mode='simulated'):
     o = observation or next(o for o in fixtures() if o.payload.kind == 'heart_rate').model_dump(mode='json')
     return dict(version=1,batch_id=str(uuid4()),mode=mode,deliveries=[dict(id=o['id'],deletion=False,packet=base64.b64encode(json.dumps(o).encode()).decode())])
 
-def test_validates_extreme_values_and_retains_event_time():
-    o=next(o for o in fixtures() if o.payload.kind == 'heart_rate').model_dump(mode='json');o['payload']['value']=999.5
+def test_validates_plausibility_boundary_and_retains_event_time():
+    o=next(o for o in fixtures() if o.payload.kind == 'heart_rate').model_dump(mode='json');o['payload']['value']=300.0
     batch=validate_transfer(json.dumps(wire(o)).encode())
-    assert batch['observations'][0]['payload']['value']==999.5
+    assert batch['observations'][0]['payload']['value']==300.0
     assert batch['observations'][0]['event_start']==o['event_start']
 
 def test_healthkit_watch_metadata_remains_historical_source_evidence():
@@ -22,7 +23,7 @@ def test_healthkit_watch_metadata_remains_historical_source_evidence():
     o=next(o for o in fixtures() if o.payload.kind == 'heart_rate').model_dump(mode='json')
     o.update(source_type='healthkit',source_id='test.synthetic.health',acquisition='historical',
              quality=['recorded_on_apple_watch','original_timezone_unknown'],original_offset='unknown')
-    result=validate_transfer(json.dumps(wire(o,mode='healthkit')).encode())
+    result=validate_transfer(json.dumps(wire(o,mode='healthkit')).encode(),clock=lambda:datetime.fromisoformat(o['received_at']))
     saved=result['observations'][0]
     assert saved['acquisition']=='historical'
     assert saved['quality']==o['quality']

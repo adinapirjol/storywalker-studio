@@ -5,7 +5,7 @@ import { createInterface as lines } from 'node:readline';
 import { resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { Writable } from 'node:stream';
-import { closeVault, openVault, putVaultRecords, removeVaultRecords } from '../lib/private-vault';
+import { closeVault, openVault, putVaultRecords, removeVaultRecords } from '../lib/vault/private-vault';
 async function main() {
  const file=process.argv[2];if(!file)throw new Error('Provide a locally selected export.xml or export.zip path.');
  // Read through an existing unlocked session in the UI instead for production use.

@@ -38,4 +38,4 @@ After registration, restart the MCP connection and authenticate in the assistant
 
 Sources: [Are.na MCP](https://github.com/aredotna/mcp), [v3 API guidance](https://www.are.na/developers/explore), [Codex MCP](https://developers.openai.com/codex/mcp).
 
-Validation: `npm run typecheck`, `npm test -- lib/arena.test.ts`, `npm run lint`, `npm run audit:public`, `npm run build`, `npm run audit:build-private`.
+Validation: `npm run typecheck`, `npm test -- lib/arena/arena.test.ts`, `npm run lint`, `npm run audit:public`, `npm run build`, `npm run audit:build-private`.

@@ -1,12 +1,12 @@
-import {isLocalSameOrigin} from '@/lib/local-origin';
-import {boundedText} from '@/lib/context-request';
+import {isLocalSameOrigin} from '@/lib/http/local-origin';
+import {boundedText} from '@/lib/http/context-request';
 import {cookies} from 'next/headers';
 import {readFileSync,existsSync,unlinkSync} from 'node:fs';
 import {join} from 'node:path';
-import {vaultSessionActive,VAULT_SESSION_COOKIE,assertVaultSessionActive,vaultSessionFailure} from '@/lib/vault-session';
-import {readVaultRecord,putVaultRecords} from '@/lib/private-vault';
-import {withBrowserVault} from '@/lib/vault-route-access';
-import {arenaRehearsalSchema,validateArenaComposition} from '@/lib/arena-rehearsal';
+import {vaultSessionActive,VAULT_SESSION_COOKIE,assertVaultSessionActive,vaultSessionFailure} from '@/lib/vault/vault-session';
+import {readVaultRecord,putVaultRecords} from '@/lib/vault/private-vault';
+import {withBrowserVault} from '@/lib/vault/vault-route-access';
+import {arenaRehearsalSchema,validateArenaComposition} from '@/lib/arena/arena-rehearsal';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 const id='arena:private-rehearsal:v1';

@@ -1,0 +1,1087 @@
+{
+  "$defs": {
+    "Activity": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "activity",
+          "default": "activity",
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 100,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "label"
+      ],
+      "title": "Activity",
+      "type": "object"
+    },
+    "Capture": {
+      "additionalProperties": false,
+      "properties": {
+        "rule_id": {
+          "default": "fictional-high",
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "rule_snapshot": {
+          "$ref": "#/$defs/Rule"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "rule_version": {
+          "title": "Rule Version",
+          "type": "integer"
+        },
+        "triggering_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Triggering Ids",
+          "type": "array"
+        },
+        "event_time": {
+          "format": "date-time",
+          "title": "Event Time",
+          "type": "string"
+        },
+        "captured_at": {
+          "format": "date-time",
+          "title": "Captured At",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "context": {
+          "$ref": "#/$defs/ContextWindow"
+        },
+        "context_history": {
+          "items": {
+            "$ref": "#/$defs/ContextWindow"
+          },
+          "maxItems": 128,
+          "title": "Context History",
+          "type": "array"
+        },
+        "notification_eligible": {
+          "const": false,
+          "default": false,
+          "title": "Notification Eligible",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "rule_id",
+        "rule_snapshot",
+        "id",
+        "rule_version",
+        "triggering_ids",
+        "event_time",
+        "captured_at",
+        "reason",
+        "context",
+        "context_history",
+        "notification_eligible"
+      ],
+      "title": "Capture",
+      "type": "object"
+    },
+    "ContextWindow": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        },
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "observation_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Observation Ids",
+          "type": "array"
+        },
+        "revision": {
+          "title": "Revision",
+          "type": "integer"
+        },
+        "tolerance_s": {
+          "default": 5,
+          "title": "Tolerance S",
+          "type": "integer"
+        },
+        "matches": {
+          "items": {
+            "$ref": "#/$defs/Match"
+          },
+          "maxItems": 512,
+          "title": "Matches",
+          "type": "array"
+        },
+        "missing_lanes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Lanes",
+          "type": "array"
+        },
+        "stale_location": {
+          "title": "Stale Location",
+          "type": "boolean"
+        },
+        "coverage_s": {
+          "title": "Coverage S",
+          "type": "integer"
+        },
+        "uncertainty": {
+          "title": "Uncertainty",
+          "type": "string"
+        },
+        "complete": {
+          "title": "Complete",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "start",
+        "end",
+        "observation_ids",
+        "revision",
+        "tolerance_s",
+        "matches",
+        "missing_lanes",
+        "stale_location",
+        "coverage_s",
+        "uncertainty",
+        "complete"
+      ],
+      "title": "ContextWindow",
+      "type": "object"
+    },
+    "Decision": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "author": {
+          "const": "local-author",
+          "default": "local-author",
+          "title": "Author",
+          "type": "string"
+        },
+        "proposal_id": {
+          "title": "Proposal Id",
+          "type": "string"
+        },
+        "target_revision": {
+          "title": "Target Revision",
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "accepted",
+            "revised",
+            "refused",
+            "unresolved"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Text"
+        },
+        "decided_at": {
+          "format": "date-time",
+          "title": "Decided At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "author",
+        "proposal_id",
+        "target_revision",
+        "status",
+        "text",
+        "decided_at"
+      ],
+      "title": "Decision",
+      "type": "object"
+    },
+    "Heart": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "heart_rate",
+          "default": "heart_rate",
+          "title": "Kind",
+          "type": "string"
+        },
+        "value": {
+          "exclusiveMinimum": 0,
+          "maximum": 300,
+          "title": "Value",
+          "type": "number"
+        },
+        "unit": {
+          "const": "bpm",
+          "default": "bpm",
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "value",
+        "unit"
+      ],
+      "title": "Heart",
+      "type": "object"
+    },
+    "Listening": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "listening",
+          "default": "listening",
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 100,
+          "title": "Label",
+          "type": "string"
+        },
+        "policy": {
+          "enum": [
+            "original",
+            "author_marker",
+            "fictional"
+          ],
+          "title": "Policy",
+          "type": "string"
+        },
+        "tempo_bpm": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 400,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tempo Bpm"
+        }
+      },
+      "required": [
+        "kind",
+        "label",
+        "policy",
+        "tempo_bpm"
+      ],
+      "title": "Listening",
+      "type": "object"
+    },
+    "Location": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "location",
+          "default": "location",
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 100,
+          "title": "Label",
+          "type": "string"
+        },
+        "accuracy_m": {
+          "minimum": 0,
+          "title": "Accuracy M",
+          "type": "number"
+        },
+        "city": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "City"
+        },
+        "country": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Country"
+        }
+      },
+      "required": [
+        "kind",
+        "label",
+        "accuracy_m",
+        "city",
+        "country"
+      ],
+      "title": "Location",
+      "type": "object"
+    },
+    "Marker": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "marker",
+          "default": "marker",
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 200,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "label"
+      ],
+      "title": "Marker",
+      "type": "object"
+    },
+    "Match": {
+      "additionalProperties": false,
+      "properties": {
+        "observation_id": {
+          "title": "Observation Id",
+          "type": "string"
+        },
+        "overlap_s": {
+          "minimum": 0,
+          "title": "Overlap S",
+          "type": "number"
+        },
+        "age_at_trigger_s": {
+          "title": "Age At Trigger S",
+          "type": "number"
+        },
+        "relation": {
+          "enum": [
+            "point",
+            "interval",
+            "location_carry_forward"
+          ],
+          "title": "Relation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "observation_id",
+        "overlap_s",
+        "age_at_trigger_s",
+        "relation"
+      ],
+      "title": "Match",
+      "type": "object"
+    },
+    "Memory": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "integer"
+        },
+        "decision_id": {
+          "title": "Decision Id",
+          "type": "string"
+        },
+        "context_revision": {
+          "title": "Context Revision",
+          "type": "integer"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "support": {
+          "default": "supported",
+          "enum": [
+            "supported",
+            "needs_review",
+            "invalidated"
+          ],
+          "title": "Support",
+          "type": "string"
+        },
+        "previous_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Previous Id"
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "decision_id",
+        "context_revision",
+        "evidence_ids",
+        "text",
+        "support",
+        "previous_id"
+      ],
+      "title": "Memory",
+      "type": "object"
+    },
+    "Observation": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "source_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_type": {
+          "default": "fictional",
+          "enum": [
+            "fictional",
+            "apple_health_export",
+            "healthkit",
+            "core_location",
+            "author",
+            "original_audio"
+          ],
+          "title": "Source Type",
+          "type": "string"
+        },
+        "source_revision": {
+          "default": "1",
+          "maxLength": 100,
+          "title": "Source Revision",
+          "type": "string"
+        },
+        "device_revision": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Device Revision"
+        },
+        "event_start": {
+          "format": "date-time",
+          "title": "Event Start",
+          "type": "string"
+        },
+        "event_end": {
+          "format": "date-time",
+          "title": "Event End",
+          "type": "string"
+        },
+        "received_at": {
+          "format": "date-time",
+          "title": "Received At",
+          "type": "string"
+        },
+        "original_offset": {
+          "maxLength": 30,
+          "title": "Original Offset",
+          "type": "string"
+        },
+        "semantics": {
+          "enum": [
+            "measurement",
+            "interval",
+            "author_marker"
+          ],
+          "title": "Semantics",
+          "type": "string"
+        },
+        "acquisition": {
+          "enum": [
+            "simulated",
+            "historical",
+            "live"
+          ],
+          "title": "Acquisition",
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "source_recorded",
+            "author_stated"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "quality": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Quality",
+          "type": "array"
+        },
+        "payload": {
+          "discriminator": {
+            "mapping": {
+              "activity": "#/$defs/Activity",
+              "heart_rate": "#/$defs/Heart",
+              "listening": "#/$defs/Listening",
+              "location": "#/$defs/Location",
+              "marker": "#/$defs/Marker"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Heart"
+            },
+            {
+              "$ref": "#/$defs/Activity"
+            },
+            {
+              "$ref": "#/$defs/Location"
+            },
+            {
+              "$ref": "#/$defs/Listening"
+            },
+            {
+              "$ref": "#/$defs/Marker"
+            }
+          ],
+          "title": "Payload"
+        }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "source_id",
+        "source_type",
+        "source_revision",
+        "device_revision",
+        "event_start",
+        "event_end",
+        "received_at",
+        "original_offset",
+        "semantics",
+        "acquisition",
+        "provenance",
+        "quality",
+        "payload"
+      ],
+      "title": "Observation",
+      "type": "object"
+    },
+    "Placement": {
+      "additionalProperties": false,
+      "properties": {
+        "memory_id": {
+          "title": "Memory Id",
+          "type": "string"
+        },
+        "x": {
+          "maximum": 20,
+          "minimum": -20,
+          "title": "X",
+          "type": "number"
+        },
+        "author": {
+          "const": "local-author",
+          "default": "local-author",
+          "title": "Author",
+          "type": "string"
+        },
+        "at": {
+          "format": "date-time",
+          "title": "At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "memory_id",
+        "x",
+        "author",
+        "at"
+      ],
+      "title": "Placement",
+      "type": "object"
+    },
+    "Proposal": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "capture_id": {
+          "title": "Capture Id",
+          "type": "string"
+        },
+        "revision": {
+          "title": "Revision",
+          "type": "integer"
+        },
+        "context_revision": {
+          "title": "Context Revision",
+          "type": "integer"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "account": {
+          "title": "Account",
+          "type": "string"
+        },
+        "question": {
+          "title": "Question",
+          "type": "string"
+        },
+        "caveats": {
+          "title": "Caveats",
+          "type": "string"
+        },
+        "method": {
+          "default": "deterministic",
+          "enum": [
+            "deterministic",
+            "manual"
+          ],
+          "title": "Method",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "capture_id",
+        "revision",
+        "context_revision",
+        "evidence_ids",
+        "account",
+        "question",
+        "caveats",
+        "method"
+      ],
+      "title": "Proposal",
+      "type": "object"
+    },
+    "Rule": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "default": "fictional-high",
+          "title": "Id",
+          "type": "string"
+        },
+        "version": {
+          "default": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "enabled": {
+          "default": false,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "priority": {
+          "default": 0,
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Priority",
+          "type": "integer"
+        },
+        "required_lanes": {
+          "items": {
+            "enum": [
+              "heart_rate",
+              "activity",
+              "location",
+              "listening",
+              "marker"
+            ],
+            "type": "string"
+          },
+          "maxItems": 5,
+          "title": "Required Lanes",
+          "type": "array"
+        },
+        "direction": {
+          "default": "high",
+          "enum": [
+            "high",
+            "low"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "threshold": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Threshold"
+        },
+        "duration_s": {
+          "default": 30,
+          "maximum": 600,
+          "minimum": 1,
+          "title": "Duration S",
+          "type": "integer"
+        },
+        "gap_s": {
+          "default": 10,
+          "maximum": 120,
+          "minimum": 1,
+          "title": "Gap S",
+          "type": "integer"
+        },
+        "hysteresis": {
+          "default": 10,
+          "minimum": 0,
+          "title": "Hysteresis",
+          "type": "number"
+        },
+        "cooldown_s": {
+          "default": 60,
+          "minimum": 0,
+          "title": "Cooldown S",
+          "type": "integer"
+        },
+        "before_s": {
+          "default": 30,
+          "maximum": 600,
+          "minimum": 0,
+          "title": "Before S",
+          "type": "integer"
+        },
+        "after_s": {
+          "default": 30,
+          "maximum": 600,
+          "minimum": 0,
+          "title": "After S",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "enabled",
+        "priority",
+        "required_lanes",
+        "direction",
+        "threshold",
+        "duration_s",
+        "gap_s",
+        "hysteresis",
+        "cooldown_s",
+        "before_s",
+        "after_s"
+      ],
+      "title": "Rule",
+      "type": "object"
+    },
+    "RuleLatch": {
+      "additionalProperties": false,
+      "properties": {
+        "armed": {
+          "default": true,
+          "title": "Armed",
+          "type": "boolean"
+        },
+        "last_capture": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Capture"
+        }
+      },
+      "required": [
+        "armed",
+        "last_capture"
+      ],
+      "title": "RuleLatch",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "revision": {
+      "default": 0,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "cursor": {
+      "default": 0,
+      "title": "Cursor",
+      "type": "integer"
+    },
+    "now": {
+      "format": "date-time",
+      "title": "Now",
+      "type": "string"
+    },
+    "next_delivery_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Next Delivery At"
+    },
+    "observations": {
+      "items": {
+        "$ref": "#/$defs/Observation"
+      },
+      "maxItems": 512,
+      "title": "Observations",
+      "type": "array"
+    },
+    "event_index": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 512,
+      "title": "Event Index",
+      "type": "array"
+    },
+    "end_index": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 512,
+      "title": "End Index",
+      "type": "array"
+    },
+    "captures": {
+      "items": {
+        "$ref": "#/$defs/Capture"
+      },
+      "maxItems": 32,
+      "title": "Captures",
+      "type": "array"
+    },
+    "proposals": {
+      "items": {
+        "$ref": "#/$defs/Proposal"
+      },
+      "maxItems": 64,
+      "title": "Proposals",
+      "type": "array"
+    },
+    "decisions": {
+      "items": {
+        "$ref": "#/$defs/Decision"
+      },
+      "maxItems": 128,
+      "title": "Decisions",
+      "type": "array"
+    },
+    "memories": {
+      "items": {
+        "$ref": "#/$defs/Memory"
+      },
+      "maxItems": 128,
+      "title": "Memories",
+      "type": "array"
+    },
+    "placements": {
+      "items": {
+        "$ref": "#/$defs/Placement"
+      },
+      "maxItems": 128,
+      "title": "Placements",
+      "type": "array"
+    },
+    "rule": {
+      "$ref": "#/$defs/Rule"
+    },
+    "additional_rules": {
+      "items": {
+        "$ref": "#/$defs/Rule"
+      },
+      "maxItems": 4,
+      "title": "Additional Rules",
+      "type": "array"
+    },
+    "latches": {
+      "additionalProperties": {
+        "$ref": "#/$defs/RuleLatch"
+      },
+      "maxProperties": 5,
+      "title": "Latches",
+      "type": "object"
+    },
+    "armed": {
+      "default": true,
+      "title": "Armed",
+      "type": "boolean"
+    },
+    "last_capture": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Last Capture"
+    },
+    "status": {
+      "default": "ready",
+      "title": "Status",
+      "type": "string"
+    },
+    "reflection": {
+      "default": "",
+      "maxLength": 2000,
+      "title": "Reflection",
+      "type": "string"
+    },
+    "deleted_sources": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 100,
+      "title": "Deleted Sources",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "revision",
+    "cursor",
+    "now",
+    "next_delivery_at",
+    "observations",
+    "event_index",
+    "end_index",
+    "captures",
+    "proposals",
+    "decisions",
+    "memories",
+    "placements",
+    "rule",
+    "additional_rules",
+    "latches",
+    "armed",
+    "last_capture",
+    "status",
+    "reflection",
+    "deleted_sources"
+  ],
+  "title": "State",
+  "type": "object"
+}

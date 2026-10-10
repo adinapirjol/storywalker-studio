@@ -1,7 +1,7 @@
 import {cookies} from 'next/headers';
-import {isLocalRead} from '@/lib/local-origin';
-import {assertVaultSessionActive,vaultSessionActive,vaultSessionFailure,VAULT_SESSION_COOKIE} from '@/lib/vault-session';
-import { spotifyEnvironmentSchema, readSpotifySelection } from "@/lib/spotify-server";
+import {isLocalRead} from '@/lib/http/local-origin';
+import {assertVaultSessionActive,vaultSessionActive,vaultSessionFailure,VAULT_SESSION_COOKIE} from '@/lib/vault/vault-session';
+import { spotifyEnvironmentSchema, readSpotifySelection } from "@/lib/music/spotify-server";
 
 export const runtime = "nodejs";
 

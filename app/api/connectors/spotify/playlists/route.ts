@@ -1,9 +1,9 @@
 import {cookies} from 'next/headers';
-import {isLocalSameOrigin} from '@/lib/local-origin';
-import {assertVaultSessionActive,vaultSessionActive,vaultSessionFailure,VAULT_SESSION_COOKIE} from '@/lib/vault-session';
-import {boundedText} from "@/lib/context-request";
+import {isLocalSameOrigin} from '@/lib/http/local-origin';
+import {assertVaultSessionActive,vaultSessionActive,vaultSessionFailure,VAULT_SESSION_COOKIE} from '@/lib/vault/vault-session';
+import {boundedText} from "@/lib/http/context-request";
 import { z } from "zod";
-import { readSpotifyPlaylistPresentations, spotifyEnvironmentSchema } from "@/lib/spotify-server";
+import { readSpotifyPlaylistPresentations, spotifyEnvironmentSchema } from "@/lib/music/spotify-server";
 
 export const runtime = "nodejs";
 

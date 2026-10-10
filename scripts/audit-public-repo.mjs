@@ -1,6 +1,7 @@
+import { privateAuditMarkers } from './private-audit-markers.mjs';
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, statSync, lstatSync } from "node:fs";
-import { extname, join } from "node:path";
+import { extname } from "node:path";
 
 const root = process.cwd();
 const listed = execFileSync(
@@ -33,18 +34,7 @@ const forbiddenTrackedPaths = [
   /(^|\/)storywalker-private-/u,
 ];
 
-const stagedRecoveryPath = join(root, "private-data", "storywalker", "july-august-2026.recovery.private.json");
-const privateMarkers = existsSync(stagedRecoveryPath)
-  ? (() => {
-    try {
-      const recovery = JSON.parse(readFileSync(stagedRecoveryPath, "utf8"));
-      return [
-        ...(recovery.moments ?? []).flatMap((moment) => [moment.id, moment.title, moment.authorStatement, ...(moment.provenance ?? []).flatMap((source) => [source.chatTitle, source.shortExcerpt])]),
-        ...(recovery.companions ? [] : []),
-      ].filter((value) => typeof value === "string" && value.trim().length >= 24);
-    } catch { failures.push("local private recovery guard could not be read"); return []; }
-  })()
-  : [];
+const privateMarkers = privateAuditMarkers(root);
 const forbiddenArtifactNames = [
   /^exports\/storywalker-life-timeline-/u,
   /^exports\/florianopolis-/u,

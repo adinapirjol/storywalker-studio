@@ -1,11 +1,11 @@
-import {isLocalSameOrigin} from '@/lib/local-origin';
-import {boundedText} from '@/lib/context-request';
+import {isLocalSameOrigin} from '@/lib/http/local-origin';
+import {boundedText} from '@/lib/http/context-request';
 import { z } from "zod";
 import { cookies } from "next/headers";
-import { closeVault, openVault, openVaultWithKey, putVaultRecords, refreshVaultDerivedViews, setVaultAccessGuard, vaultSummary, type VaultRecord } from "@/lib/private-vault";
-import { importSpotifyPlaylists, spotifyEnvironmentSchema } from "@/lib/spotify-server";
-import { assertVaultSessionActive, readVaultSession, VAULT_SESSION_COOKIE, vaultSessionFailure } from "@/lib/vault-session";
-import { VaultWriteBusyError, VaultWriteConflictError } from "@/lib/vault-file-lock";
+import { closeVault, openVault, openVaultWithKey, putVaultRecords, refreshVaultDerivedViews, setVaultAccessGuard, vaultSummary, type VaultRecord } from "@/lib/vault/private-vault";
+import { importSpotifyPlaylists, spotifyEnvironmentSchema } from "@/lib/music/spotify-server";
+import { assertVaultSessionActive, readVaultSession, VAULT_SESSION_COOKIE, vaultSessionFailure } from "@/lib/vault/vault-session";
+import { VaultWriteBusyError, VaultWriteConflictError } from "@/lib/vault/vault-file-lock";
 
 export const runtime = "nodejs";
 

@@ -9,16 +9,16 @@ external export consent remain separate domain decisions.
 
 | Module | Responsibility |
 | --- | --- |
-| `lib/vault-session.ts` | Opaque session reference, fixed expiry, key erasure, rotation and revocation |
-| `lib/local-origin.ts` | Loopback Host / same-origin browser boundary; no forwarded-host trust |
-| `lib/vault-route-access.ts` | Scoped Vault opening, transient-key cleanup, persistence and result guards |
-| `lib/vault-passkeys.ts` | Verified one-use ceremonies, PRF wrapping and locked atomic credential storage |
-| `lib/vault-passkey-browser.ts` | Device API adapter with cancellation and PRF cleanup |
-| `lib/vault-auth-client.ts` | Non-replayed, same-origin, uncached authentication transport |
-| `lib/vault-access.ts` | Shared prompt coordination and one safe retry of a pre-execution denial |
-| `components/vault-access.tsx` | One global passkey / recovery-passphrase modal with focus restoration |
-| `components/use-vault-passkeys.ts` | Enrollment, encryption check and unlock lifecycle |
-| `components/vault-passkeys.tsx` | Presentation and explicit Author actions |
+| `lib/vault/vault-session.ts` | Opaque session reference, fixed expiry, key erasure, rotation and revocation |
+| `lib/http/local-origin.ts` | Loopback Host / same-origin browser boundary; no forwarded-host trust |
+| `lib/vault/vault-route-access.ts` | Scoped Vault opening, transient-key cleanup, persistence and result guards |
+| `lib/vault/vault-passkeys.ts` | Verified one-use ceremonies, PRF wrapping and locked atomic credential storage |
+| `lib/vault/vault-passkey-browser.ts` | Device API adapter with cancellation and PRF cleanup |
+| `lib/vault/vault-auth-client.ts` | Non-replayed, same-origin, uncached authentication transport |
+| `lib/vault/vault-access.ts` | Shared prompt coordination and one safe retry of a pre-execution denial |
+| `components/vault/vault-access.tsx` | One global passkey / recovery-passphrase modal with focus restoration |
+| `components/vault/use-vault-passkeys.ts` | Enrollment, encryption check and unlock lifecycle |
+| `components/vault/vault-passkeys.tsx` | Presentation and explicit Author actions |
 
 Private views invoke `vaultFetch` for protected actions and `VaultUnlockButton`
 for explicit unlock. `/vault` uses the same modal for existing Vault access; it
@@ -97,7 +97,7 @@ count bytes before decoding and cancel on error or abort.
 
 `/research/xr/aurora-coast` includes a manually stepped BODY study, a timestamped
 simulated batch, threshold examples and access-boundary explanations. It neither
-unlocks real data nor writes to Logfire. `lib/aurora-integrations.test.ts` checks
+unlocks real data nor writes to Logfire. `lib/xr/aurora-integrations.test.ts` checks
 its examples against the real local Pydantic evaluator in an isolated test.
 
 Cryptographic tests generate synthetic P-256 credentials and real signatures;

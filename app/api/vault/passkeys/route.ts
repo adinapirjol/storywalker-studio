@@ -3,10 +3,10 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import type { AuthenticationResponseJSON, RegistrationResponseJSON } from "@simplewebauthn/server";
-import { vaultKeyIdentity, verifyVaultKey } from "@/lib/private-vault";
-import { assertVaultSessionActive, rotateVaultSession, readVaultSession, VAULT_SESSION_COOKIE, vaultSessionCookie, vaultSessionFailure } from "@/lib/vault-session";
-import { authenticationOptions, changePasskeys, decodePrf, passkeyAddressStatus, passkeyCeremonies, passkeyOrigin, readPasskeys, registrationOptions, requirePasskeyOrigin, unwrapVaultKey, verifyAssertion, verifyRegistration, wrapVaultKey } from "@/lib/vault-passkeys";
-import { boundedText } from "@/lib/context-request";
+import { vaultKeyIdentity, verifyVaultKey } from "@/lib/vault/private-vault";
+import { assertVaultSessionActive, rotateVaultSession, readVaultSession, VAULT_SESSION_COOKIE, vaultSessionCookie, vaultSessionFailure } from "@/lib/vault/vault-session";
+import { authenticationOptions, changePasskeys, decodePrf, passkeyAddressStatus, passkeyCeremonies, passkeyOrigin, readPasskeys, registrationOptions, requirePasskeyOrigin, unwrapVaultKey, verifyAssertion, verifyRegistration, wrapVaultKey } from "@/lib/vault/vault-passkeys";
+import { boundedText } from "@/lib/http/context-request";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

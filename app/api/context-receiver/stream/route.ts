@@ -1,8 +1,8 @@
 import {NextRequest,NextResponse} from 'next/server';
-import {isLocalSameOrigin} from '@/lib/local-origin';
-import {VAULT_SESSION_COOKIE} from '@/lib/vault-session';
-import {receiverSessionActive,receiverStatus,assertReceiverConnection} from '@/lib/native-receiver';
-import {receiverStream} from '@/lib/receiver-stream';
+import {isLocalSameOrigin} from '@/lib/http/local-origin';
+import {VAULT_SESSION_COOKIE} from '@/lib/vault/vault-session';
+import {receiverSessionActive,receiverStatus,assertReceiverConnection} from '@/lib/native/native-receiver';
+import {receiverStream} from '@/lib/native/receiver-stream';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 export async function POST(request:NextRequest){

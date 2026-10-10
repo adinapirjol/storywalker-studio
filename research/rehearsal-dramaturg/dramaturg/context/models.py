@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, AwareDatetime, FiniteFloat, model_validator
 
@@ -7,7 +7,8 @@ class Contract(BaseModel):
 
 class Heart(Contract):
     kind: Literal['heart_rate'] = 'heart_rate'
-    value: FiniteFloat
+    # Research plausibility envelope, not a clinical alarm threshold.
+    value: FiniteFloat = Field(gt=0, le=300)
     unit: Literal['bpm'] = 'bpm'
 class Activity(Contract):
     kind: Literal['activity'] = 'activity'
@@ -47,6 +48,15 @@ class Observation(Contract):
     def interval(self):
         if self.event_end < self.event_start: raise ValueError('invalid_interval')
         return self
+# Measurement and app-receipt clocks may differ; never rewrite source time.
+CLOCK_SKEW = timedelta(seconds=120)
+
+def validate_measurement_time(observation: Observation, now: datetime) -> None:
+    if observation.received_at + CLOCK_SKEW < observation.event_end:
+        raise ValueError('receipt_precedes_measurement')
+    if observation.event_end > now + CLOCK_SKEW or observation.received_at > now + CLOCK_SKEW:
+        raise ValueError('future_observation')
+
 class Rule(Contract):
     id: str = 'fictional-high'
     version: int = 1

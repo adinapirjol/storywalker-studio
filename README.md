@@ -211,10 +211,18 @@ Imported material is written beneath `private-data/spotify/` as an ignored `*.pr
 ## BODY research events and Logfire
 
 In `/research/xr/body`, choose **My private HealthKit data** and open
-**Research events · thresholds & context**. Its separate export switch controls
-new research candidates in the dedicated
-[`adinablazrx/storywalker` EU Logfire project](https://logfire-eu.pydantic.dev/adinablazrx/storywalker).
-The older received-batch/live-window summary switch remains independent.
+**Unreviewed live research telemetry · thresholds & context**. Its separate export switch controls
+new research candidates in the explicitly configured EU Logfire project.
+Set `STORYWALKER_HEALTH_PROJECT_URL` in ignored server configuration; without a
+valid target export fails closed. The credential must match that exact project.
+Reviewed-batch summaries have a separate session switch and per-batch export action.
+Staging stays private and pending; Accept saves evidence without authorizing export.
+After enabling reviewed exports for the current Vault session, review an accepted
+batch and choose **Export this reviewed summary to Logfire** to consent to that send.
+Pending/deleted batches cannot use that action. Live-window summaries are disabled.
+Legacy summary/event settings are not migrated: both feeds require explicit
+reconfirmation of the new scope. Restart or expiry requires a fresh enable action.
+See [the health export consent contract](docs/research/health-export-consent.md).
 
 The illustrative research markers are at least 120 bpm and below 50 bpm, with
 two distinct supporting observations, gaps of at most 60 seconds and an explicit
@@ -232,9 +240,9 @@ at least +30 bpm with a comparison gap no greater than two minutes and no report
 poor-signal flag. This is an observed delta, not certified sensor accuracy.
 
 Pydantic validates locally in an isolated subprocess; deterministic rules evaluate
-fresh observations, no more than two minutes old. Watch-attributed data is preferred,
-with phone HealthKit fallback when recent Watch data is absent. Timestamp watermarks
-prevent the same measurement triggering again through the live and batch lanes.
+fresh Watch preview observations, no more than two minutes old. Incoming historical
+batches do not trigger this exporter. Timestamp watermarks suppress repeated live
+measurements.
 Missing data resets supporting runs but does not prove recovery. A 5 bpm return
 margin and five-minute per-marker cooldown limit repeated episodes. Candidates are
 grouped for 60 seconds before export. All these settings are editable.
@@ -260,7 +268,7 @@ deduplication, stale/future data, missing coverage, cooldown/recovery, partial
 ingestion rejection, session expiry and cancellation. Run the focused checks with:
 
 ```sh
-npx vitest run lib/health-threshold.test.ts lib/context-summary-route.test.ts lib/health-summary-security.test.ts
+npx vitest run lib/body/health-threshold.test.ts lib/body/context-summary-route.test.ts lib/body/health-summary-security.test.ts
 research/rehearsal-dramaturg/.venv/bin/python -m pytest research/rehearsal-dramaturg/tests/test_health_events.py -q
 ```
 
@@ -327,9 +335,9 @@ Public research templates and the dated 23 August 2026 checkpoint are in [`docs/
 
 ```text
 app/                         Next.js routes, local API, and visual language
-components/                  Author review, Vault, Atlas, Scenario, and research surfaces
+components/                  Feature-owned UI (see components/README.md)
 examples/aurora-coast/       Committed fictional demo bundle
-lib/                         Schemas, correlation, private Vault, Atlas, Scenario, adapters
+lib/                         Feature-owned contracts, domain operations and colocated tests
 scripts/                     Demo verification, privacy audit, optional local import tools
 docs/                        Architecture, privacy, demo, import, and release notes
 .github/workflows/ci.yml     Credential-free quality gates
@@ -372,11 +380,11 @@ this does not install a device build.
 
 Every claim below is checkable in this repository:
 
-- **Deterministic data systems** — a pure correlation pass in `lib/correlation.ts` produces identical proposal IDs and ordering for identical confirmed input, verified in `lib/demo.test.ts`.
-- **Temporal uncertainty modelling** — exact, day-level, and ranged evidence stay distinct from schema (`lib/schema.ts`) through review to export, and are never silently promoted to facts.
-- **Human-in-the-loop interaction design** — `lib/review-state.ts` and the workspace in `components/` make Author confirmation, rejection, and date revision the only path from evidence to narrative.
+- **Deterministic data systems** — a pure correlation pass in `lib/studio/correlation.ts` produces identical proposal IDs and ordering for identical confirmed input, verified in `lib/studio/demo.test.ts`.
+- **Temporal uncertainty modelling** — exact, day-level, and ranged evidence stay distinct from schema (`lib/studio/schema.ts`) through review to export, and are never silently promoted to facts.
+- **Human-in-the-loop interaction design** — `lib/studio/review-state.ts` and the workspace in `components/` make Author confirmation, rejection, and date revision the only path from evidence to narrative.
 - **Privacy-aware architecture** — explicit filters at ingestion, encrypted local persistence, Atlas derivation, and export boundaries, documented in [the privacy model](docs/privacy-model.md).
-- **Server-side API integration** — the optional Spotify importer lives in Node-only modules, with `lib/browser-boundary.test.ts` proving credentials never reach the browser bundle.
+- **Server-side API integration** — the optional Spotify importer lives in Node-only modules, with `lib/privacy/browser-boundary.test.ts` proving credentials never reach the browser bundle.
 - **Reproducible verification** — credential-free CI, a deterministic fixture check, and a public-repository audit script in `scripts/`.
 
 ## Roadmap

@@ -1,11 +1,13 @@
 """Local stdin validation only: no telemetry, files, provider access or error inputs."""
+from datetime import datetime, timezone
+from collections.abc import Callable
 import base64
 import json
 import sys
 from typing import Literal
 from uuid import UUID
 from pydantic import Field, model_validator
-from .context.models import Contract, Observation
+from .context.models import Contract, Observation, validate_measurement_time
 
 class WireDelivery(Contract):
     id: str = Field(min_length=1, max_length=110)
@@ -33,7 +35,8 @@ class ValidatedTransfer(Contract):
     observations: list[Observation] = Field(max_length=200)
     deletions: list[str] = Field(max_length=200)
 
-def validate_transfer(raw: bytes) -> dict:
+def validate_transfer(raw: bytes, clock: Callable[[], datetime] = lambda: datetime.now(timezone.utc)) -> dict:
+    now = clock()
     if len(raw) > 1_048_576:
         raise ValueError('limit')
     batch = NativeBatch.model_validate_json(raw)
@@ -56,12 +59,19 @@ def validate_transfer(raw: bytes) -> dict:
             raise ValueError('mode')
         if observation.provenance != 'source_recorded' or observation.semantics != 'measurement':
             raise ValueError('provenance')
-        observations.append(observation.model_dump(mode='json'))
+        if batch.mode == 'healthkit':
+            validate_measurement_time(observation, now)
+        value = observation.model_dump(mode='json')
+        original = json.loads(packet)
+        for field in ('event_start', 'event_end', 'received_at'):
+            value[field] = original[field]
+        observations.append(value)
     return dict(version=1,batch_id=batch.batch_id,mode=batch.mode,observations=observations,deletions=deletions)
 
 def main():
     try:
-        result = validate_transfer(sys.stdin.buffer.read(1_048_577))
+        clock = (lambda: datetime.fromisoformat(sys.argv[1])) if len(sys.argv) == 2 else lambda: datetime.now(timezone.utc)
+        result = validate_transfer(sys.stdin.buffer.read(1_048_577), clock)
         sys.stdout.write(json.dumps(result,allow_nan=False))
     except Exception:
         sys.stderr.write('NATIVE_TRANSFER_INVALID\n')

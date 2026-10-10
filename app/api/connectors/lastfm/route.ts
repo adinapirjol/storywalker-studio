@@ -1,5 +1,5 @@
-import {isLocalRead} from '@/lib/local-origin';
-import { lastFmEnvironmentSchema } from "@/lib/lastfm-server";
+import {isLocalRead} from '@/lib/http/local-origin';
+import { lastFmEnvironmentSchema } from "@/lib/music/lastfm-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

@@ -1,5 +1,5 @@
-import {isLocalRead} from '@/lib/local-origin';
-import { spotifyAuthorised, spotifyEnvironmentSchema } from "@/lib/spotify-server";
+import {isLocalRead} from '@/lib/http/local-origin';
+import { spotifyAuthorised, spotifyEnvironmentSchema } from "@/lib/music/spotify-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

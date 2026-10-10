@@ -2,8 +2,8 @@
 import {readFileSync,writeFileSync,rmSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
 import path from 'node:path';
-import {decodeTransfer,validateNativePacket,stageNativeTransfer,decideNativeTransfer,nativeReceipt,previewNativeTransfer} from '../lib/native-transfer';
-import {openContextSandbox,closeVault} from '../lib/private-vault';
+import {decodeTransfer,validateNativePacket,stageNativeTransfer,decideNativeTransfer,nativeReceipt,previewNativeTransfer} from '../lib/native/native-transfer';
+import {openContextSandbox,closeVault} from '../lib/vault/private-vault';
 async function main(){
  const folder=process.argv[2];if(!folder)throw Error();
  const key=readFileSync(path.join(folder,'fictional-test-key.txt'),'utf8');

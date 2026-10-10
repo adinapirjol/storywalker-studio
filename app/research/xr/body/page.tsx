@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import {BodyStudy} from '@/components/body-study';
+import {BodyStudy} from '@/components/body/body-study';
 
 export default function BodyPreviewPage(){
  return <main style={{maxWidth:1400,margin:'0 auto',padding:'1.5rem',background:'#090f1b',color:'#e8edf0',minHeight:'100vh'}}>

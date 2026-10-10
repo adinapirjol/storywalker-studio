@@ -49,7 +49,7 @@ def test_time_and_policy_boundaries():
     sample['payload']={'kind':'heart_rate','value':float('inf')}
     with pytest.raises(ValidationError):Observation.model_validate(sample)
     sample['payload']={'kind':'heart_rate','value':500}
-    assert Observation.model_validate(sample).payload.value==500
+    with pytest.raises(ValidationError):Observation.model_validate(sample)
 
 def test_body_tempo_and_place_contract():
     assert Listening(label='Original cue',policy='original').tempo_bpm is None
@@ -63,10 +63,11 @@ def test_body_tempo_and_place_contract():
 def test_safe_health_stream():
     from io import BytesIO
     from dramaturg.context.health_import import stream_heart_records
-    xml=b'<HealthData><Record type="HKQuantityTypeIdentifierHeartRate" unit="count/min" value="500" startDate="2026-10-04 01:00:00 +0300" endDate="2026-10-04 01:00:00 +0300"/></HealthData>'
+    xml=b'<HealthData><Record type="HKQuantityTypeIdentifierHeartRate" unit="count/min" value="300" startDate="2026-10-04 01:00:00 +0300" endDate="2026-10-04 01:00:00 +0300"/></HealthData>'
     observation=list(stream_heart_records(BytesIO(xml)))[0]
-    assert observation.acquisition=='historical' and observation.payload.value==500
+    assert observation.acquisition=='historical' and observation.payload.value==300
     assert observation.original_offset=='+0300'
+    with pytest.raises(ValidationError):list(stream_heart_records(BytesIO(xml.replace(b'value="300"',b'value="500"'))))
     with pytest.raises(Exception):list(stream_heart_records(BytesIO(b'<!DOCTYPE x [<!ENTITY a "secret">]><x>&a;</x>')))
     with pytest.raises(ValueError):list(stream_heart_records(BytesIO(xml),lambda:True))
 

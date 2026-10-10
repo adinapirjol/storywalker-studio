@@ -11,6 +11,6 @@ async def main():
     state=State.model_validate_json(state.model_dump_json())
     assert all(o.source_type=='fictional' and o.acquisition=='simulated' for o in state.observations)
     assert not state.memories and not state.decisions and not state.reflection
-    (Path(__file__).resolve().parents[3]/'lib/body-preview.fictional.json').write_text(state.model_dump_json(indent=2)+'\n')
+    (Path(__file__).resolve().parents[3]/'lib/body/body-preview.fictional.json').write_text(state.model_dump_json(indent=2)+'\n')
 
 if __name__=='__main__': asyncio.run(main())

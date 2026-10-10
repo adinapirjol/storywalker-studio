@@ -1,4 +1,4 @@
-import {isLocalRead} from '@/lib/local-origin';
+import {isLocalRead} from '@/lib/http/local-origin';
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { z } from "zod";

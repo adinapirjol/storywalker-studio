@@ -1,4 +1,4 @@
-import { StorywalkerOnboarding } from "@/components/storywalker-onboarding";
+import { StorywalkerOnboarding } from "@/components/studio/storywalker-onboarding";
 
 export default function StartPage() {
   return <StorywalkerOnboarding />;

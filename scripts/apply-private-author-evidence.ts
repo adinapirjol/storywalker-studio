@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { isAbsolute, resolve } from "node:path";
-import { applyPostImportEvidence, migrateStagedRecovery, postImportCorrectionSchema } from "../lib/private-recovery";
+import { applyPostImportEvidence, migrateStagedRecovery, postImportCorrectionSchema } from "../lib/evidence/private-recovery";
 
 const args = process.argv.slice(2);
 const correctionFlag = args.indexOf("--correction");

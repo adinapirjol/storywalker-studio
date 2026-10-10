@@ -1,4 +1,4 @@
-import { parseSceneFile, reviewExport } from "@/lib/xr-scene";
+import { parseSceneFile, reviewExport } from "@/lib/xr/xr-scene";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

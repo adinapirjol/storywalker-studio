@@ -5,10 +5,10 @@ import path from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
-import {makeReceiverConfig,pairingDocument,startReceiver,stopReceiver} from '../lib/native-receiver';
-import {openContextSandbox,closeVault} from '../lib/private-vault';
-import {listNativeTransfers,decideNativeTransfer} from '../lib/native-transfer';
-import {nativeTransaction} from '../lib/native-transaction';
+import {makeReceiverConfig,pairingDocument,startReceiver,stopReceiver} from '../lib/native/native-receiver';
+import {openContextSandbox,closeVault} from '../lib/vault/private-vault';
+import {listNativeTransfers,decideNativeTransfer} from '../lib/native/native-transfer';
+import {nativeTransaction} from '../lib/native/native-transaction';
 let phase="setup";
 async function main(){
  const namespace='context-sandbox-network-'+randomUUID(),folder=await mkdtemp(path.join(tmpdir(),'storywalker-network-fixture-'));

@@ -23,15 +23,13 @@ not asserted as today's blockers.
   checks, one-use challenges, credential counters, fixed 15-minute sessions and
   explicit lock revocation. Expired private mutations are not automatically
   replayed after unlock. OAuth provider access remains a separate consent boundary.
-- The Author confirms existing phone-assisted passkey unlocking in Safari and
-  Codex, plus earlier recovery access. The Bluetooth wait was temporary. Local
-  Touch ID is deferred on the managed Mac; no restriction was changed. Enrollment,
-  expiry, explicit lock, rejection and recovery failure cases remain unaccepted.
-- Historical Watch installation, reading and phone acknowledgement are established
-  by the earlier evidence below. The latest source's **Start meditation** action
-  maps to HealthKit Mind and Body and has compiled for the unsigned Watch simulator.
-  That does not accept its latest physical save, sensing or background behavior.
-  No native installation was performed during this documentation refresh.
+- Passkey enrollment, expiry, explicit lock, rejection and recovery failure cases
+  require acceptance against the release build. Historical basic access does not
+  establish every authenticator method or failure case.
+- Native installation and displayed readings are distinct from verified archive
+  delivery and current-build acceptance. The **Start meditation** action maps to
+  HealthKit Mind and Body and has compiled for the unsigned Watch simulator;
+  physical save, sensing and background behavior remain separate checks.
 - README now describes the native pair with public app icons and includes a paused
   fictional BODY browser screenshot. Private device photos/readings were not added.
   Fictional playback and external exports were not enabled for this refresh; no
@@ -152,7 +150,7 @@ conditions are present in Storywalker.
   contains color-space/dimension tags, not GPS, artist or user-comment tags. JPEG
   screenshots contain no EXIF/XMP containers. The portfolio's existing Author
   credit is intentional public identity, not a provider secret.
-- Import/reference searches found no removable source orphan. `lib/sql-js.d.ts`
+- Import/reference searches found no removable source orphan. `lib/vault/sql-js.d.ts`
   is an ambient declaration; routes, schemes, asset catalogs, tests and scripts
   have framework/build/manual uses. Matching phone and Watch icons are required
   target assets, not accidental duplication.
@@ -181,12 +179,9 @@ conditions are present in Storywalker.
 
 ## Remaining validation and release conditions
 
-1. **Latest Author photo confirms the companion installed and open on the Watch.**
-   Earlier tunnel/profile failures remain historical findings, not current proof
-   of an installation blocker for the launched build. A newer photo shows a
-   timestamped reading and a phone receipt acknowledgement. Subsequent evidence
-   and the Author's explicit bounded resumption are recorded below; those do not
-   establish continuous sampling or a release-ready end-to-end system.
+1. Physical-device delivery, sampling and acknowledgement need acceptance against
+   the exact release build; historical demonstrations do not establish current
+   state or release readiness.
 2. The test environment exhibited large scheduling/timeouts. Get a clean complete
    suite in an uninterrupted run before release; do not suppress failing assertions
    or extend the production validator timeout just to make checks green.
@@ -214,102 +209,23 @@ conditions are present in Storywalker.
    personal research annotations must remain ignored/private.
 
 Security and privacy repairs do not themselves certify physical-device delivery.
-The current bounded resumption is recorded in `AGENTS.md`; historical freeze
-references below describe the state at the time of each earlier review.
+Durable audit boundaries are recorded in `AGENTS.md`; historical test counts
+describe their original runs, not current device state.
 
-## Read-only device follow-up after OS updates
+## Physical-device verification boundary
 
-On 9 October, the Author supplied screenshots of iOS 27.2 and watchOS 27.0.1.
-Two read-only CoreDevice discovery checks with access to the macOS service now
-report the physical phone on iOS 27.2, wired/connected, paired, with Developer
-Mode enabled. The physical Series 11 Watch reports watchOS 27.0.1, paired,
-local-network tunnel initially **connecting**, then **connected** on the second
-check, and Developer Mode **disabled**. Simulator
-entries were excluded from these conclusions. Xcode reports 27.0 (27A266a).
+Device discovery, signing, installation, sensing, phone acknowledgement, Mac
+receipt and Author acceptance are separate checks. Automated tests do not establish
+physical-device readiness or current source freshness. Keep detailed device and
+network diagnostics in ignored local notes, not public review records.
 
-This improves on the earlier missing Watch OS metadata and discovery connection,
-but does not establish deployment readiness, valid provisioning or successful installation. The
-initial sandboxed query timed out initializing CoreDevice; normal host discovery
-succeeded, so that timeout is not evidence of a physical-device failure.
-
-The next user-side check is the Watch's Settings → Privacy & Security → Developer
-Mode control, following [Apple's instructions](https://developer.apple.com/documentation/xcode/enabling-developer-mode-on-a-device).
-No device setting, pairing, app installation, feature or data feed was changed.
-The development freeze remains in place.
-
-After the Author enabled Watch Developer Mode, a further read-only CoreDevice
-check confirmed the physical Watch as **connected**, **paired**, on watchOS
-27.0.1 with Developer Mode **enabled**. The physical phone remains connected on
-iOS 27.2 with Developer Mode enabled. The earlier connection and Developer Mode
-blockers are therefore cleared at discovery level.
-
-A successful read-only installed-app query, filtered to `Storywalker` and
-including default apps, returned **zero matching apps** on the physical Watch.
-This does not validate signing/provisioning or establish deployment success.
-Storywalker installation remains pending. No app was installed or launched, no
-data feed was started, and the development/installation freeze remains in place.
-
-Following the Author's manual Watch-app Install attempt, another successful
-read-only query again found zero Storywalker apps on the connected physical Watch.
-Both physical devices still report Developer Mode enabled. Inspection of the
-existing `Debug-iphoneos` bundle confirms its Watch app is correctly embedded at
-`Watch/StorywalkerWatch.app`, and both app signatures pass strict verification.
-However, the embedded Watch development profile contains one device: the connected
-iPhone. It **does not include the connected Watch**. That profile was created on
-8 October and expires on 15 October, so expiration is not the observed defect.
-
-This confirms an installability defect in the last built package and is consistent
-with the Install button returning. The installed phone's package was not extracted,
-and installer failure logs were not captured, so the precise failed attempt is not
-independently attributed to this profile. The appropriate next repair is physical
-Watch registration, automatic-signing rebuild, verification that the new embedded
-profile includes the Watch, then deployment verification. That repair requires the
-Author to lift the existing installation freeze for this bounded operation. No
-profile was edited, device registered, app rebuilt, installed or launched during
-these checks. Device identifiers and certificate contents were not printed.
-
-## Authorized signing/install repair and remaining blocker
-
-On 9 October the Author explicitly approved a bounded exception to the freeze:
-register the physical Watch, rebuild with automatic signing, verify the profile,
-and install. Feature changes and health/data feeds remain frozen.
-
-The Mac initially had approximately 117 MiB available. Removed only reproducible
-task download/build caches and verified older temporary Xcode builds, preserving
-the current signed app and its profiles. Space initially recovered to about
-2.4 GiB, then filled again during developer preparation. Xcode's iOS device-support
-caches occupied approximately 22 GiB; the current iOS 27.2 cache was unfinished.
-The completed old iOS 26.7 and 26.7.1 system-symbol caches were each about 5.7 GiB.
-Those regenerable caches were removed with permission; current OS support,
-signing credentials, app sources and all private evidence were preserved. Free
-space subsequently reached approximately 17 GiB. This resolves the observed storage shortage,
-but is not proof of completed device-support preparation.
-
-Physical-Watch automatic-signing builds failed before a successful signing/build:
-Xcode repeatedly timed out waiting for the Watch destination, reporting
-`Connecting`. One retry also exited with code 74 during the disk-space shortage.
-Read-only discovery can report the Watch available while the developer service
-still cannot establish its tunnel. The Watch lock-state check succeeded after the
-Author unlocked it. Apple's installed watchOS DDI metadata reports compatible,
-usable support; this does not prove that image is mounted on the physical Watch.
-An attempt to prepare it failed with CoreDevice error 4000, nested
-RemotePairingError 1001: timeout establishing the negotiated developer tunnel.
-The Author confirmed both devices are connected to the same private Wi-Fi.
-
-The Mac has an active tunnel interface and GlobalProtect visibly reports connected.
-Apple documents VPN/filter interference with Xcode device communication in
-[TN3158](https://developer.apple.com/documentation/technotes/tn3158-resolving-xcode-15-device-connection-issues).
-This is a candidate cause, not a confirmed diagnosis. The Author approved a brief
-normal VPN disconnect/reconnect test, but GlobalProtect requires a valid ticket
-before disconnecting. No ticket/code was entered. The Author asked to cancel the
-test; the prompt was cancelled and GlobalProtect was visibly verified still
-connected. No VPN, firewall, network filter or managed protection was bypassed.
-
-No replacement app was successfully built or installed, no app was launched, and
-no data feed was started. The next external dependency is an IT-approved review
-of local Xcode device traffic or an authorized short VPN disconnect test. Signing
-profile repair and physical installation remain pending. Temporary command logs
-were kept locally; documentation omits device IDs, request codes and credentials.
+Do not bypass managed network protections or reset pairing during an audit.
+Use Apple's [device connection guidance](https://developer.apple.com/documentation/technotes/tn3158-resolving-xcode-15-device-connection-issues),
+[Developer Mode guidance](https://developer.apple.com/documentation/xcode/enabling-developer-mode-on-a-device)
+and [registered-device distribution guidance](https://developer.apple.com/documentation/xcode/distributing-your-app-to-registered-devices)
+when a separately authorized deployment needs troubleshooting. A signed embedded
+Watch app must include the intended device in its provisioning profile; successful
+discovery alone is not proof of this.
 
 ## High-priority repair follow-up — 9 October 2026
 
@@ -346,101 +262,23 @@ No commit, feed launch, device installation or network/VPN change was made in th
 follow-up. Existing private plaintext source copies and SQLite metadata remain
 subject to the retention/privacy limitations above.
 
-## Watch-side integrity rejection — new Author evidence
+## Native sampling and connection-maintenance findings
 
-The Author's photo shows the Watch rejecting Storywalker with: “This app cannot
-be installed because its integrity could not be verified.” This establishes an
-on-device installation verification failure, not an installed/running companion.
+Ordinary `HKObserverQuery` / `HKSampleQuery` reads available HealthKit samples;
+transport improvements cannot create missing measurements or promise continuous
+cadence. Explicit workout acquisition uses `HKWorkoutSession` and
+`HKLiveWorkoutBuilder`; it has separate Health permissions, storage and battery
+implications. See Apple's [workout session documentation](https://developer.apple.com/documentation/healthkit/running-workout-sessions).
+A phone acknowledgement establishes neither Mac receipt nor accepted Vault evidence.
 
-The message is consistent with the already documented development-profile defect:
-the inspected embedded Watch profile includes the iPhone but excludes the Watch.
-That is the leading identified signing/provisioning blocker; the photo alone does
-not identify the precise verification error or prove which build was attempted.
-The developer tunnel timeout remains a separate obstacle to registration/rebuild.
+Source inspection found connection maintenance owned by the Connections & data
+sheet, so closing the sheet cancelled it. The repair gives the foreground app scene
+ownership for HealthKit pairings and cancels when the scene becomes inactive.
+Fictional pairings are excluded; no workout is started by this loop. The temporary
+preview remains opt-in and is not persisted across phone restarts. No background
+delivery guarantee is made.
 
-Apple's [registered-device distribution guidance](https://developer.apple.com/documentation/xcode/distributing-your-app-to-registered-devices)
-requires registering test devices and including them in the provisioning profile.
-The repair path remains: establish the developer connection, register the Watch,
-regenerate its development profile, rebuild/sign the embedded Watch app, verify
-the Watch is included, and only then attempt deployment under an explicit freeze
-exception. This photo review made no device, signing, installation or VPN changes.
-
-## Watch installation and launch — latest Author evidence
-
-A subsequent Author photo shows BODY's mineral pet visibly open on the physical
-Watch, with “Waiting for a reading” below it. This confirms installation and UI
-launch for the displayed build, superseding the earlier installation-blocked
-status. It does not identify the build revision, prove that the previously
-inspected profile changed, or establish HealthKit permission/sample receipt or
-Watch → phone → Mac transmission.
-
-Read-only source inspection finds the next existing control below the pet:
-`Start pet readings`, which requests heart-rate read permission and queries the
-latest sample within two minutes. When reading is enabled, the button becomes
-`Check available reading`. No returned sample does not establish permission denial.
-`Start workout + pet` is a distinct, explicit actual-workout action, with Apple
-Health workout storage and higher battery use; it is not needed to start ordinary
-pet readings. No device action or code change was made during this documentation
-update, and the feature-development freeze remains in place.
-
-## Watch reading and phone acknowledgement — latest Author evidence
-
-The next photo shows a heart-rate reading with its measurement timestamp, the
-ordinary “Watch Health reading · latest available” mode and “Received by phone”.
-The Watch source sets the latter message only after the phone replies `received`;
-the phone bridge emits that reply when its collector accepts the incoming message.
-This establishes a displayed Watch reading and phone acknowledgement, not a
-verified Mac receipt or accepted Vault evidence. Personal values/times are omitted
-from this review.
-
-The Author observes that updates do not match Apple's Heart Rate app in real time.
-Source inspection explains the current mode: `HKObserverQuery` and `HKSampleQuery`
-read available HealthKit samples; they do not initiate continuous sensor sampling.
-Each accepted fresh reading is forwarded using WatchConnectivity without waiting
-for an encrypted archive batch. Faster transport cannot create missing samples.
-
-The existing `Start workout + pet` path uses `HKWorkoutSession` with
-`HKLiveWorkoutBuilder` callbacks. Apple's [workout session documentation](https://developer.apple.com/documentation/healthkit/running-workout-sessions)
-describes higher-frequency heart-rate samples during workouts. That path is for
-actual walking/running/indoor cycling, records a workout in Apple Health and has
-greater battery cost. No fixed sample cadence, matching of every Apple Heart Rate
-UI refresh, or on-device live-workout result is claimed. No session was started or
-feature code changed during this review.
-
-## Bounded resumption and foreground connection repair — 9 October
-
-The Author explicitly resumed work after showing a native live-workout-builder
-reading and a phone acknowledgement, then reported completing the actual workout.
-These establish displayed workout-mode acquisition and phone acknowledgement;
-continuous cadence, workout save completion and every-hop latency are not inferred.
-Ordinary HealthKit queries resume after the Watch's existing End workout path.
-
-The local BODY server was restarted with Next telemetry disabled. The Author
-reopened BODY in Safari and reported a last-registered reading labelled last-known.
-The paired private-LAN receiver was verified listening. This is bounded evidence
-of the reported display state, not a claim of a currently fresh measurement or
-accepted archive evidence. Values and precise personal timestamps are omitted.
-Browser automation could not reload its existing error-page address because the
-browser policy blocked that protocol; the Author manually reopened the local page.
-
-Source inspection found the phone's retry/heartbeat task attached to the
-Connections & data sheet. Closing that sheet cancelled connection maintenance.
-The task now belongs to the main foreground app scene for HealthKit pairings,
-continues while viewing the pet, and cancels when the scene becomes inactive.
-Fresh Watch/collector events still trigger immediate preview delivery. Fictional
-pairings are excluded from this maintenance loop; no workout is started by it.
-It does not increase ordinary Watch sampling or guarantee background delivery.
-
-Validation: all 21 focused receiver, stream and freshness tests and all 27 native
-core tests passed with invented readings. The final signed iPhone/embedded Watch
-build succeeded; both signatures and the profile device inclusion and bundle
-identifiers were verified. The updated phone package was successfully installed
-through CoreDevice. No Watch-target install command, pairing reset, beta change,
-VPN change or external health-summary export was performed. The existing
-summary-export setting was verified off. The public source audit passed across
-421 visible files, and the working diff whitespace check passed.
-
-The temporary companion feed is deliberately not persisted across phone app
-restarts. The Author must re-enable it after this phone update. Verifying
-phone connection continuity while the Connections sheet is closed remains an
-on-device acceptance check; test/build success is not substituted for that check.
+Verification of that repair: 21 focused receiver, stream and freshness tests and
+27 native core tests passed using invented readings. Physical phone/Watch continuity,
+permission handling, lock/expiry and receipt dequeue still need acceptance against
+the exact release build. Public test results do not establish current device state.

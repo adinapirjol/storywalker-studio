@@ -10,15 +10,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## BODY / Watch resumption boundary
 
-The Author resumed work on 9 October after showing the Watch companion running,
-a live-workout reading and a phone acknowledgement. Resume the current
-Watch → phone → local Mac companion integration and its relevant repairs/checks.
-Preserve the security repairs, private evidence and useful source resources.
-Do not reset device pairing, change beta channels or bypass managed VPN/network
-protections. Keep fictional rehearsals paused and external summary export off
-unless separately authorized. Native deployment is already demonstrated; do not
-install another build merely as part of an audit. See the local security review in
-`docs/research/security-review-2026-10-09.md` for the scoped verification record.
+Preserve security repairs, private evidence and useful source resources.
+Do not reset device pairing, change beta channels or bypass managed network
+protections. Keep fictional rehearsals paused and external export off unless
+separately authorized. Do not install another native build merely for an audit.
+Keep device acceptance evidence separate from automated test results.
 
 ## Code review standards
 

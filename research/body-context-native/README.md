@@ -173,7 +173,7 @@ Run from the repository root:
 
 ```sh
 swift test --package-path research/body-context-native
-npx vitest run lib/native-transfer.test.ts lib/native-transfer-route.test.ts
+npx vitest run lib/native/native-transfer.test.ts lib/native/native-transfer-route.test.ts
 (cd research/rehearsal-dramaturg && uv run --frozen python -m pytest -q)
 (cd research/rehearsal-dramaturg && PYTHONPATH=. uv run --frozen python scripts/contracts.py)
 npm run typecheck
@@ -373,7 +373,7 @@ It never reads the personal Vault or Apple Health.
 swift test --package-path research/body-context-native
 swift build --package-path research/body-context-native
 node --import tsx scripts/verify-native-network.ts
-npx vitest run lib/native-receiver.test.ts lib/native-transfer.test.ts lib/native-transfer-route.test.ts
+npx vitest run lib/native/native-receiver.test.ts lib/native/native-transfer.test.ts lib/native/native-transfer-route.test.ts
 ```
 
 The unsigned physical-iPhone target compiles. A macOS Swift rehearsal does not establish
@@ -617,64 +617,29 @@ meshes rather than a flat drawing; pinch adjusts camera distance. A small defaul
 retains the original silhouette. All integration controls are in Connections & data,
 which opens a separate sheet below the companion. Inspect reading is optional.
 
-### Dedicated private Storywalker Logfire project
+### Separately consented health telemetry
 
-At the Author's explicit request, a separate EU project was created and verified private:
-https://logfire-eu.pydantic.dev/adinablazrx/storywalker. This is a change to the earlier
-local-only telemetry boundary: maximum BPM, counts and app-receipt windows are health
-summaries that leave the Mac when this feed is enabled. Raw observations, source IDs,
-notes, place and music history are excluded. No validation SDK auto-instrumentation is
-used. Send-only credentials and the enable flag live in ignored `.logfire/storywalker/`.
-The feed was enabled for future arrivals as requested; BODY has separate check/enable/stop
-controls under private HealthKit data. Vault authentication protects those controls.
+The optional EU Logfire target is configured on the Mac with the server-only
+`STORYWALKER_HEALTH_PROJECT_URL` setting. It must match the ignored credential's
+project URL; without a valid target, export is unavailable. The ingestion host
+remains fixed. Changing the target requires a server restart and fresh consent.
+No credential or project identifier belongs in public source or browser variables.
 
-Pydantic validates each summary and selects Watch-attributed records when present in
-a batch, otherwise iPhone Health-store records. Maximum uses the preferred subset;
-received_count and the app-receipt time window cover the full non-deleted batch.
-A received-batch summary is attempted after encrypted staging. Direct incoming readings
-also form bounded 20-second live windows (at most 200 observations). Receiver stop,
-source deletion or Vault expiry clears the temporary window. Repeated batch exports
-are suppressed in-process. Failures are visible and never clear phone evidence; there
-is no persistent telemetry outbox, historical backfill or exactly-once cloud guarantee.
-Stopping does not retract records already received by Logfire. A later source deletion
-does not automatically retract an earlier aggregate in the external project.
+Staging and Accept never export. Reviewed-batch export requires current-session
+enable, an accepted surviving batch, and a separate explicit per-batch action.
+Live-window summaries are removed. The separately consented, default-off live
+threshold lane is unreviewed research telemetry; historical batches never feed it.
+See the [consent contract](../../docs/research/health-export-consent.md) for the
+allowlist, legacy-setting reconfirmation, Stop/expiry and delivery limitations.
+Already delivered external events cannot be recalled. No persistent outbox or
+exactly-once delivery is promised.
 
-Verification: both simulator targets compile, 27 native tests pass, 13 Pydantic summary/
-transfer tests pass, and 17 focused web receiver/stream/summary tests pass. Typecheck
-and focused lint pass. One explicitly fictional summary was accepted by Logfire and
-independently found with a read-only query (count=1). No real observation was used in
-that verification. Physical Watch permissions, sensor cadence and end-to-end device
-streaming require on-device verification after installation.
-
-Signed iPhone and Watch device builds also pass. The updated phone app was installed
-and launched on the physical phone. Direct Watch installation failed twice while
-creating the Bluetooth developer tunnel, before app installation. Check the iPhone's
-Watch app for the embedded Storywalker companion; physical Watch installation and
-streaming remain unverified until it is available there and opened on the Watch.
-
-Packaging correction: the initial build placed the Watch application in `PlugIns`,
-which passes generic embedded-binary validation but is not the Watch-content location.
-Removed the incorrect post-generation override; the iPhone now embeds the single-target
-watchOS app at `Watch/StorywalkerWatch.app`, matching Xcode 27's watchOS product
-specification (`watchOSDevice.xcspec`). A fresh signed build passes at that location.
-Xcode can list the paired physical Watch but cannot currently read its watchOS version;
-the missing version in its destination error is a connection problem, not evidence
-that the Watch needs an OS upgrade.
-The corrected phone bundle was installed successfully on the physical iPhone
-(installation database sequence 6128). Watch-app listing and physical Watch launch
-still require checking on the devices; a successful phone install alone does not prove
-Watch installation or sensor delivery.
-
-The subsequent on-phone Install action reached the Watch installer but returned
-"This app could not be installed at this time." Inspection of the embedded signed
-Watch profile found one provisioned device: the paired iPhone, not the Watch. A generic
-signed build therefore does not establish installability on that Watch. Device Hub
-currently shows the physical Watch as Connecting without an OS version; devicectl
-reports it paired but disconnected. Complete Watch developer setup and registration
-in Xcode, rebuild for the physical Watch with automatic signing, then confirm the new
-embedded profile includes that Watch before installing again. Never edit the signed
-profile to add a device, lower the deployment target to compensate for an unknown OS
-version, or treat the phone install as Watch-install proof.
+Native packaging must embed the Watch app at `Watch/StorywalkerWatch.app`, not
+`PlugIns`. Validate both signatures and provisioning for the intended devices.
+A successful phone install does not establish Watch installation or sensor delivery.
+Never edit signed profiles or lower deployment targets to compensate for unknown
+OS metadata. Physical delivery and source freshness require separate acceptance;
+retain installation diagnostics locally rather than publishing device chronology.
 
 ### Batch timing and paused fictional rehearsals (2026-10-08)
 

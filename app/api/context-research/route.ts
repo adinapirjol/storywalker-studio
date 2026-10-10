@@ -1,8 +1,8 @@
-import {isLocalSameOrigin,isLocalRead} from '@/lib/local-origin';
+import {isLocalSameOrigin,isLocalRead} from '@/lib/http/local-origin';
 import { NextRequest, NextResponse } from 'next/server';
-import { closeVault, openContextSandbox, putVaultRecords, readVaultRecord } from '@/lib/private-vault';
+import { closeVault, openContextSandbox, putVaultRecords, readVaultRecord } from '@/lib/vault/private-vault';
 import { randomBytes } from 'node:crypto';
-import {boundedText} from '@/lib/context-request';
+import {boundedText} from '@/lib/http/context-request';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 export const runtime = 'nodejs';

@@ -7,12 +7,12 @@ import {
   occurrenceFromSpotifyItem,
   privatePlaylistSnapshotSchema,
   type PrivatePlaylistOccurrence,
-} from "../lib/private-playlist";
+} from "../lib/music/private-playlist";
 import {
   privateImportId,
   spotifyEnvironmentSchema,
   validSpotifyToken,
-} from "../lib/spotify-server";
+} from "../lib/music/spotify-server";
 
 const playlistPageSchema = z.object({
   items: z.array(

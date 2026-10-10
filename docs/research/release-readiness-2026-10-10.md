@@ -19,7 +19,7 @@ and [security baseline](security-review-2026-10-09.md) provide historical contex
 **Latest documentation refresh, 10 October:** the Author confirms existing
 phone-assisted passkey unlocking in Safari and Codex; recovery access was also
 confirmed earlier. The Bluetooth wait was temporary. Local Touch ID remains
-deferred on the managed Mac; no policy or credential was changed. README now
+unverified for the release build; no policy or credential was changed. README now
 describes the Watch/phone companion pair and includes a paused fictional Aurora
 BODY browser screenshot. Native icons are identified as icons, not device
 screenshots. The checks refreshed below do not constitute a new full code review

@@ -3,8 +3,13 @@ import json
 import os
 import time
 import math
+import re
 from pathlib import Path
 import httpx
+
+# Fixed for this process; target changes require restart and explicit configuration.
+_configured_project = os.getenv("DRAMATURG_TELEMETRY_PROJECT_URL", "")
+TELEMETRY_PROJECT = _configured_project if re.fullmatch(r"https://logfire-eu\.pydantic\.dev/[A-Za-z0-9_-]+/[A-Za-z0-9_-]+", _configured_project) else ""
 
 async def record_run(duration_ms: float, outcome: str):
     if os.getenv("DRAMATURG_TELEMETRY") != "1":
@@ -16,7 +21,7 @@ async def record_run(duration_ms: float, outcome: str):
         return "unsafe-credential-path"
     try:
         data = json.loads(credential.read_text())
-        if data.get("project_url") != "https://logfire-eu.pydantic.dev/adinablazrx/starter-project" or data.get("logfire_api_url") != "https://logfire-eu.pydantic.dev":
+        if not TELEMETRY_PROJECT or data.get("project_url") != TELEMETRY_PROJECT or data.get("logfire_api_url") != "https://logfire-eu.pydantic.dev":
             return "target-mismatch"
         if outcome not in {"success", "failure", "cancelled"}:
             return "unsupported-outcome"
@@ -67,7 +72,7 @@ async def record_context(duration_ms: float, outcome: str, step: str):
     if directory.is_symlink() or credential.is_symlink():return 'unsafe-path'
     try:
         data=json.loads(credential.read_text())
-        if data.get('project_url')!='https://logfire-eu.pydantic.dev/adinablazrx/starter-project' or data.get('logfire_api_url')!='https://logfire-eu.pydantic.dev':return 'target-mismatch'
+        if not TELEMETRY_PROJECT or data.get('project_url')!=TELEMETRY_PROJECT or data.get('logfire_api_url')!='https://logfire-eu.pydantic.dev':return 'target-mismatch'
         payload=context_metric_packet(duration_ms,outcome,step)
         async with httpx.AsyncClient(timeout=5,trust_env=False) as client:
             response=await client.post('https://logfire-eu.pydantic.dev/v1/metrics',headers={'Authorization':data['token']},json=payload)

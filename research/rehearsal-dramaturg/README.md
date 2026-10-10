@@ -38,7 +38,10 @@ Actual local inference requires an installed model and has not been validated as
 
 Set `DRAMATURG_TELEMETRY=1` when starting the Python service to opt in. The exporter reads the existing ignored `.logfire/logfire_credentials.json` in this repository, rejects symlink credentials or a mismatched target, and uses its send-only token without printing or copying it.
 
-Exact target: `https://logfire-eu.pydantic.dev/adinablazrx/starter-project`.
+Set `DRAMATURG_TELEMETRY_PROJECT_URL` in the server process environment to the
+exact EU Logfire project URL. Keep the value in ignored local configuration.
+Missing/invalid targets or mismatched credentials fail closed. Restart after a
+target change; the opt-in switches remain required. Never use a public environment variable.
 
 The complete outbound allowlist is a duration in milliseconds, outcome (`success`, `failure`, `cancelled`), a fixed service name (`storywalker-rehearsal-dramaturg`), a fixed local-fictional environment and the measurement timestamp. Prompts, source text, scenes, exception messages, hostnames and user identifiers are omitted. No background collection occurs. Export failure never changes a proposal or approval. Auto-instrumentation is deliberately absent.
 
@@ -46,7 +49,7 @@ The complete outbound allowlist is a duration in milliseconds, outcome (`success
 
 ```sh
 uv run --project research/rehearsal-dramaturg pytest research/rehearsal-dramaturg/tests -q
-npx vitest run lib/rehearsal-dramaturg.test.ts lib/xr-scene.test.ts
+npx vitest run lib/research/rehearsal-dramaturg.test.ts lib/xr/xr-scene.test.ts
 npm run typecheck
 ```
 
