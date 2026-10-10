@@ -1,3 +1,4 @@
+import {rotateBodyPoint,type BodyFace,type BodyPet} from './body-view';
 import { acceptedDensity, spacePosition, type EpisodeSpace, type Regime, type Point } from './journey-experience';
 import {drawSourceWindows} from './archive-renderer';
 import type {WindowEvidence} from './xr-evidence';
@@ -5,6 +6,64 @@ import type { Decision } from './xr-scene';
 import {projectPoint,type WalkCamera} from './spatial-projection';
 export {projectPoint,type WalkCamera} from './spatial-projection';
 export type Hit = { index: number; x: number; y: number; radius: number; windowId?:string; corners?:{x:number;y:number}[]; depth?:number };
+/** BODY geometry uses the episode room projection; artistic colours never encode health. */
+export function drawBodyCompanion(ctx:CanvasRenderingContext2D,width:number,height:number,heart:number|null,tempo:number|null,yaw:number,appearance:{shape?:'orb'|'companion';fieldScale?:number;history?:number[];audioBands?:number[];palette?:'lilac'|'lagoon'|'ember';wireframe?:boolean;pitch?:number;zoom?:number;face?:BodyFace;pet?:BodyPet|null;inspectEvidence?:boolean}={}) {
+ ctx.clearRect(0,0,width,height);ctx.fillStyle='#090f1b';ctx.fillRect(0,0,width,height);
+ const colours={lilac:['#baa4e4','#665985','#292538'],lagoon:['#9bcfc6','#426e78','#162f3a'],ember:['#e4c197','#876374','#352734']} as const;
+ const [light,middle,dark]=colours[appearance.palette??'ember'];
+ const cx=width/2,cy=height*.44,radius=Math.min(width*.22,height*.21)*Math.max(.65,Math.min(1.6,appearance.zoom??1));
+ const pitch=appearance.pitch??0;
+ const camera:WalkCamera={x:0,z:4.4,yaw:0,eye:1.5};
+ const origin=projectPoint({x:0,y:1.5,z:0},camera,width,height)!;
+ const project=(x:number,y:number,z:number)=>{const rotated=rotateBodyPoint(x,y,z,yaw,pitch),p=projectPoint({...rotated,y:rotated.y+1.5},camera,width,height)!;return {x:cx+(p.x-origin.x)*radius/origin.scale,y:cy+(p.y-origin.y)*radius/origin.scale};};
+ const scale=Math.max(1,Math.min(1.04,appearance.fieldScale??1));
+ const halo=ctx.createRadialGradient(cx,cy,radius*.6,cx,cy,radius*2.1);halo.addColorStop(0,middle+'36');halo.addColorStop(1,middle+'00');ctx.fillStyle=halo;ctx.fillRect(0,0,width,height);
+ // The orbital layers are authored scenery, independent of measured values.
+ for(let ring=0;ring<3;ring++){
+  ctx.beginPath();ctx.ellipse(cx,cy,radius*(1.55+ring*.12)*scale,radius*(.56+ring*.09)*scale,-.28,0,Math.PI*2);
+  ctx.lineWidth=ring===0?1.2:.7;ctx.strokeStyle=light+(ring===0?'70':'30');ctx.stroke();
+ }
+ if(appearance.shape==='companion'){
+  const reach=heart===null?.3:.3+Math.max(0,Math.min(200,heart))/200*.6;
+  for(const side of [-1,1]){const a=project(side*.65,.6,0),b=project(side*(1+reach),1.05,.15),c=project(side*.85,-.3,0);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(b.x,b.y,c.x,c.y);ctx.closePath();ctx.fillStyle=middle+'88';ctx.fill();ctx.strokeStyle=light+'aa';ctx.lineWidth=1;ctx.stroke();}
+ }
+ const fill=ctx.createRadialGradient(cx-radius*.3,cy-radius*.4,radius*.04,cx,cy,radius);fill.addColorStop(0,light);fill.addColorStop(.48,middle);fill.addColorStop(1,dark);
+ ctx.fillStyle=fill;ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fill();ctx.strokeStyle=light+'88';ctx.lineWidth=1;ctx.stroke();
+ if(appearance.wireframe){
+  for(let latitude=-60;latitude<=60;latitude+=30){const a=latitude*Math.PI/180;ctx.beginPath();for(let step=0;step<=96;step++){const t=step/96*Math.PI*2,p=project(Math.cos(a)*Math.cos(t),Math.sin(a),Math.cos(a)*Math.sin(t));if(step===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);}ctx.strokeStyle=light+'44';ctx.lineWidth=.8;ctx.stroke();}
+  for(let longitude=0;longitude<180;longitude+=30){const a=longitude*Math.PI/180;ctx.beginPath();for(let step=0;step<=96;step++){const t=step/96*Math.PI*2,p=project(Math.cos(t)*Math.cos(a),Math.sin(t),Math.cos(t)*Math.sin(a));if(step===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);}ctx.strokeStyle=light+'33';ctx.stroke();}
+ }
+ for(const [i,value,limit,colour] of [[0,heart,200,'#cce6df'],[1,tempo,400,'#e8c997']] as const){
+  const r=radius*(1.22+i*.18);ctx.setLineDash(i?[3,7]:[]);ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='#79879733';ctx.lineWidth=1;ctx.stroke();
+  if(value!==null){ctx.beginPath();ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.max(0,Math.min(limit,value))/limit);ctx.strokeStyle=colour;ctx.lineWidth=2;ctx.stroke();}
+ }
+ ctx.setLineDash([]);
+ if(appearance.shape==='companion'&&rotateBodyPoint(0,0,1,yaw,pitch).z>.24){
+  const face=appearance.face??'neutral',pet=appearance.pet;
+  const gazeX=(pet?.x??0)*.035,gazeY=-(pet?.y??0)*.025;
+  const facePoint=(x:number,y:number)=>project(x,y,Math.sqrt(Math.max(0,1-x*x-y*y))*1.015);
+  const strokeFace=(points:{x:number;y:number}[],fill=false)=>{ctx.beginPath();points.forEach((p,i)=>{const q=facePoint(p.x,p.y);if(i===0)ctx.moveTo(q.x,q.y);else ctx.lineTo(q.x,q.y);});ctx.strokeStyle='#fff3de';ctx.fillStyle='#fff3de';ctx.lineWidth=Math.max(1.5,radius*.022);ctx.lineCap='round';if(fill){ctx.closePath();ctx.fill();}else ctx.stroke();};
+  for(const side of [-1,1]){
+   const x=side*.23+gazeX,y=.17+gazeY;
+   if(face==='crescent'||(pet?.strength??0)>.65)strokeFace(Array.from({length:17},(_,i)=>({x:x-.065+i/16*.13,y:y-.025*Math.sin(i/16*Math.PI)})));
+   else {const rx=face==='wide'?.055:.032,ry=face==='wide'?.085:.055;strokeFace(Array.from({length:25},(_,i)=>({x:x+rx*Math.cos(i/24*Math.PI*2),y:y+ry*Math.sin(i/24*Math.PI*2)})),true);}
+  }
+  if(face==='round'||face==='wide')strokeFace(Array.from({length:25},(_,i)=>({x:(face==='wide'?.075:.043)*Math.cos(i/24*Math.PI*2),y:-.16+.055*Math.sin(i/24*Math.PI*2)})));
+  else strokeFace(Array.from({length:17},(_,i)=>({x:-.10+i/16*.20,y:-.12-(face==='neutral'?0:.045*Math.sin(i/16*Math.PI))})));
+  if(pet){for(const side of [-1,1]){const cheek=facePoint(side*.36,-.03);ctx.beginPath();ctx.ellipse(cheek.x,cheek.y,radius*.045,radius*.022,0,0,Math.PI*2);ctx.fillStyle=`rgba(232,201,151,${pet.strength*.45})`;ctx.fill();}}
+  ctx.lineCap='butt';
+ }
+ (appearance.history??[]).slice(-8).forEach((value,i)=>{const angle=-Math.PI*.9+i*.15,r=radius*(1.49+Math.max(0,Math.min(200,value))/200*.12);ctx.beginPath();ctx.arc(cx+Math.cos(angle)*r,cy+Math.sin(angle)*r,2.3,0,Math.PI*2);ctx.fillStyle='#c6d9df';ctx.fill();});
+ // Always show eight quiet antennae. Only actual generated audio extends them.
+ ctx.lineCap='round';
+ for(let i=0;i<8;i++){
+  const level=Math.max(0,Math.min(1,appearance.audioBands?.[i]??0)),angle=-Math.PI/2+i*Math.PI/4;
+  const inner=radius*1.72,outer=radius*(1.81+level*.16);
+  ctx.beginPath();ctx.moveTo(cx+Math.cos(angle)*inner,cy+Math.sin(angle)*inner);ctx.lineTo(cx+Math.cos(angle)*outer,cy+Math.sin(angle)*outer);ctx.strokeStyle=appearance.audioBands?'#e8c997':'#8aa3a377';ctx.lineWidth=3;ctx.stroke();
+  ctx.beginPath();ctx.arc(cx+Math.cos(angle)*outer,cy+Math.sin(angle)*outer,2.4,0,Math.PI*2);ctx.fillStyle=appearance.audioBands?'#e8c997':'#8aa3a3';ctx.fill();
+ }
+ if(appearance.inspectEvidence){ctx.lineCap='butt';ctx.textAlign='center';ctx.fillStyle='#fff5e4';ctx.font='26px Georgia';ctx.fillText(heart===null?'—':`${Math.round(heart)} bpm`,cx,height-43);ctx.font='10px sans-serif';ctx.fillStyle='#bfccd5';ctx.fillText('SELECTED MEASUREMENT',cx,height-22);ctx.textAlign='left';}
+}
 export function renderEpisodeRoom(ctx: CanvasRenderingContext2D, width:number,height:number, spaces:EpisodeSpace[], regime:Regime, base:'WORLD'|'TIME', camera:WalkCamera, selected:number, decisions:Record<string,Decision>, placements:Map<string,string[]>,windows:WindowEvidence[]=[],windowPage=0,dim=false) {
   const hits:Hit[]=[];
   ctx.clearRect(0,0,width,height);

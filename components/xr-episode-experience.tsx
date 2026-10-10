@@ -9,9 +9,10 @@ import {drawEvidenceSurface,drawEvidenceChamber} from '@/lib/archive-renderer';
 import {beginLook,advanceLook,pickArchiveHit,walkWheelDelta,type LookGesture} from '@/lib/archive-interaction';
 import css from './xr-experience.module.css';
 import {XRGeographicAtlas} from './xr-geographic-atlas';
+import {XRRehearsalModes} from './xr-rehearsal-modes';
 
-type Props={scene:XRScene;decisions:Record<string,Decision>;activated:boolean;onChange:(scene:XRScene)=>void;onInspect:(index:number)=>void;onCalibrate:()=>void};
-export function XREpisodeExperience({scene,decisions,activated,onChange,onInspect,onCalibrate}:Props){
+type Props={onBody?:()=>void;scene:XRScene;decisions:Record<string,Decision>;activated:boolean;onChange:(scene:XRScene)=>void;onInspect:(index:number)=>void;onCalibrate:()=>void};
+export function XREpisodeExperience({scene,decisions,activated,onChange,onInspect,onCalibrate,onBody}:Props){
  const spaces=useMemo(()=>episodeSpaces(scene),[scene]);
  const experience=scene.experience??{regime:'TIME' as Regime,memoryBase:'TIME' as const,fragmentDecisions:[]};
  const {regime,memoryBase}=experience;
@@ -87,10 +88,10 @@ export function XREpisodeExperience({scene,decisions,activated,onChange,onInspec
  useEffect(()=>()=>{const old=engine.current;if(old)void old.context.close();},[]);
  useEffect(()=>{const close=()=>{if(!document.fullscreenElement)setImmersive(false);};document.addEventListener('fullscreenchange',close);return()=>document.removeEventListener('fullscreenchange',close);},[]);
  if(!current)return null;
- if(['WORLD','MEMORY'].includes(regime))return <XRGeographicAtlas scene={scene} decisions={decisions} activated={activated} onChange={onChange} onRegime={changeRegime} onInspect={onInspect}/>;
+ if(['WORLD','MEMORY'].includes(regime))return <XRGeographicAtlas scene={scene} decisions={decisions} activated={activated} onChange={onChange} onRegime={changeRegime} onInspect={onInspect} onBody={onBody}/>;
  return <div ref={root} className={`${css.experience} ${immersive?css.immersive:''} ${archiveView.phase!=='corridor'?css.archiveOpen:''}`}>
   <div className={`${css.top} ${archiveView.phase!=='corridor'?css.archiveTop:''}`}><div><span className={css.eyebrow}>SPATIAL REHEARSAL / {String(index+1).padStart(2,'0')} OF {spaces.length}</span><h2>{archiveView.phase==='chamber'?<>An archive<br/><em>within TIME.</em></>:archiveView.phase==='surface'?<>A window<br/><em>drawn closer.</em></>:<>A passage made<br/><em>of intervals.</em></>}</h2></div>
-   <div className={css.regimes} role="group" aria-label="Spatial regime">{(['WORLD','TIME','MEMORY'] as const).map(mode=><button key={mode} aria-pressed={mode===regime} onClick={()=>changeRegime(mode)}>{mode}</button>)}</div>
+   <XRRehearsalModes className={css.regimes} active={regime} onRegime={changeRegime} onBody={onBody}/>
   </div>
   <canvas ref={canvas} className={css.canvas} tabIndex={0} aria-label="Walkable episode spaces. W A S D to walk, arrows to turn, drag to look, scroll to approach. Click a portal to focus."
    onKeyDown={e=>{const key=e.key.toLowerCase();if(['w','a','s','d','arrowleft','arrowright','arrowup','arrowdown'].includes(key)){e.preventDefault();keys.current.add(key);}if(key==='escape'){if(archive.current.phase!=='corridor'){e.preventDefault();closeArchive();return;}gesture.current=null;setMoving(false);setInspecting(false);setImmersive(false);if(document.fullscreenElement)void document.exitFullscreen();}if(key==='enter'&&!e.repeat){e.preventDefault();if(regime==='TIME'){if(archive.current.phase==='surface')enterChamber();else if(archive.current.phase==='chamber')closeArchive();else if(near)selectWindow(windows[current.members[Math.min(windowPage*4,current.members.length-1)]].windowId);}else setInspecting(v=>!v);}}}

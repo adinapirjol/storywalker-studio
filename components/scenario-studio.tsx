@@ -1,4 +1,5 @@
 "use client";
+import { ContextResearch } from "./context-research";
 import {vaultFetch} from '@/lib/vault-access';
 import {VaultUnlockButton} from './vault-access';
 
@@ -59,6 +60,7 @@ export function ScenarioStudio() {
   }
 
   return <main className="research-main private-review-main scenario-main">
+    <ContextResearch />
     <section className="experiment-hero"><p className="eyebrow"><span /> Scenario Studio · private beta</p><h1>Keep the routes entangled until time makes a difference.</h1><p>This is a constellation of possible routes, not a funnel. Name the paths that matter, mark dates and conditions, then make explicit the overlaps that are useful to you.</p></section>
     <p className="live-notice" role="status">{message}</p>
     <section className="notebook-card vault-card"><p className="section-kicker">Open the private constellation</p><form onSubmit={open} className="vault-form"><button className="primary-button" disabled={busy}>{busy ? "Opening Scenario Studio…" : "Open Scenario Studio"}</button></form><p className="small-note">Uses the active browser-wide Vault session. Unlock here: <VaultUnlockButton />. Access lasts 15 minutes; unlocking keeps you on this page. Opening refreshes the local Atlas drawer. It does not save a scenario, create a Moment, Journey, Episode, or public draft.</p></section>

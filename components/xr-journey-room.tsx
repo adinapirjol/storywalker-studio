@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { XREvidenceReport } from "./xr-evidence-report";
 import { XREpisodeExperience } from "./xr-episode-experience";
+import { XRRehearsalModes } from "./xr-rehearsal-modes";
 import { XRJourneyMap } from "./xr-journey-map";
 import { journeyAtTime } from "@/lib/journey-basemap";
 import { episodeIdentifiers } from "@/lib/journey-identifiers";
@@ -9,7 +10,8 @@ import { moveJourneyEpisode } from "@/lib/journey-grounding";
 import type { XRScene, Decision } from "@/lib/xr-scene";
 import styles from "./xr-lab.module.css";
 
-export function XRJourneyRoom({ scene, decisions, onChange, activated }: { activated: boolean; scene: XRScene; decisions: Record<string, Decision>; onChange: (scene: XRScene) => void }) {
+export function XRJourneyRoom({ scene, decisions, onChange, activated, bodyStudy, onEnterBody, showBodyStudy = false, saveNotice = "Save review to Vault to keep Author moves and fragment placements." }: { bodyStudy?: ReactNode; onEnterBody?: () => void; showBodyStudy?: boolean; saveNotice?: string; activated: boolean; scene: XRScene; decisions: Record<string, Decision>; onChange: (scene: XRScene) => void }) {
+  const [bodyOpen, setBodyOpen] = useState(false);
   const [selected, setSelected] = useState(0), [x, setX] = useState(""), [z, setZ] = useState(""), [message, setMessage] = useState("");
   const [calibration, setCalibration] = useState(false), [evidenceOpen, setEvidenceOpen] = useState(false);
   const [asOf, setAsOf] = useState<number | null>(null);
@@ -25,16 +27,24 @@ export function XRJourneyRoom({ scene, decisions, onChange, activated }: { activ
     const target = reset ? current.worldPosition!.position : { x: x === "" ? position.x : Number(x), z: z === "" ? position.z : Number(z) };
     if (![target.x, target.z].every(value => Number.isFinite(value) && Math.abs(value) <= 20)) { setMessage("Choose coordinates between −20 and 20."); return; }
     onChange(moveJourneyEpisode(scene, current.id, target.x, target.z));
-    setX(""); setZ(""); setMessage("Author move recorded. Accepted selections are unchanged; activation is off. Save review to Vault to keep this move.");
+    setX(""); setZ(""); setMessage(`Author move recorded. Accepted selections are unchanged; activation is off. ${saveNotice}`);
   }
+  if (bodyOpen && bodyStudy) return <div className={styles.journey}>
+    <XRRehearsalModes active="BODY" onBody={() => {}} onRegime={regime => {
+      setBodyOpen(false);
+      onChange({...scene, experience: {...(scene.experience ?? {memoryBase: "TIME", fragmentDecisions: []}), regime}});
+    }} />
+    {bodyStudy}
+  </div>;
   return <div className={styles.journey}>
-    <XREpisodeExperience scene={scene} decisions={decisions} activated={activated} onChange={onChange} onInspect={i=>{choose(i);setEvidenceOpen(true);requestAnimationFrame(()=>{const desk=document.getElementById("xr-source-desk");desk?.scrollIntoView({block:"start"});desk?.focus();});}} onCalibrate={()=>setCalibration(v=>!v)} />
+    {showBodyStudy&&<p><a href="#context-body-composition">BODY · open the fictional spherical companion study above</a></p>}
+    <XREpisodeExperience onBody={bodyStudy ? () => { onEnterBody?.(); setBodyOpen(true); } : undefined} scene={scene} decisions={decisions} activated={activated} onChange={onChange} onInspect={i=>{choose(i);setEvidenceOpen(true);requestAnimationFrame(()=>{const desk=document.getElementById("xr-source-desk");desk?.scrollIntoView({block:"start"});desk?.focus();});}} onCalibrate={()=>setCalibration(v=>!v)} />
     {calibration && scene.experience?.regime === "WORLD" && <div><div className={styles.actions}><h3>Temporary geographic calibration</h3><button onClick={()=>setCalibration(false)}>Close calibration map</button></div>
     <XRJourneyMap episodes={episodes} mode="WORLD" layout={{...layout,mode:"WORLD"}} asOf={asOf} selected={index} counts={episodes.map(selectedPlays)} onSelect={index => choose(index, true)}
       onTimeChange={at => { setAsOf(at); if (at !== null) { const latest = journeyAtTime(episodes, at).latest; if (latest >= 0) choose(latest, true); } }}
       onMove={(episodeIndex, target) => {
         onChange(moveJourneyEpisode(scene, episodes[episodeIndex].id, target.x, target.z));
-        setX(""); setZ(""); setMessage("Author move recorded. Accepted selections are unchanged; activation is off. Save review to Vault to keep this move.");
+        setX(""); setZ(""); setMessage(`Author move recorded. Accepted selections are unchanged; activation is off. ${saveNotice}`);
       }} />
     </div>}
     <XREvidenceReport scene={scene} onChange={onChange} />
@@ -73,6 +83,6 @@ export function XRJourneyRoom({ scene, decisions, onChange, activated }: { activ
     <details><summary>Episode provenance and Author moves</summary><pre className={styles.evidenceText}>{JSON.stringify({ provenance: current.provenance, notionEvidence: current.notionEvidence, calendarEvidence: current.calendarEvidence, context: current.context, memoryDecisions: current.memoryDecisions }, null, 2)}</pre></details>
     <details><summary>Coverage and deterministic method</summary><p>{layout.coverage.visits} Timeline stops; {layout.coverage.matchedPlays} uniquely matched / {layout.coverage.baselinePlays} baseline plays. {layout.coverage.ambiguousPlays} ambiguous; {layout.coverage.unmatchedPlays} unassigned. Routes excluded: {layout.coverage.excludedRoutes}; invalid visits: {layout.coverage.invalidVisits}; duplicate visits/plays removed: {layout.coverage.duplicateVisits}/{layout.coverage.duplicatePlays}.</p><p>Timeline stop coverage: {layout.coverage.timelineStart} → {layout.coverage.timelineEnd}. {episodes.some(episode => episode.reconstructedTiming) ? "Later stops use the separate Author reconstruction. Date envelopes and unresolved return boundaries remain explicit." : "The 27 August–28 September itinerary is still awaiting Author input."} Gaps within existing coverage remain unknown.</p><p>Projection: {layout.projection.method}; origin {layout.projection.originLatitude.toFixed(4)}°, {layout.projection.originLongitude.toFixed(4)}°; {layout.projection.metresPerUnit.toFixed(2)} geographic metres per room unit. No chronology-based axis or position jitter.</p><ul>{layout.rules.map(rule => <li key={rule}>{rule}</li>)}</ul></details>
     </details>
-    <p>Episode spaces are a revisable representation. Source windows, geography, listening and acceptance remain independent. Save review to Vault to keep Author moves and fragment placements.</p>
+    <p>Episode spaces are a revisable representation. Source windows, geography, listening and acceptance remain independent. {saveNotice}</p>
   </div>;
 }

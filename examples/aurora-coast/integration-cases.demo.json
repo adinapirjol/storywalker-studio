@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "fictional": true,
+  "label": "Aurora Coast · invented integration rehearsal",
+  "base_time": "2030-05-01T12:00:00Z",
+  "cases": [
+    {"id":"upper-support","label":"Upper marker with repeated support","samples":[{"second":0,"bpm":122,"source":"watch"},{"second":5,"bpm":124,"source":"watch"}],"expected_kinds":["absolute-high"]},
+    {"id":"lower-support","label":"Lower marker with repeated support","samples":[{"second":0,"bpm":49,"source":"watch"},{"second":5,"bpm":48,"source":"watch"}],"expected_kinds":["absolute-low"]},
+    {"id":"single-sample","label":"One sample cannot establish repeated support","samples":[{"second":0,"bpm":124,"source":"watch"}],"expected_kinds":[]},
+    {"id":"duplicate","label":"Repeated delivery is not new support","samples":[{"second":0,"bpm":124,"source":"watch"},{"second":0,"bpm":124,"source":"watch"}],"expected_kinds":[]},
+    {"id":"watch-priority","label":"Watch reading takes precedence over phone fallback","samples":[{"second":0,"bpm":124,"source":"phone-health"},{"second":0,"bpm":80,"source":"watch"}],"expected_kinds":[]},
+    {"id":"phone-fallback","label":"Phone fallback when no Watch reading is available","samples":[{"second":0,"bpm":122,"source":"phone-health"},{"second":5,"bpm":124,"source":"phone-health"}],"expected_kinds":["absolute-high"]},
+    {"id":"missing-support","label":"Long gaps break supporting observations","samples":[{"second":0,"bpm":122,"source":"watch"},{"second":90,"bpm":124,"source":"watch"}],"expected_kinds":[]},
+    {"id":"stale","label":"Old readings do not create fresh events","now_second":300,"samples":[{"second":0,"bpm":122,"source":"watch"},{"second":5,"bpm":124,"source":"watch"}],"expected_kinds":[]},
+    {"id":"rest-unconfirmed","label":"Rest-only rules wait for an Author report","rest_only":true,"samples":[{"second":0,"bpm":122,"source":"watch"},{"second":5,"bpm":124,"source":"watch"}],"expected_kinds":[]}
+  ],
+  "access_cases": [
+    {"id":"locked","label":"Locked","result":"Open the shared passkey / recovery-passphrase modal before private work."},
+    {"id":"cancelled","label":"Cancelled","result":"Keep unsaved work; do not replay the action."},
+    {"id":"expired","label":"Expired during work","result":"Deny persistence and private results; require an explicit retry."},
+    {"id":"revoked","label":"Passkey removed","result":"Reject an in-flight assertion for the removed credential."},
+    {"id":"unsupported","label":"Encryption unavailable","result":"Do not enroll; keep recovery-passphrase access."}
+  ]
+}

@@ -1,0 +1,20 @@
+.panel {
+  margin: 3rem 0 0;
+  padding: clamp(1.25rem, 3vw, 2.5rem);
+  border: 1px solid #5c5365;
+  border-radius: 1.25rem;
+  background: linear-gradient(130deg, #24212c, #101822 70%);
+  color: #e6e0d5;
+}
+.kicker { color: #d5b994; letter-spacing: .16em; font-size: .75rem; }
+.panel h2 { margin: .75rem 0; font-family: Georgia, serif; font-size: clamp(1.75rem, 3vw, 2.5rem); }
+.panel p { line-height: 1.65; max-width: 75ch; }
+.panel > details { border-top: 1px solid #514958; padding: 1rem 0; }
+.panel summary { cursor: pointer; color: #e3c8a9; padding: .35rem 0; }
+.panel label { display: grid; gap: .65rem; margin: 1.25rem 0; max-width: 42rem; }
+.panel select { background: #202c37; color: #eee5d9; border: 1px solid #7b7184; border-radius: .5rem; padding: .8rem; width: 100%; }
+.panel table { border-collapse: collapse; width: 100%; max-width: 42rem; margin-top: 1rem; }
+.panel caption { text-align: left; padding: .75rem 0; color: #b6b1bb; }
+.panel th, .panel td { text-align: left; padding: .65rem .8rem; border-bottom: 1px solid #514958; }
+.panel th { color: #d5b994; font-weight: 500; }
+.panel select:focus-visible, .panel summary:focus-visible { outline: 2px solid #e3c8a9; outline-offset: 4px; }

@@ -1,0 +1,15 @@
+.panel label { display: block; margin: 1rem 0; }
+.panel input { display: block; max-width: 100%; margin-top: .5rem; }
+.panel input[type=password] { width: min(100%, 30rem); padding: .6rem; color: inherit; background: transparent; border: 1px solid currentColor; border-radius: .35rem; }
+.panel table { min-width: 40rem; border-collapse: collapse; text-align: left; }
+.panel td, .panel th { padding: .5rem; vertical-align: top; }
+.panel caption { text-align: left; margin-bottom: .5rem; }
+.panel button { margin: .25rem; }
+.panel :focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
+.timing { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .35rem 1rem; font-size: .88rem; line-height: 1.5; margin: .75rem 0 1rem; }
+.timing dt { opacity: .7; }
+.timing dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.batchTimestamp { font-size: .85rem; opacity: .75; font-variant-numeric: tabular-nums; }
+.timingDetails { margin: .5rem 0 .75rem; }
+.timingDetails > summary { font-size: .85rem; opacity: .8; cursor: pointer; }
+@media (max-width: 40rem) { .timing { grid-template-columns: 1fr; gap: .15rem; } .timing dd { margin-bottom: .4rem; } }
