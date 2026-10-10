@@ -1,0 +1,1274 @@
+{
+  "schema_version": 1,
+  "revision": 21,
+  "cursor": 21,
+  "now": "2030-05-01T12:02:00Z",
+  "next_delivery_at": null,
+  "observations": [
+    {
+      "schema_version": 1,
+      "id": "activity",
+      "source_id": "fictional-activity",
+      "source_type": "fictional",
+      "source_revision": "1",
+      "device_revision": null,
+      "event_start": "2030-05-01T12:00:00Z",
+      "event_end": "2030-05-01T12:00:25Z",
+      "received_at": "2030-05-01T12:00:00Z",
+      "original_offset": "+00:00",
+      "semantics": "interval",
+      "acquisition": "simulated",
+      "provenance": "source_recorded",
+      "quality": [],
+      "payload": {
+        "kind": "activity",
+        "label": "walking"
+      }
+    },
+    {
+      "schema_version": 1,
+      "id": "hr-0",
+      "source_id": "fictional-body",
+      "source_type": "fictional",
+      "source_revision": "1",
+      "device_revision": null,
+      "event_start": "2030-05-01T12:00:00Z",
+      "event_end": "2030-05-01T12:00:00Z",
+      "received_at": "2030-05-01T12:00:00Z",
+      "original_offset": "+00:00",
+      "semantics": "measurement",
+      "acquisition": "simulated",
+      "provenance": "source_recorded",
+      "quality": [],
+      "payload": {
+        "kind": "heart_rate",
+        "value": 70.0,
+        "unit": "bpm"
+      }
+    },
+    {
+      "schema_version": 1,
+      "id": "hr-1",
+      "source_id": "fictional-body",
+      "source_type": "fictional",
+      "source_revision": "1",
+      "device_revision": null,
+      "event_start": "2030-05-01T12:00:10Z",
+      "event_end": "2030-05-01T12:00:10Z",
+      "received_at": "2030-05-01T12:00:10Z",
+      "original_offset": "+00:00",
+      "semantics": "measurement",
+      "acquisition": "simulated",
+      "provenance": "source_recorded",
+      "quality": [],
+      "payload": {
+        "kind": "heart_rate",
+        "value": 75.0,
+        "unit": "bpm"
+      }
+    },
+    {
+      "schema_version": 1,
+      "id": "sound",
+      "source_id": "fictional-audio",
+      "source_type": "fictional",
+      "source_revision": "1",
+      "device_revision": null,
+      "event_start": "2030-05-01T12:00:10Z",
+      "event_end": "2030-05-01T12:01:40Z",
+      "received_at": "2030-05-01T12:00:10Z",
+      "original_offset": "+00:00",
+      "semantics": "interval",
+      "acquisition": "simulated",
+      "provenance": "source_recorded",
+      "quality": [],
+      "payload": {
+        "kind": "listening",
+        "label": "An original bell study",
+        "policy": "fictional",
+        "tempo_bpm": 96.0
+      }
+    },
+    {
+      "schema_version": 1,
+      "id": "world",
+      "source_id": "fictional-world",
+      "source_type": "fictional",
+      "source_revision": "1",
+      "device_revision": null,
+      "event_start": "2030-05-01T12:00:15Z",
+      "event_end": "2030-05-01T12:00:15Z",
+      "received_at": "2030-05-01T12:00:15Z",
+      "original_offset": "+00:00",
+      "semantics": "measurement",
+      "acquisition": "simulated",
+      "provenance": "source_recorded",
+      "quality": [],
+      "payload": {
+        "kind": "location",
+        "label": "Imagined tidal courtyard",
+        "accuracy_m": 120.0,
+        "city": "Tidal City",
+        "country": "Imagined Coast"
+      }
+    },
+    {
+      "schema_version": 1,
+      "id": "hr-2",
+      "source_id": "fictional-body",
+      "source_type": "fictional",
+      "source_revision": "1",
+      "device_revision": null,
+      "event_start": "2030-05-01T12:00:20Z",
+      "event_end": "2030-05-01T12:00:20Z",
+      "received_at": "2030-05-01T12:00:20Z",
+      "original_offset": "+00:00",
+      "semantics": "measurement",
+      "acquisition": "simulated",
+      "provenance": "source_recorded",
+      "quality": [],
+      "payload": {
+        "kind": "heart_rate",
+        "value": 80.0,
+        "unit": "bpm"
+      }
+    },
+    {
+      "schema_version": 1,
+      "id": "hr-3",
+      "source_id": "fictional-body",
+      "source_type": "fictional",
+      "source_revision": "1",
+      "device_revision": null,
+      "event_start": "2030-05-01T12:00:30Z",
+      "event_end": "2030-05-01T12:00:30Z",
+      "received_at": "2030-05-01T12:00:30Z",
+      "original_offset": "+00:00",
+      "semantics": "measurement",
+      "acquisition": "simulated",
+      "provenance": "source_recorded",
+      "quality": [],
+      "payload": {
+        "kind": "heart_rate",
+        "value": 130.0,
+        "unit": "bpm"
+      }
+    },
+    {
+      "schema_version": 1,
+      "id": "hr-4",
+      "source_id": "fictional-body",
+      "source_type": "fictional",
+      "source_revision": "1",
+      "device_revision": null,
+      "event_start": "2030-05-01T12:00:40Z",
+      "event_end": "2030-05-01T12:00:40Z",
+      "received_at": "2030-05-01T12:00:40Z",
+      "original_offset": "+00:00",
+      "semantics": "measurement",
+      "acquisition": "simulated",
+      "provenance": "source_recorded",
+      "quality": [],
+      "payload": {
+        "kind": "heart_rate",
+        "value": 132.0,
+        "unit": "bpm"
+      }
+    },
+    {
+      "schema_version": 1,
+      "id": "hr-5",
+      "source_id": "fictional-body",
+      "source_type": "fictional",
+      "source_revision": "1",
+      "device_revision": null,
+      "event_start": "2030-05-01T12:00:50Z",
+      "event_end": "2030-05-01T12:00:50Z",
+      "received_at": "2030-05-01T12:00:50Z",
+      "original_offset": "+00:00",
+      "semantics": "measurement",
+      "acquisition": "simulated",
+      "provenance": "source_recorded",
+      "quality": [],
+      "payload": {
+        "kind": "heart_rate",
+        "value": 134.0,
+        "unit": "bpm"
+      }
+    },
+    {
+      "schema_version": 1,
+      "id": "hr-6",
+      "source_id": "fictional-body",
+      "source_type": "fictional",
+      "source_revision": "1",
+      "device_revision": null,
+      "event_start": "2030-05-01T12:01:00Z",
+      "event_end": "2030-05-01T12:01:00Z",
+      "received_at": "2030-05-01T12:01:00Z",
+      "original_offset": "+00:00",
+      "semantics": "measurement",
+      "acquisition": "simulated",
+      "provenance": "source_recorded",
+      "quality": [],
+      "payload": {
+        "kind": "heart_rate",
+        "value": 136.0,
+        "unit": "bpm"
+      }
+    },
+    {
+      "schema_version": 1,
+      "id": "hr-7",
+      "source_id": "fictional-body",
+      "source_type": "fictional",
+      "source_revision": "1",
+      "device_revision": null,
+      "event_start": "2030-05-01T12:01:10Z",
+      "event_end": "2030-05-01T12:01:10Z",
+      "received_at": "2030-05-01T12:01:10Z",
+      "original_offset": "+00:00",
+      "semantics": "measurement",
+      "acquisition": "simulated",
+      "provenance": "source_recorded",
+      "quality": [],
+      "payload": {
+        "kind": "heart_rate",
+        "value": 80.0,
+        "unit": "bpm"
+      }
+    },
+    {
+      "schema_version": 1,
+      "id": "hr-8",
+      "source_id": "fictional-body",
+      "source_type": "fictional",
+      "source_revision": "1",
+      "device_revision": null,
+      "event_start": "2030-05-01T12:01:20Z",
+      "event_end": "2030-05-01T12:01:20Z",
+      "received_at": "2030-05-01T12:01:20Z",
+      "original_offset": "+00:00",
+      "semantics": "measurement",
+      "acquisition": "simulated",
+      "provenance": "source_recorded",
+      "quality": [],
+      "payload": {
+        "kind": "heart_rate",
+        "value": 75.0,
+        "unit": "bpm"
+      }
+    },
+    {
+      "schema_version": 1,
+      "id": "note",
+      "source_id": "fictional-marker",
+      "source_type": "fictional",
+      "source_revision": "1",
+      "device_revision": null,
+      "event_start": "2030-05-01T12:00:32Z",
+      "event_end": "2030-05-01T12:00:32Z",
+      "received_at": "2030-05-01T12:01:22Z",
+      "original_offset": "+00:00",
+      "semantics": "author_marker",
+      "acquisition": "simulated",
+      "provenance": "author_stated",
+      "quality": [],
+      "payload": {
+        "kind": "marker",
+        "label": "A pause to read the wall"
+      }
+    },
+    {
+      "schema_version": 1,
+      "id": "late",
+      "source_id": "fictional-body",
+      "source_type": "fictional",
+      "source_revision": "1",
+      "device_revision": null,
+      "event_start": "2030-05-01T12:00:35Z",
+      "event_end": "2030-05-01T12:00:35Z",
+      "received_at": "2030-05-01T12:01:25Z",
+      "original_offset": "+00:00",
+      "semantics": "measurement",
+      "acquisition": "simulated",
+      "provenance": "source_recorded",
+      "quality": [],
+      "payload": {
+        "kind": "heart_rate",
+        "value": 131.0,
+        "unit": "bpm"
+      }
+    },
+    {
+      "schema_version": 1,
+      "id": "hr-9",
+      "source_id": "fictional-body",
+      "source_type": "fictional",
+      "source_revision": "1",
+      "device_revision": null,
+      "event_start": "2030-05-01T12:01:30Z",
+      "event_end": "2030-05-01T12:01:30Z",
+      "received_at": "2030-05-01T12:01:30Z",
+      "original_offset": "+00:00",
+      "semantics": "measurement",
+      "acquisition": "simulated",
+      "provenance": "source_recorded",
+      "quality": [],
+      "payload": {
+        "kind": "heart_rate",
+        "value": 130.0,
+        "unit": "bpm"
+      }
+    },
+    {
+      "schema_version": 1,
+      "id": "hr-10",
+      "source_id": "fictional-body",
+      "source_type": "fictional",
+      "source_revision": "1",
+      "device_revision": null,
+      "event_start": "2030-05-01T12:01:40Z",
+      "event_end": "2030-05-01T12:01:40Z",
+      "received_at": "2030-05-01T12:01:40Z",
+      "original_offset": "+00:00",
+      "semantics": "measurement",
+      "acquisition": "simulated",
+      "provenance": "source_recorded",
+      "quality": [],
+      "payload": {
+        "kind": "heart_rate",
+        "value": 131.0,
+        "unit": "bpm"
+      }
+    },
+    {
+      "schema_version": 1,
+      "id": "hr-11",
+      "source_id": "fictional-body",
+      "source_type": "fictional",
+      "source_revision": "1",
+      "device_revision": null,
+      "event_start": "2030-05-01T12:01:50Z",
+      "event_end": "2030-05-01T12:01:50Z",
+      "received_at": "2030-05-01T12:01:50Z",
+      "original_offset": "+00:00",
+      "semantics": "measurement",
+      "acquisition": "simulated",
+      "provenance": "source_recorded",
+      "quality": [],
+      "payload": {
+        "kind": "heart_rate",
+        "value": 132.0,
+        "unit": "bpm"
+      }
+    },
+    {
+      "schema_version": 1,
+      "id": "hr-12",
+      "source_id": "fictional-body",
+      "source_type": "fictional",
+      "source_revision": "1",
+      "device_revision": null,
+      "event_start": "2030-05-01T12:02:00Z",
+      "event_end": "2030-05-01T12:02:00Z",
+      "received_at": "2030-05-01T12:02:00Z",
+      "original_offset": "+00:00",
+      "semantics": "measurement",
+      "acquisition": "simulated",
+      "provenance": "source_recorded",
+      "quality": [],
+      "payload": {
+        "kind": "heart_rate",
+        "value": 133.0,
+        "unit": "bpm"
+      }
+    }
+  ],
+  "event_index": [
+    "activity",
+    "hr-0",
+    "hr-1",
+    "sound",
+    "world",
+    "hr-2",
+    "hr-3",
+    "note",
+    "late",
+    "hr-4",
+    "hr-5",
+    "hr-6",
+    "hr-7",
+    "hr-8",
+    "hr-9",
+    "hr-10",
+    "hr-11",
+    "hr-12"
+  ],
+  "end_index": [
+    "hr-0",
+    "hr-1",
+    "world",
+    "hr-2",
+    "activity",
+    "hr-3",
+    "note",
+    "late",
+    "hr-4",
+    "hr-5",
+    "hr-6",
+    "hr-7",
+    "hr-8",
+    "hr-9",
+    "hr-10",
+    "sound",
+    "hr-11",
+    "hr-12"
+  ],
+  "captures": [
+    {
+      "rule_id": "fictional-high",
+      "rule_snapshot": {
+        "id": "fictional-high",
+        "version": 1,
+        "enabled": true,
+        "priority": 0,
+        "required_lanes": [
+          "heart_rate"
+        ],
+        "direction": "high",
+        "threshold": 120.0,
+        "duration_s": 30,
+        "gap_s": 10,
+        "hysteresis": 10.0,
+        "cooldown_s": 60,
+        "before_s": 30,
+        "after_s": 30
+      },
+      "id": "4f4d837ab0bf0f73",
+      "rule_version": 1,
+      "triggering_ids": [
+        "hr-6",
+        "hr-5",
+        "hr-4",
+        "hr-3"
+      ],
+      "event_time": "2030-05-01T12:01:00Z",
+      "captured_at": "2030-05-01T12:01:00Z",
+      "reason": "Fictional high threshold; 30s sampled span, gaps ≤ 10s.",
+      "context": {
+        "id": "4f4d837ab0bf0f73",
+        "start": "2030-05-01T12:00:30Z",
+        "end": "2030-05-01T12:01:30Z",
+        "observation_ids": [
+          "activity",
+          "sound",
+          "world",
+          "hr-3",
+          "note",
+          "late",
+          "hr-4",
+          "hr-5",
+          "hr-6",
+          "hr-7",
+          "hr-8",
+          "hr-9"
+        ],
+        "revision": 6,
+        "tolerance_s": 5,
+        "matches": [
+          {
+            "observation_id": "activity",
+            "overlap_s": 0.0,
+            "age_at_trigger_s": 60.0,
+            "relation": "interval"
+          },
+          {
+            "observation_id": "sound",
+            "overlap_s": 60.0,
+            "age_at_trigger_s": 50.0,
+            "relation": "interval"
+          },
+          {
+            "observation_id": "world",
+            "overlap_s": 0.0,
+            "age_at_trigger_s": 45.0,
+            "relation": "location_carry_forward"
+          },
+          {
+            "observation_id": "hr-3",
+            "overlap_s": 0.0,
+            "age_at_trigger_s": 30.0,
+            "relation": "point"
+          },
+          {
+            "observation_id": "note",
+            "overlap_s": 0.0,
+            "age_at_trigger_s": 28.0,
+            "relation": "point"
+          },
+          {
+            "observation_id": "late",
+            "overlap_s": 0.0,
+            "age_at_trigger_s": 25.0,
+            "relation": "point"
+          },
+          {
+            "observation_id": "hr-4",
+            "overlap_s": 0.0,
+            "age_at_trigger_s": 20.0,
+            "relation": "point"
+          },
+          {
+            "observation_id": "hr-5",
+            "overlap_s": 0.0,
+            "age_at_trigger_s": 10.0,
+            "relation": "point"
+          },
+          {
+            "observation_id": "hr-6",
+            "overlap_s": 0.0,
+            "age_at_trigger_s": 0.0,
+            "relation": "point"
+          },
+          {
+            "observation_id": "hr-7",
+            "overlap_s": 0.0,
+            "age_at_trigger_s": -10.0,
+            "relation": "point"
+          },
+          {
+            "observation_id": "hr-8",
+            "overlap_s": 0.0,
+            "age_at_trigger_s": -20.0,
+            "relation": "point"
+          },
+          {
+            "observation_id": "hr-9",
+            "overlap_s": 0.0,
+            "age_at_trigger_s": -30.0,
+            "relation": "point"
+          }
+        ],
+        "missing_lanes": [
+          "activity"
+        ],
+        "stale_location": true,
+        "coverage_s": 30,
+        "uncertainty": "Sample coverage is not confidence in meaning.",
+        "complete": true
+      },
+      "context_history": [
+        {
+          "id": "4f4d837ab0bf0f73",
+          "start": "2030-05-01T12:00:30Z",
+          "end": "2030-05-01T12:01:30Z",
+          "observation_ids": [],
+          "revision": 0,
+          "tolerance_s": 5,
+          "matches": [],
+          "missing_lanes": [],
+          "stale_location": true,
+          "coverage_s": 30,
+          "uncertainty": "Sample coverage is not confidence in meaning.",
+          "complete": false
+        },
+        {
+          "id": "4f4d837ab0bf0f73",
+          "start": "2030-05-01T12:00:30Z",
+          "end": "2030-05-01T12:01:30Z",
+          "observation_ids": [
+            "activity",
+            "sound",
+            "world",
+            "hr-3",
+            "hr-4",
+            "hr-5",
+            "hr-6"
+          ],
+          "revision": 1,
+          "tolerance_s": 5,
+          "matches": [
+            {
+              "observation_id": "activity",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 60.0,
+              "relation": "interval"
+            },
+            {
+              "observation_id": "sound",
+              "overlap_s": 60.0,
+              "age_at_trigger_s": 50.0,
+              "relation": "interval"
+            },
+            {
+              "observation_id": "world",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 45.0,
+              "relation": "location_carry_forward"
+            },
+            {
+              "observation_id": "hr-3",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 30.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-4",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 20.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-5",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 10.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-6",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 0.0,
+              "relation": "point"
+            }
+          ],
+          "missing_lanes": [
+            "activity"
+          ],
+          "stale_location": true,
+          "coverage_s": 30,
+          "uncertainty": "Sample coverage is not confidence in meaning.",
+          "complete": false
+        },
+        {
+          "id": "4f4d837ab0bf0f73",
+          "start": "2030-05-01T12:00:30Z",
+          "end": "2030-05-01T12:01:30Z",
+          "observation_ids": [
+            "activity",
+            "sound",
+            "world",
+            "hr-3",
+            "hr-4",
+            "hr-5",
+            "hr-6",
+            "hr-7"
+          ],
+          "revision": 2,
+          "tolerance_s": 5,
+          "matches": [
+            {
+              "observation_id": "activity",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 60.0,
+              "relation": "interval"
+            },
+            {
+              "observation_id": "sound",
+              "overlap_s": 60.0,
+              "age_at_trigger_s": 50.0,
+              "relation": "interval"
+            },
+            {
+              "observation_id": "world",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 45.0,
+              "relation": "location_carry_forward"
+            },
+            {
+              "observation_id": "hr-3",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 30.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-4",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 20.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-5",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 10.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-6",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 0.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-7",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": -10.0,
+              "relation": "point"
+            }
+          ],
+          "missing_lanes": [
+            "activity"
+          ],
+          "stale_location": true,
+          "coverage_s": 30,
+          "uncertainty": "Sample coverage is not confidence in meaning.",
+          "complete": false
+        },
+        {
+          "id": "4f4d837ab0bf0f73",
+          "start": "2030-05-01T12:00:30Z",
+          "end": "2030-05-01T12:01:30Z",
+          "observation_ids": [
+            "activity",
+            "sound",
+            "world",
+            "hr-3",
+            "hr-4",
+            "hr-5",
+            "hr-6",
+            "hr-7",
+            "hr-8"
+          ],
+          "revision": 3,
+          "tolerance_s": 5,
+          "matches": [
+            {
+              "observation_id": "activity",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 60.0,
+              "relation": "interval"
+            },
+            {
+              "observation_id": "sound",
+              "overlap_s": 60.0,
+              "age_at_trigger_s": 50.0,
+              "relation": "interval"
+            },
+            {
+              "observation_id": "world",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 45.0,
+              "relation": "location_carry_forward"
+            },
+            {
+              "observation_id": "hr-3",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 30.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-4",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 20.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-5",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 10.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-6",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 0.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-7",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": -10.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-8",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": -20.0,
+              "relation": "point"
+            }
+          ],
+          "missing_lanes": [
+            "activity"
+          ],
+          "stale_location": true,
+          "coverage_s": 30,
+          "uncertainty": "Sample coverage is not confidence in meaning.",
+          "complete": false
+        },
+        {
+          "id": "4f4d837ab0bf0f73",
+          "start": "2030-05-01T12:00:30Z",
+          "end": "2030-05-01T12:01:30Z",
+          "observation_ids": [
+            "activity",
+            "sound",
+            "world",
+            "hr-3",
+            "note",
+            "hr-4",
+            "hr-5",
+            "hr-6",
+            "hr-7",
+            "hr-8"
+          ],
+          "revision": 4,
+          "tolerance_s": 5,
+          "matches": [
+            {
+              "observation_id": "activity",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 60.0,
+              "relation": "interval"
+            },
+            {
+              "observation_id": "sound",
+              "overlap_s": 60.0,
+              "age_at_trigger_s": 50.0,
+              "relation": "interval"
+            },
+            {
+              "observation_id": "world",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 45.0,
+              "relation": "location_carry_forward"
+            },
+            {
+              "observation_id": "hr-3",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 30.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "note",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 28.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-4",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 20.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-5",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 10.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-6",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 0.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-7",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": -10.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-8",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": -20.0,
+              "relation": "point"
+            }
+          ],
+          "missing_lanes": [
+            "activity"
+          ],
+          "stale_location": true,
+          "coverage_s": 30,
+          "uncertainty": "Sample coverage is not confidence in meaning.",
+          "complete": false
+        },
+        {
+          "id": "4f4d837ab0bf0f73",
+          "start": "2030-05-01T12:00:30Z",
+          "end": "2030-05-01T12:01:30Z",
+          "observation_ids": [
+            "activity",
+            "sound",
+            "world",
+            "hr-3",
+            "note",
+            "late",
+            "hr-4",
+            "hr-5",
+            "hr-6",
+            "hr-7",
+            "hr-8"
+          ],
+          "revision": 5,
+          "tolerance_s": 5,
+          "matches": [
+            {
+              "observation_id": "activity",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 60.0,
+              "relation": "interval"
+            },
+            {
+              "observation_id": "sound",
+              "overlap_s": 60.0,
+              "age_at_trigger_s": 50.0,
+              "relation": "interval"
+            },
+            {
+              "observation_id": "world",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 45.0,
+              "relation": "location_carry_forward"
+            },
+            {
+              "observation_id": "hr-3",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 30.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "note",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 28.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "late",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 25.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-4",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 20.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-5",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 10.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-6",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": 0.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-7",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": -10.0,
+              "relation": "point"
+            },
+            {
+              "observation_id": "hr-8",
+              "overlap_s": 0.0,
+              "age_at_trigger_s": -20.0,
+              "relation": "point"
+            }
+          ],
+          "missing_lanes": [
+            "activity"
+          ],
+          "stale_location": true,
+          "coverage_s": 30,
+          "uncertainty": "Sample coverage is not confidence in meaning.",
+          "complete": false
+        }
+      ],
+      "notification_eligible": false
+    },
+    {
+      "rule_id": "fictional-high",
+      "rule_snapshot": {
+        "id": "fictional-high",
+        "version": 1,
+        "enabled": true,
+        "priority": 0,
+        "required_lanes": [
+          "heart_rate"
+        ],
+        "direction": "high",
+        "threshold": 120.0,
+        "duration_s": 30,
+        "gap_s": 10,
+        "hysteresis": 10.0,
+        "cooldown_s": 60,
+        "before_s": 30,
+        "after_s": 30
+      },
+      "id": "a10dbdbfac3c2f06",
+      "rule_version": 1,
+      "triggering_ids": [
+        "hr-12",
+        "hr-11",
+        "hr-10",
+        "hr-9"
+      ],
+      "event_time": "2030-05-01T12:02:00Z",
+      "captured_at": "2030-05-01T12:02:00Z",
+      "reason": "Fictional high threshold; 30s sampled span, gaps ≤ 10s.",
+      "context": {
+        "id": "a10dbdbfac3c2f06",
+        "start": "2030-05-01T12:01:30Z",
+        "end": "2030-05-01T12:02:30Z",
+        "observation_ids": [
+          "sound",
+          "world",
+          "hr-9",
+          "hr-10",
+          "hr-11",
+          "hr-12"
+        ],
+        "revision": 1,
+        "tolerance_s": 5,
+        "matches": [
+          {
+            "observation_id": "sound",
+            "overlap_s": 10.0,
+            "age_at_trigger_s": 110.0,
+            "relation": "interval"
+          },
+          {
+            "observation_id": "world",
+            "overlap_s": 0.0,
+            "age_at_trigger_s": 105.0,
+            "relation": "location_carry_forward"
+          },
+          {
+            "observation_id": "hr-9",
+            "overlap_s": 0.0,
+            "age_at_trigger_s": 30.0,
+            "relation": "point"
+          },
+          {
+            "observation_id": "hr-10",
+            "overlap_s": 0.0,
+            "age_at_trigger_s": 20.0,
+            "relation": "point"
+          },
+          {
+            "observation_id": "hr-11",
+            "overlap_s": 0.0,
+            "age_at_trigger_s": 10.0,
+            "relation": "point"
+          },
+          {
+            "observation_id": "hr-12",
+            "overlap_s": 0.0,
+            "age_at_trigger_s": 0.0,
+            "relation": "point"
+          }
+        ],
+        "missing_lanes": [
+          "activity"
+        ],
+        "stale_location": true,
+        "coverage_s": 30,
+        "uncertainty": "Sample coverage is not confidence in meaning.",
+        "complete": false
+      },
+      "context_history": [
+        {
+          "id": "a10dbdbfac3c2f06",
+          "start": "2030-05-01T12:01:30Z",
+          "end": "2030-05-01T12:02:30Z",
+          "observation_ids": [],
+          "revision": 0,
+          "tolerance_s": 5,
+          "matches": [],
+          "missing_lanes": [],
+          "stale_location": true,
+          "coverage_s": 30,
+          "uncertainty": "Sample coverage is not confidence in meaning.",
+          "complete": false
+        }
+      ],
+      "notification_eligible": false
+    }
+  ],
+  "proposals": [
+    {
+      "id": "4f4d837ab0bf0f73:proposal:1",
+      "capture_id": "4f4d837ab0bf0f73",
+      "revision": 1,
+      "context_revision": 1,
+      "evidence_ids": [
+        "activity",
+        "sound",
+        "world",
+        "hr-3",
+        "hr-4",
+        "hr-5",
+        "hr-6"
+      ],
+      "account": "A sampled body change coincided with this available context. Its meaning remains open.",
+      "question": "What else was happening? Missing activity prevents a resting comparison.",
+      "caveats": "Temporal overlap establishes neither emotion nor causation. Location is approximate.",
+      "method": "deterministic"
+    },
+    {
+      "id": "4f4d837ab0bf0f73:proposal:2",
+      "capture_id": "4f4d837ab0bf0f73",
+      "revision": 2,
+      "context_revision": 2,
+      "evidence_ids": [
+        "activity",
+        "sound",
+        "world",
+        "hr-3",
+        "hr-4",
+        "hr-5",
+        "hr-6",
+        "hr-7"
+      ],
+      "account": "A sampled body change coincided with this available context. Its meaning remains open.",
+      "question": "What else was happening? Missing activity prevents a resting comparison.",
+      "caveats": "Temporal overlap establishes neither emotion nor causation. Location is approximate.",
+      "method": "deterministic"
+    },
+    {
+      "id": "4f4d837ab0bf0f73:proposal:3",
+      "capture_id": "4f4d837ab0bf0f73",
+      "revision": 3,
+      "context_revision": 3,
+      "evidence_ids": [
+        "activity",
+        "sound",
+        "world",
+        "hr-3",
+        "hr-4",
+        "hr-5",
+        "hr-6",
+        "hr-7",
+        "hr-8"
+      ],
+      "account": "A sampled body change coincided with this available context. Its meaning remains open.",
+      "question": "What else was happening? Missing activity prevents a resting comparison.",
+      "caveats": "Temporal overlap establishes neither emotion nor causation. Location is approximate.",
+      "method": "deterministic"
+    },
+    {
+      "id": "4f4d837ab0bf0f73:proposal:4",
+      "capture_id": "4f4d837ab0bf0f73",
+      "revision": 4,
+      "context_revision": 4,
+      "evidence_ids": [
+        "activity",
+        "sound",
+        "world",
+        "hr-3",
+        "note",
+        "hr-4",
+        "hr-5",
+        "hr-6",
+        "hr-7",
+        "hr-8"
+      ],
+      "account": "A sampled body change coincided with this available context. Its meaning remains open.",
+      "question": "What else was happening? Missing activity prevents a resting comparison.",
+      "caveats": "Temporal overlap establishes neither emotion nor causation. Location is approximate.",
+      "method": "deterministic"
+    },
+    {
+      "id": "4f4d837ab0bf0f73:proposal:5",
+      "capture_id": "4f4d837ab0bf0f73",
+      "revision": 5,
+      "context_revision": 5,
+      "evidence_ids": [
+        "activity",
+        "sound",
+        "world",
+        "hr-3",
+        "note",
+        "late",
+        "hr-4",
+        "hr-5",
+        "hr-6",
+        "hr-7",
+        "hr-8"
+      ],
+      "account": "A sampled body change coincided with this available context. Its meaning remains open.",
+      "question": "What else was happening? Missing activity prevents a resting comparison.",
+      "caveats": "Temporal overlap establishes neither emotion nor causation. Location is approximate.",
+      "method": "deterministic"
+    },
+    {
+      "id": "4f4d837ab0bf0f73:proposal:6",
+      "capture_id": "4f4d837ab0bf0f73",
+      "revision": 6,
+      "context_revision": 6,
+      "evidence_ids": [
+        "activity",
+        "sound",
+        "world",
+        "hr-3",
+        "note",
+        "late",
+        "hr-4",
+        "hr-5",
+        "hr-6",
+        "hr-7",
+        "hr-8",
+        "hr-9"
+      ],
+      "account": "A sampled body change coincided with this available context. Its meaning remains open.",
+      "question": "What else was happening? Missing activity prevents a resting comparison.",
+      "caveats": "Temporal overlap establishes neither emotion nor causation. Location is approximate.",
+      "method": "deterministic"
+    },
+    {
+      "id": "a10dbdbfac3c2f06:proposal:1",
+      "capture_id": "a10dbdbfac3c2f06",
+      "revision": 1,
+      "context_revision": 1,
+      "evidence_ids": [
+        "sound",
+        "world",
+        "hr-9",
+        "hr-10",
+        "hr-11",
+        "hr-12"
+      ],
+      "account": "A sampled body change coincided with this available context. Its meaning remains open.",
+      "question": "What else was happening? Missing activity prevents a resting comparison.",
+      "caveats": "Temporal overlap establishes neither emotion nor causation. Location is approximate.",
+      "method": "deterministic"
+    }
+  ],
+  "decisions": [],
+  "memories": [],
+  "placements": [],
+  "rule": {
+    "id": "fictional-high",
+    "version": 1,
+    "enabled": true,
+    "priority": 0,
+    "required_lanes": [
+      "heart_rate"
+    ],
+    "direction": "high",
+    "threshold": 120.0,
+    "duration_s": 30,
+    "gap_s": 10,
+    "hysteresis": 10.0,
+    "cooldown_s": 60,
+    "before_s": 30,
+    "after_s": 30
+  },
+  "additional_rules": [],
+  "latches": {
+    "fictional-high:1": {
+      "armed": false,
+      "last_capture": "2030-05-01T12:02:00Z"
+    }
+  },
+  "armed": false,
+  "last_capture": "2030-05-01T12:02:00Z",
+  "status": "awaiting-Author",
+  "reflection": "",
+  "deleted_sources": []
+}
