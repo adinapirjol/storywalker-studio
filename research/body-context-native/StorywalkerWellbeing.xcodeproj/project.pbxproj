@@ -1,0 +1,517 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		06FC22BBA2C638CA1241DEE5 /* TransferView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC7B24220A9D64AA1DCB9D0 /* TransferView.swift */; };
+		5B27371B16AA905EE0423CB8 /* PhoneWatchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D249C8DCB06EA05A49A4706F /* PhoneWatchBridge.swift */; };
+		883177D816768DDB1E05184D /* WatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 943F528DE9803C4F40C70C55 /* WatchApp.swift */; };
+		99E2F7090FDA9F17A0AE6945 /* WatchPet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1B56E8CA697180D8ED17F87 /* WatchPet.swift */; };
+		9C5A208DABDF3E2488145BA7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E03860C1FF3A6D7898FBFDB6 /* Assets.xcassets */; };
+		B22495DFAE035A01226336A7 /* StorywalkerWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 5C97B591FB14CEF852BE5156 /* StorywalkerWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D211104245D1A12AEE77A00E /* PetWatchFace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67D396885B7D90DF275F71A6 /* PetWatchFace.swift */; };
+		D45478225589B0755C68D95A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1589C940C020D560D358B8F0 /* Assets.xcassets */; };
+		D9791D929381FD2D354A02CB /* WatchSignal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7438B340D36ACD025A521461 /* WatchSignal.swift */; };
+		ED3AD0752930EB98188E5765 /* CompanionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE24544FEEB0B32A84A88405 /* CompanionApp.swift */; };
+		F7FAD89079233AF6CF96F366 /* CollectorCore in Frameworks */ = {isa = PBXBuildFile; productRef = 32CDF07CFC0ADD8A56D47A35 /* CollectorCore */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		BDCD28C1AD3C6D1CE62547A0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B27D9F12B8243512514988BA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B422565D807CAA05B401BA9F;
+			remoteInfo = StorywalkerWatch;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C1CBD4CE1CCAC47BB68DB98F /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				B22495DFAE035A01226336A7 /* StorywalkerWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		AA53D5ECAF8B4C2CAB602001 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = SOURCE_ROOT; };
+		0B56D5C48C3BA9175CC20016 /* StorywalkerWellbeing.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = StorywalkerWellbeing.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1589C940C020D560D358B8F0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		5C97B591FB14CEF852BE5156 /* StorywalkerWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StorywalkerWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5E45C37CD9EE995F35267FD0 /* body-context-native */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "body-context-native"; path = .; sourceTree = SOURCE_ROOT; };
+		67D396885B7D90DF275F71A6 /* PetWatchFace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetWatchFace.swift; sourceTree = "<group>"; };
+		7438B340D36ACD025A521461 /* WatchSignal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSignal.swift; sourceTree = "<group>"; };
+		943F528DE9803C4F40C70C55 /* WatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchApp.swift; sourceTree = "<group>"; };
+		9FC7B24220A9D64AA1DCB9D0 /* TransferView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferView.swift; sourceTree = "<group>"; };
+		BF78E2F601C351665BBE9F0C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		D1B56E8CA697180D8ED17F87 /* WatchPet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchPet.swift; sourceTree = "<group>"; };
+		D249C8DCB06EA05A49A4706F /* PhoneWatchBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneWatchBridge.swift; sourceTree = "<group>"; };
+		E03860C1FF3A6D7898FBFDB6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		E333BC2C8A3C4DA37B4B819E /* Watch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Watch.entitlements; sourceTree = "<group>"; };
+		FE24544FEEB0B32A84A88405 /* CompanionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionApp.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F7D7814A5BC36C2C1AC02976 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F7FAD89079233AF6CF96F366 /* CollectorCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		11EF4104FB54437732A50BE1 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				5E45C37CD9EE995F35267FD0 /* body-context-native */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		298CF1B50D78286243A82663 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5C97B591FB14CEF852BE5156 /* StorywalkerWatch.app */,
+				0B56D5C48C3BA9175CC20016 /* StorywalkerWellbeing.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		7989DD718CB27BFF230472A1 /* CollectorCore */ = {
+			isa = PBXGroup;
+			children = (
+				7438B340D36ACD025A521461 /* WatchSignal.swift */,
+			);
+			name = CollectorCore;
+			path = Sources/CollectorCore;
+			sourceTree = "<group>";
+		};
+		82251A1A15112D0778EA08BA /* Watch */ = {
+			isa = PBXGroup;
+			children = (
+				E03860C1FF3A6D7898FBFDB6 /* Assets.xcassets */,
+				BF78E2F601C351665BBE9F0C /* Info.plist */,
+				E333BC2C8A3C4DA37B4B819E /* Watch.entitlements */,
+				943F528DE9803C4F40C70C55 /* WatchApp.swift */,
+				D1B56E8CA697180D8ED17F87 /* WatchPet.swift */,
+			);
+			path = Watch;
+			sourceTree = "<group>";
+		};
+		8A6AAAB5326B1FE63F3856BF /* iPhone */ = {
+			isa = PBXGroup;
+			children = (
+				1589C940C020D560D358B8F0 /* Assets.xcassets */,
+				FE24544FEEB0B32A84A88405 /* CompanionApp.swift */,
+				67D396885B7D90DF275F71A6 /* PetWatchFace.swift */,
+				D249C8DCB06EA05A49A4706F /* PhoneWatchBridge.swift */,
+				9FC7B24220A9D64AA1DCB9D0 /* TransferView.swift */,
+			);
+			path = iPhone;
+			sourceTree = "<group>";
+		};
+		FC925081E7F09C20FCC15ED9 = {
+			isa = PBXGroup;
+			children = (
+				7989DD718CB27BFF230472A1 /* CollectorCore */,
+				8A6AAAB5326B1FE63F3856BF /* iPhone */,
+				11EF4104FB54437732A50BE1 /* Packages */,
+				82251A1A15112D0778EA08BA /* Watch */,
+				298CF1B50D78286243A82663 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B422565D807CAA05B401BA9F /* StorywalkerWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 767F7910892EF5B2390B9660 /* Build configuration list for PBXNativeTarget "StorywalkerWatch" */;
+			buildPhases = (
+				42DC1268A4939C3294677454 /* Sources */,
+				7641970129A6BC77C66023BB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = StorywalkerWatch;
+			packageProductDependencies = (
+			);
+			productName = StorywalkerWatch;
+			productReference = 5C97B591FB14CEF852BE5156 /* StorywalkerWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D6B3144B2A70FD8487A561D1 /* StorywalkerWellbeing */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 29EE17907D67377383F94C23 /* Build configuration list for PBXNativeTarget "StorywalkerWellbeing" */;
+			buildPhases = (
+				4169EAFD7E383D8F75B0DC03 /* Sources */,
+				91E4DE140598A4E72CFF88E8 /* Resources */,
+				F7D7814A5BC36C2C1AC02976 /* Frameworks */,
+				C1CBD4CE1CCAC47BB68DB98F /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E38F49E3B0701C8B4C72D4CF /* PBXTargetDependency */,
+			);
+			name = StorywalkerWellbeing;
+			packageProductDependencies = (
+				32CDF07CFC0ADD8A56D47A35 /* CollectorCore */,
+			);
+			productName = StorywalkerWellbeing;
+			productReference = 0B56D5C48C3BA9175CC20016 /* StorywalkerWellbeing.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B27D9F12B8243512514988BA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					B422565D807CAA05B401BA9F = {
+					};
+					D6B3144B2A70FD8487A561D1 = {
+					};
+				};
+			};
+			buildConfigurationList = BE932B0E63CC73EC507BA299 /* Build configuration list for PBXProject "StorywalkerWellbeing" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = FC925081E7F09C20FCC15ED9;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				25D7B9CB561979ED57D843CE /* XCLocalSwiftPackageReference "." */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 298CF1B50D78286243A82663 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D6B3144B2A70FD8487A561D1 /* StorywalkerWellbeing */,
+				B422565D807CAA05B401BA9F /* StorywalkerWatch */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		7641970129A6BC77C66023BB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9C5A208DABDF3E2488145BA7 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		91E4DE140598A4E72CFF88E8 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D45478225589B0755C68D95A /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4169EAFD7E383D8F75B0DC03 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ED3AD0752930EB98188E5765 /* CompanionApp.swift in Sources */,
+				D211104245D1A12AEE77A00E /* PetWatchFace.swift in Sources */,
+				5B27371B16AA905EE0423CB8 /* PhoneWatchBridge.swift in Sources */,
+				06FC22BBA2C638CA1241DEE5 /* TransferView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		42DC1268A4939C3294677454 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				883177D816768DDB1E05184D /* WatchApp.swift in Sources */,
+				99E2F7090FDA9F17A0AE6945 /* WatchPet.swift in Sources */,
+				D9791D929381FD2D354A02CB /* WatchSignal.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E38F49E3B0701C8B4C72D4CF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B422565D807CAA05B401BA9F /* StorywalkerWatch */;
+			targetProxy = BDCD28C1AD3C6D1CE62547A0 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		282756F5E8CEC98EEDE3414D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = AA53D5ECAF8B4C2CAB602001 /* Signing.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Collector.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.example.plist;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Review selected heart-rate observations in a private wellbeing journal, with your own notes and control over deletion.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Add an approximate place to a wellbeing note when you explicitly request it.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = studio.storywalker.wellbeing.example;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		503D5F75234FA85FA8AB80CA /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = AA53D5ECAF8B4C2CAB602001 /* Signing.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Collector.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.example.plist;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Review selected heart-rate observations in a private wellbeing journal, with your own notes and control over deletion.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Add an approximate place to a wellbeing note when you explicitly request it.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = studio.storywalker.wellbeing.example;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		7ED2DEB9B2757C0E9083BCAF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		D0A52301332BBBF822C6B3EC /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = AA53D5ECAF8B4C2CAB602001 /* Signing.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Watch/Watch.entitlements;
+				INFOPLIST_FILE = Watch/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = studio.storywalker.wellbeing.example.watch;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		D2DA37BB6FFAE7A869C75BCD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = AA53D5ECAF8B4C2CAB602001 /* Signing.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Watch/Watch.entitlements;
+				INFOPLIST_FILE = Watch/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = studio.storywalker.wellbeing.example.watch;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		FB18504AB853FDEC5E1D290C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		29EE17907D67377383F94C23 /* Build configuration list for PBXNativeTarget "StorywalkerWellbeing" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				282756F5E8CEC98EEDE3414D /* Debug */,
+				503D5F75234FA85FA8AB80CA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		767F7910892EF5B2390B9660 /* Build configuration list for PBXNativeTarget "StorywalkerWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D2DA37BB6FFAE7A869C75BCD /* Debug */,
+				D0A52301332BBBF822C6B3EC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BE932B0E63CC73EC507BA299 /* Build configuration list for PBXProject "StorywalkerWellbeing" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FB18504AB853FDEC5E1D290C /* Debug */,
+				7ED2DEB9B2757C0E9083BCAF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		25D7B9CB561979ED57D843CE /* XCLocalSwiftPackageReference "." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = .;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		32CDF07CFC0ADD8A56D47A35 /* CollectorCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CollectorCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = B27D9F12B8243512514988BA /* Project object */;
+}

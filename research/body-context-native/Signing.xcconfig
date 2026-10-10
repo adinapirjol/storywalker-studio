@@ -1,0 +1,2 @@
+// Machine-specific settings stay in the ignored private-data directory.
+#include? "../../private-data/native-development/Signing.xcconfig"
