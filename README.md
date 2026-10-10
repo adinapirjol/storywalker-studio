@@ -16,7 +16,63 @@ The system is deliberately deterministic first. It does not claim that a song ex
 
 `/research/xr` develops WORLD / TIME / MEMORY: geographic calibration, a chronological archive of episode spaces, and Author recomposition with visible geographic ghosts. Private sources stay in the encrypted local Vault; passkey or recovery-passphrase access can resume an interrupted action on the same page.
 
-See the [29 September NOVA report and next tasks](docs/research/xr/nova-report-2026-09-29.md), [rehearsal guide](docs/research/xr/README.md), and [CTM research checkpoint](docs/research/ctm-2027/checkpoint-2026-09-29.md). The full fictional Aurora Coast immersive preview and new privacy-safe XR screenshots are planned; the screenshots below show the existing editorial demo.
+See the [29 September NOVA report and next tasks](docs/research/xr/nova-report-2026-09-29.md) and [rehearsal guide](docs/research/xr/README.md). The full fictional Aurora Coast immersive preview is available at `/research/xr/aurora-coast`; it needs no Vault. The earlier editorial demo remains available below.
+
+## BODY companion and shared private access
+
+`/research/xr/body` is a creature-first study in warm mineral light and wire form.
+Drag, zoom and gentle petting shape its presentation; optional evidence inspection
+keeps measurement values, provenance and timing visible without dominating it.
+The same pet accompanies the Author on **Apple Watch and iPhone**, with native
+SwiftUI apps in [`research/body-context-native`](research/body-context-native/README.md).
+
+| Apple Watch companion | iPhone companion |
+| --- | --- |
+| <img src="research/body-context-native/Watch/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="80" alt="Storywalker Watch companion icon"> | <img src="research/body-context-native/iPhone/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="80" alt="Storywalker iPhone companion icon"> |
+| Pet interaction, last registered reading and measurement time. **Start meditation** is the first session action; walking, running and indoor cycling remain explicit choices. | The companion and its reading age stay at the front. Collection, pairing, encrypted transfers and the Mac feed live behind **Connections & data**. |
+
+Meditation starts a HealthKit **Mind and Body workout session** for available live
+readings. It does not infer that the Author is resting or promise a Mindful Minutes
+record. The Watch sends available readings to the phone; the phone bridges them
+to the local web companion. Latest on-device acceptance remains separate from
+simulator compilation and synthetic tests.
+
+Watch workout readings can reach the phone through WatchConnectivity; available
+HealthKit records remain the fallback. The phone pushes fresh previews to a pinned
+local HTTPS receiver, which pushes browser updates through a bounded event stream.
+Encrypted archived batches, receipts and explicit evidence acceptance remain a
+separate path. Contact, receipt and measurement times are shown independently.
+Watch sensing and operating-system scheduling do not guarantee continuous delivery.
+This research companion is not an emergency monitor.
+
+All private surfaces share one passkey / recovery-passphrase window. Existing
+Vault access from `/vault` uses it too. Sessions expire after 15 minutes, lock on
+request and disappear on server restart. Private actions recheck authority before
+persistence and release. Passkeys require encryption support (PRF); use the saved
+`localhost` address for enrollment and unlock, with recovery access retained.
+See [passkey setup](docs/vault-passkeys.md), [auth architecture](docs/auth-architecture.md)
+and [code review standards](docs/code-review-guidelines.md). The
+[10 October review](docs/research/review-2026-10-10.md) records repairs and checks.
+The [release-readiness review](docs/research/release-readiness-2026-10-10.md)
+records the repaired consent blocker, remaining risks and manual acceptance checklist.
+
+Vault unlocking uses **WebAuthn passkeys with PRF key wrapping**, retaining the
+recovery passphrase. A provider sign-in alone would not unwrap the local Vault
+key. OAuth remains the separate mechanism for delegated provider access, such as
+Spotify imports; it does not grant evidence acceptance or export consent.
+
+Aurora Coast has a fourth **BODY** view beside **WORLD / TIME / MEMORY**, with
+the pet and invented batch timing, threshold and access examples. It starts
+paused and is manually explored, with no
+real Watch feed, private Vault writes or external telemetry. Cryptographic and
+contract tests use synthetic inputs; real-device acceptance remains a separate
+check.
+
+![Fictional Aurora Coast BODY companion, paused with rotation, zoom and petting controls](docs/screenshots/aurora-xr-body.jpg)
+
+*Web browser capture from Aurora Coast's fictional BODY tab. Invented inputs only;
+playback and sound are stopped. This is a design rehearsal, not live phone or Watch
+evidence. The icons above identify the native pair; they are not device screenshots.*
 
 ## Why Storywalker exists
 
@@ -47,6 +103,25 @@ No demo data is persisted during preview. Seeding is explicit. LifeEvents begin 
 
 ![The Review desk before any decision: eight pending fictional LifeEvents, twelve synthetic tracks, and zero proposed connections](docs/screenshots/aurora-coast-timeline.png)
 
+## Enter the fictional XR rehearsal
+
+Open `/research/xr/aurora-coast` on your local server. All visits, plays, notebook material and decisions are invented; the map uses public geographic anchors.
+
+1. In **TIME**, choose **Next**, then **Approach** and **Open first visible window**. Cross into the chamber and return to the same corridor.
+2. In **WORLD**, orbit the geographic baseline. In **MEMORY**, choose **Time-axis view** and move an episode; its geographic ghost remains visible.
+   In **BODY**, rotate, zoom or pet the companion and step through fictional
+   measurements manually. **Inspect evidence** reveals the invented values;
+   **Batch Aurora 01** keeps its timestamp visible with extra detail collapsed.
+3. Inspect the source desk: an ambiguous calendar fragment stays pending, a refused association stays excluded, and an empty listening window remains sparse.
+4. Activate the fictional sound choices, then use **Sound & samples** to audition. Sound requires an explicit action; the sample palette is local Kenney CC0 material, not Spotify audio.
+5. Download the current scene to preserve your changes. Reload restores the deterministic fixture; it does not write to your private Vault.
+
+![Aurora Coast TIME passage: invented festival windows become entrances to evidence](docs/screenshots/aurora-xr-time.jpg)
+
+![Aurora Coast MEMORY: fictional visits, elapsed time and visible geographic ghosts](docs/screenshots/aurora-xr-memory.jpg)
+
+The private Are.na experiment lives at `/research/arena-field`: open an authenticated snapshot, orbit its references, hold two together, set others aside and save the composition encrypted. Private channel content is never embedded in these screenshots or the public build.
+
 ## Explore Aurora Coast
 
 **Aurora Coast — Chapter One: Ten Days in Transit** is a fictional Euro-summer journey set from 18–27 July 2027:
@@ -70,7 +145,8 @@ The full deterministic proposal set remains available as an evidence ledger, not
 
 ## Try it in under a minute
 
-Requires Node.js 22 or newer.
+Requires Node.js 22 or newer. The editorial demo is credential-free. For BODY
+contract tests, also prepare the local Python validator as shown below.
 
 ```bash
 npm ci
@@ -132,6 +208,62 @@ npm run spotify:import -- --playlist YOUR_PLAYLIST_ID
 
 Imported material is written beneath `private-data/spotify/` as an ignored `*.private.json` file. It is never required by Aurora Coast and is never committed by default. See [Spotify import and deletion](docs/spotify-import.md) for scopes, setup, storage, and deletion.
 
+## BODY research events and Logfire
+
+In `/research/xr/body`, choose **My private HealthKit data** and open
+**Research events · thresholds & context**. Its separate export switch controls
+new research candidates in the dedicated
+[`adinablazrx/storywalker` EU Logfire project](https://logfire-eu.pydantic.dev/adinablazrx/storywalker).
+The older received-batch/live-window summary switch remains independent.
+
+The illustrative research markers are at least 120 bpm and below 50 bpm, with
+two distinct supporting observations, gaps of at most 60 seconds and an explicit
+Author report of being awake and resting. They are not personalized danger limits,
+diagnoses or emergency notifications. Rest confirmation applies prospectively,
+expires after ten minutes and clears when the receiver stops. Clear it when activity
+changes. No resting state, stress, anxiety or relaxation is inferred from BPM.
+
+The resting baseline starts **unset**. Relative elevation (+30 bpm) and sustained
+sampled elevation (+20 bpm across five minutes) require a baseline supplied from
+reviewed resting evidence. Review approximately 7–14 days when adequate context is
+available; sparse observations cannot establish continuous coverage. The rapid-change
+marker compares consecutive Watch-attributed observations from the same source:
+at least +30 bpm with a comparison gap no greater than two minutes and no reported
+poor-signal flag. This is an observed delta, not certified sensor accuracy.
+
+Pydantic validates locally in an isolated subprocess; deterministic rules evaluate
+fresh observations, no more than two minutes old. Watch-attributed data is preferred,
+with phone HealthKit fallback when recent Watch data is absent. Timestamp watermarks
+prevent the same measurement triggering again through the live and batch lanes.
+Missing data resets supporting runs but does not prove recovery. A 5 bpm return
+margin and five-minute per-marker cooldown limit repeated episodes. Candidates are
+grouped for 60 seconds before export. All these settings are editable.
+
+Only candidate kind, configured marker, extreme or delta, count, source class,
+context/support labels and measured/app-receipt time windows leave the Mac. These
+remain sensitive health-derived data despite minimization. No raw packets, source
+or device identifiers, notes, location or musical history are exported; no LLM is
+called. Rules/configuration and credentials stay under ignored `.logfire/storywalker/`.
+Evaluation state, rest context and pending candidates are bounded and memory-only.
+Stopping or receiver expiry drops pending candidates; it cannot recall events already
+sent to Logfire. There is no persistent delivery outbox or guaranteed delivery.
+Historical review stays local and is never automatically backfilled to this feed.
+No event accepts evidence, clears the phone queue or creates canonical memory.
+
+**Send fictional connection test** checks the exporter without using a personal
+reading or enabling the feed. Its Logfire event carries `synthetic_test=true`;
+exclude that flag when querying actual research candidates. Successful ingestion
+does not establish a real Watch threshold crossing or continuous monitoring.
+
+Validation covers context gating, baseline requirements, source preference,
+deduplication, stale/future data, missing coverage, cooldown/recovery, partial
+ingestion rejection, session expiry and cancellation. Run the focused checks with:
+
+```sh
+npx vitest run lib/health-threshold.test.ts lib/context-summary-route.test.ts lib/health-summary-security.test.ts
+research/rehearsal-dramaturg/.venv/bin/python -m pytest research/rehearsal-dramaturg/tests/test_health_events.py -q
+```
+
 ## Architecture
 
 ```text
@@ -160,7 +292,7 @@ Private Vault ──► Atlas Now ──► Scenario Studio
 
 The domain and transformation functions live in `lib/`. The Next.js client is a review surface over those pure functions. `localStorage` is used only after explicit demo seed and is described honestly as demo persistence, not durable archival storage. The separate Vault is an encrypted local SQLite store under ignored `private-data/`; it is never part of the demo bundle or browser build.
 
-Read [the architecture note](docs/architecture.md), [privacy model](docs/privacy-model.md), and [orientation release notes](docs/release-notes.md) for the boundaries in detail.
+Read [the authentication architecture](docs/auth-architecture.md), [the architecture note](docs/architecture.md), [privacy model](docs/privacy-model.md), and [orientation release notes](docs/release-notes.md) for the boundaries in detail.
 
 ## Local private recovery staging
 
@@ -205,7 +337,12 @@ docs/                        Architecture, privacy, demo, import, and release no
 
 ## Testing and quality checks
 
+The full JavaScript suite calls the local Pydantic validator. Install Python
+3.11–3.14 and uv, then prepare its ignored environment from the committed lockfile:
+
 ```bash
+uv sync --frozen --project research/rehearsal-dramaturg
+(cd research/rehearsal-dramaturg && .venv/bin/python -m pytest tests -q)
 npm test
 npm run typecheck
 npm run lint
@@ -217,7 +354,10 @@ npm run audit
 
 `npm run audit:public` checks visible repository files for forbidden private paths, tracked token caches, private JSON, absolute user paths, selected private-journey markers, and common credential-shaped values. It is a focused backstop, not a substitute for human review.
 
-CI runs the same checks from a lockfile-enforced install and requires no Spotify credentials.
+CI prepares both lockfile-enforced runtimes and runs the Python, JavaScript, type,
+lint and public build audits without personal credentials. On macOS, also run
+`swift test --package-path research/body-context-native` for the collector core;
+this does not install a device build.
 
 ## Design principles
 
