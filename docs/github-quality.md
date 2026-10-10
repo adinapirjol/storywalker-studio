@@ -36,7 +36,8 @@ Swift coverage is not measured by this job. Do not claim those checks are presen
 ## Security analysis
 
 CodeQL default setup scans GitHub Actions, JavaScript/TypeScript, Python, and
-Swift using the default query suite. The branch rules require CodeQL results and
+Swift using the default query suite, with a weekly scheduled scan. All four
+languages passed the initial setup run on 10 October 2026. The branch rules require CodeQL results and
 block errors and high-or-higher security findings. CodeQL is separate from code
 coverage and from the `quality` job's privacy audits.
 
