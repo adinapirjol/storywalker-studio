@@ -67,7 +67,7 @@ jobs:
 
       - name: Build and test the fictional Swift package
         if: matrix.language == 'swift'
-        run: swift test --package-path research/body-context-native --scratch-path "$RUNNER_TEMP/storywalker-swift-tests" --arch arm64
+        run: swift test --package-path research/body-context-native --scratch-path "$RUNNER_TEMP/storywalker-swift-tests"
 
       - name: Analyze
         uses: github/codeql-action/analyze@f3c49fd1ef3281abc41069b3dd22807a60c963f6 # v4
