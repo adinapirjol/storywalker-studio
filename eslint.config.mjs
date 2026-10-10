@@ -8,6 +8,7 @@ export default tseslint.config(
       ".next/**",
       ".next-review/**",
       "coverage/**",
+      "**/.venv/**",
       "private-data/**",
       "tmp/**",
       "next-env.d.ts",
