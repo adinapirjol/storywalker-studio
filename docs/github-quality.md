@@ -13,7 +13,8 @@ branches. Local branches still need local cleanup.
 
 The required `quality` job enforces a minimum of 50% line coverage separately for
 JavaScript/TypeScript and Python. A failing test or coverage threshold fails the
-job. The initial measured baselines are 53.06% and 88.51%, respectively.
+job. The initial CI baselines are 53.06% and 89.50%, respectively (Python 3.13).
+The local Python runtime measured 88.51%; coverage line counts can vary by runtime.
 
 - `npm run test:coverage` measures application code in `app`, `components`, and
   `lib`, including untested files. Tests, declarations, and generated type-only
