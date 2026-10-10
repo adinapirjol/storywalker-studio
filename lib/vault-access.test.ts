@@ -13,6 +13,12 @@ it('does not replay writes after cancellation, ordinary errors, network failures
  const network=vi.fn<typeof fetch>().mockRejectedValue(new Error('Network'));await expect(fetchWithVaultUnlock('/api/vault',{},async()=>true,network)).rejects.toThrow('Network');expect(network).toHaveBeenCalledTimes(1);
  const lockedAgain=vi.fn<typeof fetch>().mockImplementation(async()=>locked());expect((await fetchWithVaultUnlock('/api/vault',{},async()=>true,lockedAgain)).status).toBe(401);expect(lockedAgain).toHaveBeenCalledTimes(2);
 });
+it('does not automatically replay a provider action whose session ended while it ran',async()=>{
+ const send=vi.fn<typeof fetch>().mockResolvedValue(Response.json({code:'VAULT_SESSION_EXPIRED'},{status:401}));
+ const unlock=vi.fn(async()=>true);
+ expect((await fetchWithVaultUnlock('/api/vault',{method:'POST'},unlock,send)).status).toBe(401);
+ expect(send).toHaveBeenCalledOnce();expect(unlock).not.toHaveBeenCalled();
+});
 it('shares one unlock prompt for simultaneous requests and respects cancellation',async()=>{
  const gate=createUnlockGate();let finish:(ok:boolean)=>void=()=>{};const prompt=vi.fn(()=>new Promise<boolean>(resolve=>finish=resolve));const remove=gate.install(prompt);
  const a=gate.request(),b=gate.request();expect(a).toBe(b);expect(prompt).toHaveBeenCalledTimes(1);finish(false);expect(await a).toBe(false);remove();await expect(gate.request()).rejects.toThrow('not ready');
@@ -22,4 +28,11 @@ it('shares one unlock prompt for simultaneous requests and respects cancellation
 it('allows only known local return pages, never arbitrary URLs, APIs or injected schemes',()=>{
  expect(safeVaultReturn('/research/xr')).toBe('/research/xr');expect(safeVaultReturn('/director')).toBe('/director');
  for(const bad of ['https://example.com','//example.com','javascript:alert(1)','/\\example.com','/api/vault','/vault','/research/xr?private=query','/%2fexample.com',undefined,['/research/xr']])expect(safeVaultReturn(bad)).toBeUndefined();
+});
+it('never prompts or replays foreign endpoints and consumed request bodies',async()=>{
+ const send=vi.fn<typeof fetch>().mockImplementation(async()=>locked()),unlock=vi.fn(async()=>true);
+ for(const input of ['https://foreign.example/api/vault','/api/public-test',new Request('http://localhost/api/vault',{method:'POST',body:'one-use'})]){
+  expect((await fetchWithVaultUnlock(input,undefined,unlock,send)).status).toBe(401);
+ }
+ expect(unlock).not.toHaveBeenCalled();expect(send).toHaveBeenCalledTimes(3);
 });

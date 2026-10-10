@@ -1,5 +1,5 @@
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
-import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, openSync, closeSync, fsyncSync, unlinkSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import initialiseSqlJs, { type SqlDatabase } from "sql.js/dist/sql-wasm.js";
@@ -8,7 +8,8 @@ import { inspectAndMinimiseTimeline, minimiseEchoesExport, minimisedGoogleCalend
 import { minimiseGoogleMapsSavedListCsv, minimisedGoogleMapsSavedListSchema, validateGoogleMapsListUrl } from "@/lib/google-maps-list";
 import { buildEvidencePack } from "@/lib/private-signal-engine";
 import { buildLocalRetrievalIndex } from "@/lib/private-retrieval-index";
-import { buildAtlasNow, type AtlasNow } from "@/lib/private-atlas";
+import { buildAtlasNow, isArchivedEvidence, isAtlasSource, type AtlasNow } from "@/lib/private-atlas";
+import { VaultWriteConflictError, withVaultFileLock } from "@/lib/vault-file-lock";
 
 const VAULT_DIR = path.join(process.cwd(), "private-data", "vault");
 const VAULT_PATH = path.join(VAULT_DIR, "storywalker-vault.sqlite");
@@ -22,15 +23,42 @@ const TIMELINE_CHUNK_SIZE = 256;
 export type VaultKind = "recovery-document" | "moment" | "journey" | "journey-proposal" | "thread" | "playlist-source" | "capture" | "reference" | "import" | "editorial-cut" | "editorial-draft" | "retrieval-index" | "atlas" | "scenario-studio" | "public-draft";
 export type VaultRecord = { id: string; kind: VaultKind; capturedAt: string; payload: unknown };
 type VaultMeta = { schemaVersion: 1; salt: string; verifier: string; createdAt: string };
-export type OpenVault = { database: SqlDatabase; key: Buffer };
+export type OpenVault = { database: SqlDatabase; key: Buffer; storagePath?: string };
 
 function vaultDirectory() { mkdirSync(VAULT_DIR, { recursive: true, mode: 0o700 }); try { chmodSync(VAULT_DIR, 0o700); } catch { /* best-effort */ } }
-function persistDatabase(database: SqlDatabase) { writeFileSync(VAULT_PATH, Buffer.from(database.export()), { mode: 0o600 }); try { chmodSync(VAULT_PATH, 0o600); } catch { /* best-effort */ } }
+// sql.js opens independent in-memory snapshots. Reject stale snapshots before
+// they can replace a newer encrypted file (including writes from other routes).
+const diskVersions=new WeakMap<SqlDatabase,string|null>();
+const accessGuards = new WeakMap<SqlDatabase, () => void>();
+/** Bind browser authorization to persistence without retaining it on disk. */
+export function setVaultAccessGuard(vault: OpenVault, guard: () => void) { accessGuards.set(vault.database, guard); }
+const fingerprint=(bytes:Uint8Array)=>createHash("sha256").update(bytes).digest("hex");
+function rememberDisk(database:SqlDatabase,bytes:Uint8Array|undefined){diskVersions.set(database,bytes?fingerprint(bytes):null);}
+function persistDatabase(database: SqlDatabase, storagePath = VAULT_PATH) {
+  return withVaultFileLock(storagePath, () => {
+    // The disk comparison and replacement must use the same exclusive lock.
+    accessGuards.get(database)?.();
+    const current=existsSync(storagePath)?fingerprint(readFileSync(storagePath)):null;
+    if(!diskVersions.has(database)||diskVersions.get(database)!==current)throw new VaultWriteConflictError();
+    const temporary = `${storagePath}.write-${randomBytes(8).toString("hex")}`;
+    try {
+      const exported=Buffer.from(database.export());
+      writeFileSync(temporary, exported, { mode: 0o600, flag: "wx" });
+      const handle=openSync(temporary,"r");
+      try { fsyncSync(handle); } finally { closeSync(handle); }
+      accessGuards.get(database)?.();
+      renameSync(temporary,storagePath);
+      diskVersions.set(database,fingerprint(exported));
+      try { chmodSync(storagePath,0o600); } catch { /* best-effort permissions */ }
+    } finally { if(existsSync(temporary))unlinkSync(temporary); }
+  });
+}
 
 async function openDatabase() {
   vaultDirectory();
   const SQL = await initialiseSqlJs({ locateFile: () => SQL_WASM_PATH });
-  const database = new SQL.Database(existsSync(VAULT_PATH) ? new Uint8Array(readFileSync(VAULT_PATH)) : undefined);
+  const bytes=existsSync(VAULT_PATH)?new Uint8Array(readFileSync(VAULT_PATH)):undefined;
+  const database = new SQL.Database(bytes);rememberDisk(database,bytes);
   database.run("CREATE TABLE IF NOT EXISTS vault_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS vault_records (record_id TEXT PRIMARY KEY, kind TEXT NOT NULL, captured_at TEXT NOT NULL, content_hash TEXT NOT NULL, iv BLOB NOT NULL, auth_tag BLOB NOT NULL, ciphertext BLOB NOT NULL);");
   return database;
 }
@@ -64,14 +92,14 @@ export async function initialiseVault(passphrase: string) {
   const database = await openDatabase();
   if (metadata(database)) { database.close(); throw new Error("This device already has a Storywalker Vault. Unlock it instead of creating a new one."); }
   const salt = randomBytes(16).toString("base64url"); const key = keyFrom(passphrase, salt); const next: VaultMeta = { schemaVersion: 1, salt, verifier: keyVerifier(key), createdAt: new Date().toISOString() };
-  database.run("INSERT INTO vault_meta (key, value) VALUES ('metadata', ?)", [JSON.stringify(next)]); persistDatabase(database); database.close(); return { createdAt: next.createdAt };
+  database.run("INSERT INTO vault_meta (key, value) VALUES ('metadata', ?)", [JSON.stringify(next)]); try { persistDatabase(database); return { createdAt: next.createdAt }; } finally { key.fill(0); database.close(); }
 }
 
 export async function openVault(passphrase: string): Promise<OpenVault> {
   if (!vaultExists()) throw new Error("Create the local Vault before unlocking it.");
   const database = await openDatabase(); const meta = metadata(database); if (!meta) { database.close(); throw new Error("Vault metadata is missing."); }
   const key = keyFrom(passphrase, meta.salt); const expected = Buffer.from(meta.verifier, "base64url"); const actual = Buffer.from(keyVerifier(key), "base64url");
-  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) { database.close(); throw new Error("That passphrase cannot unlock this Vault."); }
+  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) { key.fill(0); database.close(); throw new Error("That passphrase cannot unlock this Vault."); }
   return { database, key };
 }
 
@@ -105,15 +133,15 @@ export async function vaultKeyIdentity() {
   } finally { database.close(); }
 }
 
-export function closeVault(vault: OpenVault) { vault.database.close(); }
+export function closeVault(vault: OpenVault) { try { vault.database.close(); } finally { vault.key.fill(0); } }
 function writeVaultRecords(vault: OpenVault, records: VaultRecord[], removeRecordIds: string[] = []) {
   const insert = "INSERT INTO vault_records (record_id, kind, captured_at, content_hash, iv, auth_tag, ciphertext) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(record_id) DO UPDATE SET kind = excluded.kind, captured_at = excluded.captured_at, content_hash = excluded.content_hash, iv = excluded.iv, auth_tag = excluded.auth_tag, ciphertext = excluded.ciphertext";
   vault.database.run("BEGIN IMMEDIATE");
   try {
     for (const recordId of removeRecordIds) vault.database.run("DELETE FROM vault_records WHERE record_id = ?", [recordId]);
     for (const record of records) { const secured = crypt(vault.key, record); vault.database.run(insert, [record.id, record.kind, record.capturedAt, createHash("sha256").update(JSON.stringify(record.payload)).digest("hex"), secured.iv, secured.authTag, secured.ciphertext]); }
-    vault.database.run("COMMIT"); persistDatabase(vault.database);
-  } catch (error) { vault.database.run("ROLLBACK"); throw error; }
+    vault.database.run("COMMIT"); if(removeRecordIds.length)vault.database.run("VACUUM"); persistDatabase(vault.database, vault.storagePath);
+  } catch (error) { try { vault.database.run("ROLLBACK"); } catch { /* transaction may already be committed in memory */ } throw error; }
   return records.length;
 }
 export function putVaultRecords(vault: OpenVault, records: VaultRecord[]) { return writeVaultRecords(vault, records); }
@@ -125,7 +153,7 @@ export function vaultRecordHeaders(vault: OpenVault) {
 /** Timeline chunks are intentionally omitted from general derived views. They
  * are decrypted one small chunk at a time when Atlas needs a place reading. */
 export function readVaultRecords(vault: OpenVault, includeTimelineChunks = false) {
-  const query = includeTimelineChunks ? "SELECT ciphertext, iv, auth_tag FROM vault_records ORDER BY captured_at DESC, record_id ASC" : "SELECT ciphertext, iv, auth_tag FROM vault_records WHERE record_id NOT LIKE ? ORDER BY captured_at DESC, record_id ASC";
+  const query = includeTimelineChunks ? "SELECT ciphertext, iv, auth_tag FROM vault_records WHERE record_id NOT LIKE 'native:%' AND record_id NOT LIKE 'health:stage:%' ORDER BY captured_at DESC, record_id ASC" : "SELECT ciphertext, iv, auth_tag FROM vault_records WHERE record_id NOT LIKE 'native:%' AND record_id NOT LIKE 'health:stage:%' AND record_id NOT LIKE ? ORDER BY captured_at DESC, record_id ASC";
   const selected = rows(vault.database, query, includeTimelineChunks ? [] : [`${TIMELINE_CHUNK_PREFIX}%`]) as Array<{ ciphertext: Uint8Array; iv: Uint8Array; auth_tag: Uint8Array }>;
   return selected.map((row) => decrypt(vault.key, row) as VaultRecord);
 }
@@ -177,9 +205,9 @@ export function refreshVaultDerivedViews(vault: OpenVault, acknowledgeAtlasChang
   // the original encrypted source to a local manifest once, then keep chunks
   // out of the always-on retrieval snapshot and stream them only into Atlas.
   ensureTimelineChunks(vault);
-  const records = readVaultRecords(vault);
+  const records = vaultRecordHeaders(vault).filter(record => !isArchivedEvidence(record) && !record.id.startsWith("native:") && !record.id.startsWith("health:stage:") && !record.id.startsWith(TIMELINE_CHUNK_PREFIX)).map(record => readVaultRecord(vault, record.id)!);
   const previousAtlas = records.find((record) => record.id === "atlas:now:v1" && record.kind === "atlas")?.payload as AtlasNow | undefined;
-  const retrievalIndex = buildLocalRetrievalIndex(records);
+  const retrievalIndex = buildLocalRetrievalIndex(records.filter(isAtlasSource));
   const derivedAtlas = buildAtlasNow(records, new Date().toISOString(), previousAtlas, { timelineWindows: readTimelineWindows(vault) });
   const atlas = acknowledgeAtlasChanges ? { ...derivedAtlas, acknowledgedImports: derivedAtlas.imports, acknowledgedSourceIds: records.filter((record) => record.kind === "editorial-draft" || record.kind === "capture").map((record) => record.id) } : { ...derivedAtlas, acknowledgedImports: previousAtlas?.acknowledgedImports, acknowledgedSourceIds: previousAtlas?.acknowledgedSourceIds };
   putVaultRecords(vault, [
@@ -317,3 +345,25 @@ export function migrateRecoveryIntoVault(vault: OpenVault) {
   const records: VaultRecord[] = [{ id: "recovery:current", kind: "recovery-document", capturedAt, payload: document }, ...document.moments.map((moment) => ({ id: `moment:${moment.id}`, kind: "moment" as const, capturedAt, payload: { moment, review: document.review[moment.id], relationshipOverride: document.relationshipOverrides[moment.id] ?? null, postImportEvidence: document.postImportEvidence.filter((item) => item.targetMomentIds.includes(moment.id)) } })), ...document.journeys.map((journey) => ({ id: `journey:${journey.id}`, kind: "journey" as const, capturedAt, payload: journey })), ...document.threads.map((thread, index) => ({ id: `thread:${index}:${thread.title}`, kind: "thread" as const, capturedAt, payload: thread })), ...document.playlistSources.map((playlist, index) => ({ id: `playlist-source:${index}:${playlist.spotifyPlaylistId}`, kind: "playlist-source" as const, capturedAt, payload: playlist })), ...playlistIds.map((spotifyPlaylistId) => ({ id: `spotify-baseline:${spotifyPlaylistId}`, kind: "reference" as const, capturedAt, payload: { source: "spotify-playlist", spotifyPlaylistId, privacy: "private", canonical: false, reviewStatus: "pending", importStatus: "awaiting-local-Spotify-authorisation" } }))];
   putVaultRecords(vault, records); return { moments: document.moments.length, journeys: document.journeys.length, threads: document.threads.length, playlistSources: document.playlistSources.length, baselinePlaylistSources: playlistIds.length, totalRecords: records.length };
 }
+
+/** Isolated encrypted fictional scenario. Never opens or imports the personal Vault. */
+export async function openContextSandbox(namespace = "context-sandbox"): Promise<OpenVault> {
+  if(!/^context-sandbox(?:-[a-z0-9-]+)?$/.test(namespace))throw new Error("Invalid sandbox namespace");
+  const directory = path.join(process.cwd(), "private-data", namespace);
+  mkdirSync(directory, { recursive: true, mode: 0o700 });
+  const storagePath = path.join(directory, "scenario.sqlite");
+  const keyPath = path.join(directory, "fictional-sandbox.key");
+  if (!existsSync(keyPath)) writeFileSync(keyPath, randomBytes(32), { mode: 0o600, flag: "wx" });
+  const key = readFileSync(keyPath);
+  if (key.length !== 32) throw new Error("Sandbox key unavailable");
+  const SQL = await initialiseSqlJs({ locateFile: () => SQL_WASM_PATH });
+  const bytes=existsSync(storagePath)?new Uint8Array(readFileSync(storagePath)):undefined;
+  const database = new SQL.Database(bytes);rememberDisk(database,bytes);
+  database.run("CREATE TABLE IF NOT EXISTS vault_records (record_id TEXT PRIMARY KEY, kind TEXT NOT NULL, captured_at TEXT NOT NULL, content_hash TEXT NOT NULL, iv BLOB NOT NULL, auth_tag BLOB NOT NULL, ciphertext BLOB NOT NULL)");
+  return { database, key, storagePath };
+}
+
+export function removeVaultRecords(vault: OpenVault, ids: string[]) { return writeVaultRecords(vault, [], ids); }
+
+/** Atomic source replacement with vacuum for removal of superseded encrypted copies. */
+export function replaceVaultRecords(vault: OpenVault, records: VaultRecord[], removeIds: string[]) { return writeVaultRecords(vault, records, removeIds); }

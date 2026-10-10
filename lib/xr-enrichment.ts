@@ -8,7 +8,7 @@ const hash=(v:unknown)=>createHash('sha256').update(JSON.stringify(v)).digest('h
 const instant=(v?:string)=>v&&/^\d{4}-\d\d-\d\dT.*(?:Z|[+-]\d\d:\d\d)$/.test(v)&&Number.isFinite(Date.parse(v))?Date.parse(v):NaN;
 const day=(v:string,tz:string)=>new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(v));
 const validDay=(v:string)=>/^\d{4}-\d\d-\d\d$/.test(v)&&Number.isFinite(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v;
-export function eligibleArchiveRecord(h:Pick<VaultRecord,'id'|'kind'>){return ['import','capture','moment','reference'].includes(h.kind)&&!/(?:^xr:|^lastfm:|:before|:snapshot:|timeline-chunk|spotify)/i.test(h.id);}
+export function eligibleArchiveRecord(h:Pick<VaultRecord,'id'|'kind'>){return ['import','capture','moment','reference'].includes(h.kind)&&!/(?:^native:|^health:stage:|^xr:|^lastfm:|:before|:snapshot:|timeline-chunk|spotify)/i.test(h.id);}
 /** Explicit field adapters only. Never use ingestion/capture/edit time as event time,
  * never semantic search, and never fetch a remote thumbnail or URL. */
 export function enrichWindowEvidence(scene:XRScene,records:VaultRecord[],scannedAt=new Date().toISOString()):EvidenceArchive{

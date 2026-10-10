@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { requestVaultUnlock } from "@/lib/vault-access";
 
 type CheckResult = { available: boolean; authenticator?: boolean; prf?: boolean; failed?: boolean; checkedAt: string; number: number };
 
@@ -32,6 +33,7 @@ export function VaultPasskeyCheck({ active }: { active: boolean }) {
     finally { if (timeout) clearTimeout(timeout); setBusy(false); }
   }
   function nextStep() {
+    if (!active) { void requestVaultUnlock(); return; }
     const target = document.getElementById(active ? "vault-passkey-name" : "vault-passphrase");
     target?.scrollIntoView({ block: "center", behavior: "auto" });
     target?.focus({ preventScroll: true });

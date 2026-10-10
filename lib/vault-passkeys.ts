@@ -1,8 +1,11 @@
 import { createCipheriv, createDecipheriv, hkdfSync, randomBytes } from "node:crypto";
-import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
+import { isIP } from "node:net";
 import path from "node:path";
 import { generateAuthenticationOptions, generateRegistrationOptions, verifyAuthenticationResponse, verifyRegistrationResponse, type AuthenticationResponseJSON, type RegistrationResponseJSON } from "@simplewebauthn/server";
 import { z } from "zod";
+import { withVaultFileLock } from "./vault-file-lock";
+import { isLocalSameOrigin } from "./local-origin";
 
 const encoded = z.string().min(1).max(16_384).regex(/^[A-Za-z0-9_-]+$/);
 const recordSchema = z.object({
@@ -20,25 +23,46 @@ type Ceremony = { challenge: string; browser: string; expiresAt: number; vaultId
 const storeSchema = z.object({ version: z.literal(1), credentials: z.array(recordSchema).max(10) });
 const file = path.join(process.cwd(), "private-data", "vault", "passkeys.json");
 
-export function passkeyOrigin(configured = process.env.STORYWALKER_PASSKEY_ORIGIN ?? "http://localhost:3011") {
+export function passkeyOrigin(configured = process.env.STORYWALKER_PASSKEY_ORIGIN ?? "http://localhost:3000") {
   const url = new URL(configured);
-  if (url.origin !== configured || url.username || url.password || (url.protocol !== "https:" && !(url.protocol === "http:" && url.hostname === "localhost"))) throw new Error("Invalid passkey origin configuration.");
+  if (url.origin !== configured || url.username || url.password || isIP(url.hostname.replace(/^\[|\]$/g, "")) || (url.protocol !== "https:" && !(url.protocol === "http:" && url.hostname === "localhost"))) throw new Error("Invalid passkey origin configuration.");
   return { origin: url.origin, rpID: url.hostname };
 }
 export function requirePasskeyOrigin(request: Request) {
   const { origin } = passkeyOrigin();
-  if (request.headers.get("origin") !== origin || new URL(request.url).origin !== origin) throw new Error("Open the Vault at its configured passkey address.");
+  const target = new URL(request.url);
+  const actualOrigin = `${target.protocol}//${request.headers.get("host") ?? target.host}`;
+  if (request.headers.get("sec-fetch-site") === "cross-site" || request.headers.get("origin") !== origin || actualOrigin !== origin) throw new Error("Open the Vault at its configured passkey address.");
+}
+/** Only non-secret address guidance is available from an alternate local address. */
+export function passkeyAddressStatus(request: Request) {
+  const { origin } = passkeyOrigin();
+  if (request.headers.get("origin") === origin) {
+    requirePasskeyOrigin(request);
+    return { origin, supportedOrigin: true };
+  }
+  if (!isLocalSameOrigin(request)) throw new Error("Local origin required.");
+  return { origin, supportedOrigin: false };
 }
 export function readPasskeys(): VaultPasskey[] {
+  for (const entry of [path.dirname(path.dirname(file)), path.dirname(file), file]) {
+    if (lstatSync(entry, { throwIfNoEntry: false })?.isSymbolicLink()) throw new Error("Passkey storage must not be a symbolic link.");
+  }
   return existsSync(file) ? storeSchema.parse(JSON.parse(readFileSync(file, "utf8"))).credentials : [];
 }
-/** Synchronous read/modify/rename avoids lost updates inside this local Node process. */
+/** Atomic compare-and-replace, excluding other route bundles and CLI writers. */
 export function changePasskeys(change: (current: VaultPasskey[]) => VaultPasskey[]) {
-  const next = storeSchema.parse({ version: 1, credentials: change(readPasskeys()) });
+  readPasskeys(); // Reject redirected storage before creating directories or locks.
   mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
-  const temporary = `${file}.${randomBytes(8).toString("hex")}.tmp`;
-  writeFileSync(temporary, JSON.stringify(next), { mode: 0o600, flag: "wx" });
-  renameSync(temporary, file); chmodSync(file, 0o600);
+  return withVaultFileLock(file, () => {
+    const next = storeSchema.parse({ version: 1, credentials: change(readPasskeys()) });
+    const temporary = `${file}.${randomBytes(8).toString("hex")}.tmp`;
+    try {
+      writeFileSync(temporary, JSON.stringify(next), { mode: 0o600, flag: "wx" });
+      renameSync(temporary, file);
+      chmodSync(file, 0o600);
+    } finally { if (existsSync(temporary)) unlinkSync(temporary); }
+  });
 }
 export function decodePrf(value: unknown) {
   if (typeof value !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(value)) throw new Error("This passkey did not provide encryption support.");
@@ -88,7 +112,8 @@ export class PasskeyCeremonies {
     return ceremony;
   }
 }
-export const passkeyCeremonies = new PasskeyCeremonies();
+const ceremonyStore = globalThis as typeof globalThis & { __storywalkerPasskeyCeremonies?: PasskeyCeremonies };
+export const passkeyCeremonies = ceremonyStore.__storywalkerPasskeyCeremonies ??= new PasskeyCeremonies();
 
 export async function registrationOptions(vaultId: string, credentials: VaultPasskey[]) {
   return generateRegistrationOptions({
@@ -103,6 +128,8 @@ export async function verifyRegistration(response: RegistrationResponseJSON, cer
 }
 export async function authenticationOptions(credential: NewCredential) {
   const options = await generateAuthenticationOptions({ rpID: new URL(credential.origin).hostname, userVerification: "required", timeout: 120_000, allowCredentials: [{ id: credential.id }] });
+  // Preference only: the browser still offers compatible phone/security-key paths.
+  options.hints = ["client-device", "hybrid", "security-key"];
   return { options, salt: credential.salt };
 }
 export async function verifyAssertion(response: AuthenticationResponseJSON, ceremony: Ceremony, credential: NewCredential) {

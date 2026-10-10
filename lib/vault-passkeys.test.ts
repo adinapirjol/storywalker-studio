@@ -1,10 +1,11 @@
 import { createHash, generateKeyPairSync, randomBytes, sign } from "node:crypto";
+import { NextResponse } from "next/server";
 import { describe, expect, it, vi } from "vitest";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { isoCBOR } from "@simplewebauthn/server/helpers";
 import type { AuthenticationResponseJSON, RegistrationResponseJSON } from "@simplewebauthn/server";
-import { decodePrf, passkeyOrigin, PasskeyCeremonies, requirePasskeyOrigin, unwrapVaultKey, verifyAssertion, verifyRegistration, wrapVaultKey } from "./vault-passkeys";
+import { authenticationOptions, registrationOptions, decodePrf, passkeyAddressStatus, passkeyOrigin, PasskeyCeremonies, requirePasskeyOrigin, unwrapVaultKey, verifyAssertion, verifyRegistration, wrapVaultKey } from "./vault-passkeys";
 
 const b64 = (value: Uint8Array) => Buffer.from(value).toString("base64url");
 const jar = vi.hoisted(() => new Map<string, string>());
@@ -14,7 +15,7 @@ function fixture() {
   const { privateKey, publicKey } = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
   const jwk = publicKey.export({ format: "jwk" });
   const cose = isoCBOR.encode(new Map<number, number | Uint8Array>([[1, 2], [3, -7], [-1, 1], [-2, Buffer.from(jwk.x!, "base64url")], [-3, Buffer.from(jwk.y!, "base64url")]]));
-  const credential = { id: b64(randomBytes(32)), publicKey: b64(cose), counter: 0, salt: b64(randomBytes(32)), vaultId: b64(randomBytes(32)), origin: "http://localhost:3011", label: "Synthetic test key", createdAt: new Date().toISOString() };
+  const credential = { id: b64(randomBytes(32)), publicKey: b64(cose), counter: 0, salt: b64(randomBytes(32)), vaultId: b64(randomBytes(32)), origin: "http://localhost:3000", label: "Synthetic test key", createdAt: new Date().toISOString() };
   const ceremony = { kind: "register" as const, challenge: b64(randomBytes(32)), browser: "browser", expiresAt: Date.now() + 60_000, vaultId: credential.vaultId, origin: credential.origin, sessionToken: "session", label: credential.label };
   function assertion(overrides: { origin?: string; challenge?: string; flags?: number; rpID?: string; counter?: number } = {}): AuthenticationResponseJSON {
     const client = Buffer.from(JSON.stringify({ type: "webauthn.get", challenge: overrides.challenge ?? ceremony.challenge, origin: overrides.origin ?? credential.origin }));
@@ -50,6 +51,17 @@ describe("Vault passkey cryptography", () => {
   });
 });
 describe("WebAuthn verification with real synthetic signatures", () => {
+  it("requires verification and bounded prompts, preferring the platform without restricting transports", async () => {
+    const { credential } = fixture();
+    const registration = await registrationOptions(credential.vaultId, []);
+    expect(registration.authenticatorSelection?.userVerification).toBe("required");
+    expect(registration.authenticatorSelection?.authenticatorAttachment).toBeUndefined();
+    const { options, salt } = await authenticationOptions(credential);
+    expect(options).toMatchObject({ rpId: "localhost", userVerification: "required", timeout: 120_000,
+      hints: ["client-device", "hybrid", "security-key"], allowCredentials: [{ id: credential.id, type: "public-key" }] });
+    expect(options.allowCredentials?.[0].transports).toBeUndefined();
+    expect(salt).toBe(credential.salt);
+  });
   it("verifies registration and a subsequent signed, user-verified assertion", async () => {
     const { credential, ceremony, registration, assertion } = fixture();
     const result = await verifyRegistration(registration(), ceremony);
@@ -81,12 +93,20 @@ describe("Passkey request isolation", () => {
     expect(() => store.take(store.put(ceremony), "browser", "unlock", "session")).toThrow();
   });
   it("trusts only the configured origin, never a request host or arbitrary HTTP origin", () => {
-    expect(passkeyOrigin("http://localhost:3011").rpID).toBe("localhost");
-    for (const value of ["http://example.com", "https://example.com/path", "https://user:password@example.com"]) expect(() => passkeyOrigin(value)).toThrow();
-    expect(() => requirePasskeyOrigin(new Request("http://localhost:3011/api/vault/passkeys", { headers: { Origin: "https://attacker.example" } }))).toThrow();
-    expect(() => requirePasskeyOrigin(new Request("http://attacker.example/api/vault/passkeys", { headers: { Origin: "http://localhost:3011" } }))).toThrow();
-    expect(() => requirePasskeyOrigin(new Request("http://localhost:3011/api/vault/passkeys"))).toThrow();
-    expect(() => requirePasskeyOrigin(new Request("http://localhost:3011/api/vault/passkeys", { headers: { Origin: "http://localhost:3011" } }))).not.toThrow();
+    expect(passkeyOrigin("http://localhost:3000").rpID).toBe("localhost");
+    for (const value of ["http://example.com", "http://127.0.0.1:3000", "https://127.0.0.1", "https://[::1]", "https://example.com/path", "https://user:password@example.com"]) expect(() => passkeyOrigin(value)).toThrow();
+    expect(() => requirePasskeyOrigin(new Request("http://localhost:3000/api/vault/passkeys", { headers: { Origin: "https://attacker.example" } }))).toThrow();
+    expect(() => requirePasskeyOrigin(new Request("http://attacker.example/api/vault/passkeys", { headers: { Origin: "http://localhost:3000" } }))).toThrow();
+    expect(() => requirePasskeyOrigin(new Request("http://localhost:3000/api/vault/passkeys"))).toThrow();
+    expect(() => requirePasskeyOrigin(new Request("http://localhost:3000/api/vault/passkeys", { headers: { Origin: "http://localhost:3000" } }))).not.toThrow();
+  });
+  it("rejects a normalized localhost URL carrying a different actual Host", () => {
+    expect(() => requirePasskeyOrigin(new Request("http://localhost:3000/api/vault/passkeys", {
+      headers: { host: "127.0.0.1:3000", origin: "http://localhost:3000" },
+    }))).toThrow();
+    expect(passkeyAddressStatus(new Request("http://localhost:3000/api/vault/passkeys", {
+      headers: { host: "127.0.0.1:3000", origin: "http://127.0.0.1:3000" },
+    }))).toEqual({ origin: "http://localhost:3000", supportedOrigin: false });
   });
 });
 
@@ -105,13 +125,15 @@ describe("Complete local Vault lifecycle", () => {
       await vault.initialiseVault(passphrase);
       const opened = await vault.openVault(passphrase);
       vault.putVaultRecords(opened, [{ id: "test:record", kind: "reference", capturedAt: new Date().toISOString(), payload: { text: "synthetic evidence" } }]);
-      const session = sessions.createVaultSession(opened.key);
+      let session = sessions.createVaultSession(opened.key);
       jar.set(sessions.VAULT_SESSION_COOKIE, session.token); vault.closeVault(opened);
       const dbPath = path.join(temporary, "private-data/vault/storywalker-vault.sqlite");
       const originalDatabase = readFileSync(dbPath);
-      async function call(body: Record<string, unknown>) {
-        const response = await POST(new Request("http://localhost:3011/api/vault/passkeys", { method: "POST", headers: { Origin: "http://localhost:3011", "Content-Type": "application/json" }, body: JSON.stringify(body) }));
-        for (const cookie of response.cookies.getAll()) jar.set(cookie.name, cookie.value);
+      const vaultRoute = await import("../app/api/vault/route");
+      async function call(body: Record<string, unknown>, endpoint = "/api/vault/passkeys") {
+        const handler = endpoint === "/api/vault" ? vaultRoute.POST : POST;
+        const response = await handler(new Request(`http://localhost:3000${endpoint}`, { method: "POST", headers: { Origin: "http://localhost:3000", "Content-Type": "application/json" }, body: JSON.stringify(body) }));
+        for (const cookie of (response instanceof NextResponse ? response.cookies.getAll() : [])) jar.set(cookie.name, cookie.value);
         return { status: response.status, body: await response.json() };
       }
       const f = fixture(), secret = b64(randomBytes(32));
@@ -129,7 +151,29 @@ describe("Complete local Vault lifecycle", () => {
       const persisted = readFileSync(sidecarPath, "utf8");
       expect(persisted).not.toContain(secret); expect(persisted).not.toContain(passphrase);
       expect((await call({ action: "status" })).body.credentials).toHaveLength(1);
+      const identity = vault.vaultKeyIdentity;
+      const pendingIdentity = vi.spyOn(vault, "vaultKeyIdentity").mockImplementationOnce(async () => {
+        const id = await identity(); sessions.deleteVaultSession(session.token); return id;
+      });
+      const expiredRemoval = await call({ action: "remove", credentialId: f.credential.id });
+      expect(expiredRemoval.status).toBe(401); expect(expiredRemoval.body.code).toBe("VAULT_SESSION_EXPIRED");
+      expect(readFileSync(sidecarPath, "utf8")).toBe(persisted);
+      pendingIdentity.mockRestore();
+      const reopened = await vault.openVault(passphrase);
+      session = sessions.createVaultSession(reopened.key); vault.closeVault(reopened);
+      jar.set(sessions.VAULT_SESSION_COOKIE, session.token);
       sessions.deleteVaultSession(session.token); jar.delete(sessions.VAULT_SESSION_COOKIE);
+      // A valid signature alone cannot grant access without UV and valid PRF.
+      for (const failure of ["missing-uv", "missing-prf", "short-prf"] as const) {
+        const failedStart = await call({ action: "begin-unlock", credentialId: f.credential.id });
+        f.ceremony.challenge = failedStart.body.options.challenge;
+        const failed = await call({ action: "finish-unlock", ceremonyId: failedStart.body.ceremonyId,
+          response: f.assertion({ counter: 2, flags: failure === "missing-uv" ? 1 : 5 }),
+          ...(failure === "missing-uv" ? { prf: secret } : failure === "short-prf" ? { prf: b64(randomBytes(31)) } : {}) });
+        expect(failed.status).toBe(400);
+        expect(sessions.readVaultSession(jar.get(sessions.VAULT_SESSION_COOKIE))).toBeUndefined();
+        expect(readFileSync(sidecarPath, "utf8")).toBe(persisted);
+      }
       const begin = await call({ action: "begin-unlock", credentialId: f.credential.id });
       f.ceremony.challenge = begin.body.options.challenge;
       const unlockBody = { action: "finish-unlock", ceremonyId: begin.body.ceremonyId, response: f.assertion({ counter: 2 }), prf: secret };
@@ -137,6 +181,13 @@ describe("Complete local Vault lifecycle", () => {
       const unlockedSession = sessions.readVaultSession(jar.get(sessions.VAULT_SESSION_COOKIE)); expect(unlockedSession).toBeDefined();
       const viaPasskey = await vault.openVaultWithKey(unlockedSession!.key);
       expect(vault.readVaultRecord(viaPasskey, "test:record")?.payload).toEqual({ text: "synthetic evidence" }); vault.closeVault(viaPasskey);
+      const passkeyToken = jar.get(sessions.VAULT_SESSION_COOKIE);
+      expect((await call({ action: "lock-session" }, "/api/vault")).status).toBe(200);
+      expect(sessions.vaultSessionActive(passkeyToken)).toBe(false);
+      expect((await call({ action: "unlock", passphrase: "wrong-synthetic-recovery" }, "/api/vault")).status).toBe(400);
+      expect(sessions.readVaultSession(jar.get(sessions.VAULT_SESSION_COOKIE))).toBeUndefined();
+      expect((await call({ action: "unlock", passphrase }, "/api/vault")).status).toBe(200);
+      expect(sessions.vaultSessionActive(jar.get(sessions.VAULT_SESSION_COOKIE))).toBe(true);
       expect((await call(unlockBody)).status).toBe(400);
       const wrongSecret = await call({ action: "begin-unlock", credentialId: f.credential.id }); f.ceremony.challenge = wrongSecret.body.options.challenge;
       expect((await call({ action: "finish-unlock", ceremonyId: wrongSecret.body.ceremonyId, response: f.assertion({ counter: 3 }), prf: b64(randomBytes(32)) })).status).toBe(400);
@@ -152,4 +203,32 @@ describe("Complete local Vault lifecycle", () => {
       await expect(vault.verifyVaultKey(randomBytes(32))).rejects.toThrow();
     } finally { cwd.mockRestore(); jar.clear(); rmSync(temporary, { recursive: true, force: true }); vi.resetModules(); }
   });
+});
+
+it("preserves one-use ceremonies across route module reloads", async () => {
+  const first = await import("./vault-passkeys");
+  const f = fixture(); const id = first.passkeyCeremonies.put(f.ceremony);
+  vi.resetModules(); const next = await import("./vault-passkeys");
+  expect(next.passkeyCeremonies.take(id, "browser", "register", "session").challenge).toBe(f.ceremony.challenge);
+  expect(() => first.passkeyCeremonies.take(id, "browser", "register", "session")).toThrow();
+});
+
+it("rejects redirected sidecars and competing writers without modifying storage", async () => {
+  const workspace = process.cwd();
+  mkdirSync(path.join(workspace, "tmp"), { recursive: true });
+  const temporary = mkdtempSync(path.join(workspace, "tmp", "passkey-storage-test-"));
+  const cwd = vi.spyOn(process, "cwd").mockReturnValue(temporary);
+  vi.resetModules();
+  try {
+    const storage = path.join(temporary, "private-data/vault"); mkdirSync(storage, { recursive: true });
+    const destination = path.join(temporary, "untouched.json"); writeFileSync(destination, '{"version":1,"credentials":[]}');
+    const sidecar = path.join(storage, "passkeys.json"); symlinkSync(destination, sidecar);
+    const keys = await import("./vault-passkeys");
+    expect(() => keys.readPasskeys()).toThrow("symbolic link");
+    expect(() => keys.changePasskeys(() => [])).toThrow("symbolic link");
+    expect(readFileSync(destination, "utf8")).toBe('{"version":1,"credentials":[]}');
+    rmSync(sidecar); writeFileSync(`${sidecar}.lock`, "other writer");
+    expect(() => keys.changePasskeys(() => [])).toThrow("busy");
+    expect(readFileSync(`${sidecar}.lock`, "utf8")).toBe("other writer");
+  } finally { cwd.mockRestore(); rmSync(temporary, { recursive: true, force: true }); vi.resetModules(); }
 });

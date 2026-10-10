@@ -1,7 +1,10 @@
+import { xrSceneSchema } from "./xr-scene";
+import { episodeSpaces } from "./journey-experience";
+import { evidenceMatchAttached } from "./xr-evidence";
 import type { VaultRecord } from "@/lib/private-vault";
 
 export type AtlasLane = { id: string; title: string; evidenceCount: number; sourceRecordIds: string[]; matchedTerms: string[]; status: "evidence-window" | "working-thread"; note: string };
-export type AtlasImport = { id: string; source: string; label?: string; importedAt: string; retained: number };
+export type AtlasImport = { id: string; source: string; label?: string; importedAt: string; retained: number; coverage?: { from: string; through: string; datedRows: number } };
 export type AtlasChange = { id: string; title: string; detail: string; sourceRecordIds: string[] };
 export type AtlasConvergence = { id: string; title: string; detail: string; evidenceLayers: string[]; sourceRecordIds: string[] };
 export type AtlasNeed = { id: string; title: string; detail: string; sourceRecordIds: string[] };
@@ -10,9 +13,46 @@ export type AtlasPlaceReading = { id: string; when: string; kind: "visit" | "rou
 export type AtlasNow = {
   schemaVersion: 3; kind: "storywalker-atlas-now"; privacy: "private"; canonical: false; derivedAt: string;
   method: "explicit-keyword-record-layer-and-delta-v3"; sourceRecordCount: number; imports: AtlasImport[]; lanes: AtlasLane[];
+  spatial?: { title: string; savedAt: string; sourceRecordId: string; windows: number; episodes: number; observedPlays: number; alignedPlays: number; ambiguousPlays: number; unassignedPlays: number; attached: number; candidates: number; refused: number; sourceSnapshots: Array<{ id: string; type: string; capturedAt: string }>; memoryMoves: number };
+  research?: Array<{ id: string; title: string; savedAt: string }>;
+  timelineRange?: { from: string; through: string };
   acknowledgedImports?: AtlasImport[]; acknowledgedSourceIds?: string[];
   whatChanged: AtlasChange[]; convergences: AtlasConvergence[]; needsYou: AtlasNeed[]; placeReadings: AtlasPlaceReading[]; placeCoverage: { timelineWindows: number; windowsWithCandidates: number; directTimelineLabels: number }; caveat: string;
 };
+
+/** Archive identities are deliberately narrow: retain ordinary reference records. */
+export function isArchivedEvidence(record: Pick<VaultRecord, "id">) {
+  return record.id.startsWith("xr:spatial-draft:before-") || record.id.startsWith("xr:spatial-draft:archive:") || record.id.startsWith("lastfm:before-") || record.id.startsWith("arena:private-rehearsal:v1:archive:");
+}
+export function isAtlasSource(record: Pick<VaultRecord, "id" | "kind">) {
+  return !record.id.startsWith("native:") && !record.id.startsWith("health:stage:") && !isArchivedEvidence(record) && !record.id.startsWith("xr:spatial-draft:") && !["recovery-document", "retrieval-index", "atlas", "scenario-studio", "public-draft"].includes(record.kind);
+}
+function sourceCoverage(rows: unknown[]) {
+  const dated = rows.flatMap(row => {
+    const r = asRecord(row); if (!r) return [];
+    // Only explicit observation/event fields, never import or derived timestamps.
+    const values = [r.playedAt, r.endedAt, r.watchedAt, r.startAt, r.endAt, r.startsWhen, r.endsWhen, r.played_at, r.addedAtUtc].filter((v): v is string => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v) && Number.isFinite(Date.parse(v)));
+    return values.length ? [values.sort((a,b)=>Date.parse(a)-Date.parse(b))] : [];
+  });
+  const dates = dated.flat().sort((a,b)=>Date.parse(a)-Date.parse(b));
+  return dates.length ? { from: dates[0], through: dates.at(-1)!, datedRows: dated.length } : undefined;
+}
+function spatialSummary(records: VaultRecord[]) {
+  const current = records.find(r => r.id === "xr:spatial-draft:v1");
+  if (!current) return undefined;
+  const content = payload(current), parsed = xrSceneSchema.safeParse(content.scene);
+  if (!parsed.success || !parsed.data.journeyLayout) return undefined;
+  const scene = parsed.data, archive = scene.evidenceArchive;
+  const attached = archive?.matches.filter(m => evidenceMatchAttached(archive,m.artifactId,m.windowId)).length ?? 0;
+  const refused = archive?.matches.filter(m => [...archive.decisions].reverse().find(d => d.artifactId===m.artifactId && d.windowId===m.windowId)?.decision==='refuse').length ?? 0;
+  const audit = scene.journeyLayout!.coverage;
+  return { title: scene.title, sourceRecordId: current.id, savedAt: typeof content.updatedAt === "string" ? content.updatedAt : current.capturedAt,
+    windows: scene.journeyEpisodes?.length ?? 0, episodes: episodeSpaces(scene).length,
+    observedPlays: audit.baselinePlays, alignedPlays: audit.matchedPlays, ambiguousPlays: audit.ambiguousPlays, unassignedPlays: audit.unmatchedPlays,
+    attached, refused, candidates: (archive?.matches.length ?? 0)-attached-refused,
+    sourceSnapshots: scene.journeyLayout!.sources.map(({id,type,capturedAt})=>({id,type,capturedAt})),
+    memoryMoves: scene.journeyEpisodes?.reduce((sum,e)=>sum+e.memoryDecisions.length,0) ?? 0 };
+}
 
 const laneDefinitions: Array<{ id: string; title: string; terms: readonly string[]; sources?: readonly string[] }> = [
   { id: "creative-tech-study", title: "Creative technology and study", terms: ["creative technology", "creative-tech", "digital art", "la salle", "master", "masters", "barcelona"] },
@@ -35,13 +75,13 @@ function titleFor(record: VaultRecord) { const title = payload(record).title; re
 function importRecord(record: VaultRecord): AtlasImport | undefined {
   const content = payload(record); const source = content.source; const importedAt = content.importedAt;
   if (record.kind !== "import" || typeof source !== "string") return undefined;
-  const document = content.document as { records?: unknown[] } | undefined; const snapshot = content.snapshot as { occurrences?: unknown[]; playlist?: { id?: unknown; name?: unknown } } | undefined;
+  const document = content.document as { records?: unknown[]; recordCount?: number } | undefined; const snapshot = content.snapshot as { occurrences?: unknown[]; playlist?: { id?: unknown; name?: unknown } } | undefined;
   const summary = content.summary as { retained?: unknown } | undefined;
-  const retained = Array.isArray(document?.records) ? document.records.length : Array.isArray(snapshot?.occurrences) ? snapshot.occurrences.length : typeof summary?.retained === "number" ? summary.retained : 0;
+  const retained = Array.isArray(document?.records) ? document.records.length : Array.isArray(snapshot?.occurrences) ? snapshot.occurrences.length : typeof document?.recordCount === "number" ? document.recordCount : typeof summary?.retained === "number" ? summary.retained : 0;
   const playlistName = typeof snapshot?.playlist?.name === "string" ? snapshot.playlist.name : undefined;
   const playlistId = typeof snapshot?.playlist?.id === "string" ? snapshot.playlist.id : undefined;
   const label = source === "spotify-playlist" && playlistName && playlistId ? `Spotify playlist: ${playlistName} (${playlistId})` : undefined;
-  return { id: record.id, source, label, importedAt: typeof importedAt === "string" ? importedAt : record.capturedAt, retained };
+  return { id: record.id, source, label, importedAt: typeof importedAt === "string" ? importedAt : record.capturedAt, retained, coverage: sourceCoverage(document?.records ?? snapshot?.occurrences ?? []) };
 }
 
 /** A Side Quest export is deliberately preserved as one snapshot plus many
@@ -117,10 +157,11 @@ function buildPlaceReadings(source: VaultRecord[], options?: AtlasBuildOptions) 
   for (const place of maps) if (typeof place.latitude === "number" && typeof place.longitude === "number") { const key = gridKey(place.latitude, place.longitude); mapGrid.set(key, [...(mapGrid.get(key) ?? []), place]); }
   const readings: AtlasPlaceReading[] = [];
   let timelineWindows = 0; let windowsWithCandidates = 0; let directTimelineLabels = 0;
-  let index = 0;
+  let index = 0; let earliest: string | undefined; let latest: string | undefined;
   for (const rawWindow of rawWindows) {
     const window = timelineWindow(rawWindow); if (!window) continue;
     timelineWindows += 1;
+    for (const value of [window.startAt,window.endAt]) if (value && Number.isFinite(Date.parse(value))) { const iso = new Date(value).toISOString(); earliest = !earliest || iso < earliest ? iso : earliest; latest = !latest || iso > latest ? iso : latest; }
     const candidates: AtlasPlaceCandidate[] = [];
     const directLabels = window.kind === "visit" ? [window.locationLabel] : [window.startLocationLabel, window.endLocationLabel];
     if (directLabels.some(Boolean)) directTimelineLabels += 1;
@@ -135,7 +176,7 @@ function buildPlaceReadings(source: VaultRecord[], options?: AtlasBuildOptions) 
     if (unique.length) { windowsWithCandidates += 1; readings.push({ id: `timeline-window:${index}`, when: window.startAt ?? window.endAt ?? "time unknown", kind: window.kind, candidates: unique, resolution: unique.length === 1 ? "one-candidate" : "competing-candidates", caveat: "These are ranked source links, not a confirmed venue, city, country, visit, or explanation." }); readings.sort((a, b) => b.when.localeCompare(a.when)); readings.length = Math.min(readings.length, 12); }
     index += 1;
   }
-  return { placeReadings: readings, placeCoverage: { timelineWindows, windowsWithCandidates, directTimelineLabels } };
+  return { timelineRange: earliest && latest ? { from: earliest, through: latest } : undefined, placeReadings: readings, placeCoverage: { timelineWindows, windowsWithCandidates, directTimelineLabels } };
 }
 
 /** Atlas is a local navigation aid. It shows source changes, explicit overlap
@@ -145,8 +186,10 @@ export function buildAtlasNow(records: VaultRecord[], derivedAt = new Date().toI
   // never feed a Scenario Studio constellation or public draft back into its
   // own evidence lanes. That would make saved planning text look like new
   // source evidence and destabilise lane selections on reload.
-  const source = records.filter((record) => record.kind !== "recovery-document" && record.kind !== "retrieval-index" && record.kind !== "atlas" && record.kind !== "scenario-studio" && record.kind !== "public-draft");
+  const source = records.filter(isAtlasSource);
   const imports = importRecords(source);
+  const spatial = spatialSummary(records);
+  const research = source.filter(r=>r.id.startsWith("research-session:")).map(r=>({id:r.id,title:titleFor(r),savedAt:r.capturedAt}));
   const lanes = laneDefinitions.map((definition) => {
     const matched = source.flatMap((record) => { const text = recordText(record); const matchedTerms = definition.terms.filter((term) => text.includes(term)); const source = payload(record).source; const sourceMatched = typeof source === "string" && (definition.sources?.includes(source) ?? false); return matchedTerms.length || sourceMatched ? [{ record, matchedTerms: sourceMatched ? [...matchedTerms, "selected Maps list"] : matchedTerms }] : []; });
     return { id: definition.id, title: definition.title, evidenceCount: matched.length, sourceRecordIds: matched.map(({ record }) => record.id).slice(0, 12), matchedTerms: [...new Set(matched.flatMap(({ matchedTerms }) => matchedTerms))], status: "evidence-window" as const, note: matched.length ? "Matched by explicit wording or source type; inspect the sources before drawing a connection." : "No current explicit match. This is absence from the selected record set, not absence from your life." };
@@ -185,5 +228,5 @@ export function buildAtlasNow(records: VaultRecord[], derivedAt = new Date().toI
   const captures = pending.filter((record) => record.kind === "capture");
   if (captures.length) needsYou.push({ id: "pending-captures", title: "Private captures awaiting a reading", detail: `${captures.length} capture${captures.length === 1 ? " is" : "s are"} still pending—useful material, but not a task unless you want to work with it.`, sourceRecordIds: captures.map((record) => record.id).slice(0, 8) });
   const places = buildPlaceReadings(source, options);
-  return { schemaVersion: 3, kind: "storywalker-atlas-now", privacy: "private", canonical: false, derivedAt, method: "explicit-keyword-record-layer-and-delta-v3", sourceRecordCount: source.length, imports, lanes: [...lanes, ...workingThreads], whatChanged, convergences, needsYou, ...places, caveat: "Atlas shows explicit source changes, wording overlaps and decisions that remain yours. Place readings rank labels already present in private sources; they do not reverse-geocode, infer a visit, causality, feelings or a single narrative, and they do not create canon." };
+  return { schemaVersion: 3, kind: "storywalker-atlas-now", privacy: "private", canonical: false, derivedAt, method: "explicit-keyword-record-layer-and-delta-v3", sourceRecordCount: source.length, imports, spatial, research, lanes: [...lanes, ...workingThreads], whatChanged, convergences, needsYou, ...places, caveat: "Atlas shows explicit source changes, wording overlaps and decisions that remain yours. Place readings rank labels already present in private sources; they do not reverse-geocode, infer a visit, causality, feelings or a single narrative, and they do not create canon." };
 }
