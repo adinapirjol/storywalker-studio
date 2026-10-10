@@ -36,13 +36,27 @@ jobs:
 
       - name: Test local Python contracts
         working-directory: research/rehearsal-dramaturg
-        run: .venv/bin/python -m pytest tests -q
+        env:
+          COVERAGE_FILE: ../../coverage/.coverage
+        run: .venv/bin/python -m pytest tests -q --cov=dramaturg --cov-report=term --cov-report=xml:../../coverage/python.xml --cov-fail-under=50
 
       - name: Verify fictional demo
         run: npm run demo:aurora-coast
 
-      - name: Test
-        run: npm test
+      - name: Test with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: coverage-${{ github.sha }}
+          path: |
+            coverage/javascript/cobertura-coverage.xml
+            coverage/javascript/coverage-summary.json
+            coverage/python.xml
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Typecheck
         run: npm run typecheck
