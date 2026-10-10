@@ -1,7 +1,9 @@
 # GitHub quality gates
 
 The default branch requires a pull request, resolved review conversations, and
-the GitHub Actions `quality` check against an up-to-date base branch. There are
+the GitHub Actions `quality` check against an up-to-date base branch. All four
+`Analyze (<language>)` CodeQL jobs are also required: the aggregate CodeQL check
+can turn green before every language has completed. There are
 no ruleset bypass actors. No independent approving reviewer is required for this
 single-maintainer repository; this does not remove the PR or check requirements.
 Deletion and force pushes to the default branch are blocked.
