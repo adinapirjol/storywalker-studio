@@ -30,7 +30,8 @@
     "linz:private-traces": "node --import tsx scripts/linz-private-traces.ts",
     "audit:build-private": "node scripts/audit-build-private.mjs",
     "prebuild": "npm run arena:refresh",
-    "arena:refresh": "NODE_USE_ENV_PROXY=1 node --import tsx scripts/arena-build.ts"
+    "arena:refresh": "NODE_USE_ENV_PROXY=1 node --import tsx scripts/arena-build.ts",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@simplewebauthn/server": "13.3.2",
@@ -46,6 +47,7 @@
     "@types/node": "^22.10.2",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@vitest/coverage-v8": "4.1.11",
     "eslint": "^10.8.0",
     "globals": "^16.5.0",
     "tsx": "^4.23.1",
