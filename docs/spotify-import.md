@@ -55,6 +55,29 @@ Both the directory and `*.private.json` files are ignored. The importer writes a
 
 Rows with a missing addition timestamp or unavailable Spotify item are retained and reported as diagnostics rather than silently dropped. The command prints actual previous and current occurrence counts after a successful authenticated import. The files contain private playlist metadata and must not be moved into `examples/`.
 
+## Compare two existing occurrence exports
+
+With Python 3.10 or newer, compare two local Spotify Labs occurrence snapshots:
+
+```bash
+python3 scripts/spotify-snapshot-diff.py \
+  private-data/spotify/before.private.json \
+  private-data/spotify/after.private.json \
+  private-data/spotify/comparison.private.json
+```
+
+Use existing ignored input files and a new ignored output path. The script does
+not contact Spotify or open the Vault. It preserves source files, refuses to
+overwrite any output, and creates the comparison with owner-only permissions.
+The result contains private occurrence metadata; only summary counts are printed.
+Keep the result under `private-data/` or named `*.private.json`.
+
+Matching uses track identity and the UTC addition instant, preserves duplicates,
+and explicitly reports ambiguous duplicate pairing and missing-ID fallbacks.
+Addition/removal means a difference between snapshots, not a dated listening or
+removal event. Position changes do not prove manual reordering. Source timestamps
+are preserved; `Europe/Bucharest` describes the source export's local-time view.
+
 ## Delete local imported data
 
 Delete the specific ignored file under `private-data/spotify/`. Delete `.spotify-token.local.json` to remove local authorization material. Revoking the application in Spotify account settings invalidates the authorization at the provider.
