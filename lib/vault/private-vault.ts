@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, openSync, closeSync, fsyncSync, unlinkSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -10,10 +10,11 @@ import { buildEvidencePack } from "@/lib/evidence/private-signal-engine";
 import { buildLocalRetrievalIndex } from "./private-retrieval-index";
 import { buildAtlasNow, isArchivedEvidence, isAtlasSource, type AtlasNow } from "@/lib/studio/private-atlas";
 import { VaultWriteConflictError, withVaultFileLock } from "./vault-file-lock";
+import { vaultMetadataSchema, type VaultMetadata, recoveryKeyFrom as keyFrom, dataKeyVerifier as keyVerifier, unlockRecoveryKey, verifyRecoveryDataKey, recoveryVaultIdentity, replaceRecoveryEnvelope } from "./vault-recovery";
 
 const VAULT_DIR = path.join(process.cwd(), "private-data", "vault");
 const VAULT_PATH = path.join(VAULT_DIR, "storywalker-vault.sqlite");
-const VERIFIER = "storywalker-vault:v1:passphrase-check";
+
 const runtimeRequire = createRequire(path.join(process.cwd(), "package.json"));
 const SQL_WASM_PATH = runtimeRequire.resolve("sql.js/dist/sql-wasm.wasm");
 const TIMELINE_RECORD_ID = "import:google-timeline:v1";
@@ -22,7 +23,7 @@ const TIMELINE_CHUNK_SIZE = 256;
 
 export type VaultKind = "recovery-document" | "moment" | "journey" | "journey-proposal" | "thread" | "playlist-source" | "capture" | "reference" | "import" | "editorial-cut" | "editorial-draft" | "retrieval-index" | "atlas" | "scenario-studio" | "public-draft";
 export type VaultRecord = { id: string; kind: VaultKind; capturedAt: string; payload: unknown };
-type VaultMeta = { schemaVersion: 1; salt: string; verifier: string; createdAt: string };
+
 export type OpenVault = { database: SqlDatabase; key: Buffer; storagePath?: string };
 
 function vaultDirectory() { mkdirSync(VAULT_DIR, { recursive: true, mode: 0o700 }); try { chmodSync(VAULT_DIR, 0o700); } catch { /* best-effort */ } }
@@ -34,7 +35,7 @@ const accessGuards = new WeakMap<SqlDatabase, () => void>();
 export function setVaultAccessGuard(vault: OpenVault, guard: () => void) { accessGuards.set(vault.database, guard); }
 const fingerprint=(bytes:Uint8Array)=>createHash("sha256").update(bytes).digest("hex");
 function rememberDisk(database:SqlDatabase,bytes:Uint8Array|undefined){diskVersions.set(database,bytes?fingerprint(bytes):null);}
-function persistDatabase(database: SqlDatabase, storagePath = VAULT_PATH) {
+function persistDatabase(database: SqlDatabase, storagePath = VAULT_PATH, onCommitted?: () => void) {
   return withVaultFileLock(storagePath, () => {
     // The disk comparison and replacement must use the same exclusive lock.
     accessGuards.get(database)?.();
@@ -48,6 +49,7 @@ function persistDatabase(database: SqlDatabase, storagePath = VAULT_PATH) {
       try { fsyncSync(handle); } finally { closeSync(handle); }
       accessGuards.get(database)?.();
       renameSync(temporary,storagePath);
+      onCommitted?.();
       diskVersions.set(database,fingerprint(exported));
       try { chmodSync(storagePath,0o600); } catch { /* best-effort permissions */ }
     } finally { if(existsSync(temporary))unlinkSync(temporary); }
@@ -67,9 +69,10 @@ function rows(database: SqlDatabase, sql: string, values: unknown[] = []) {
   const statement = database.prepare(sql);
   try { statement.bind(values); const result: Array<Record<string, unknown>> = []; while (statement.step()) result.push(statement.getAsObject()); return result; } finally { statement.free(); }
 }
-function keyFrom(passphrase: string, salt: string) { if (passphrase.length < 12) throw new Error("Choose a Vault passphrase with at least 12 characters."); return scryptSync(passphrase, Buffer.from(salt, "base64url"), 32); }
-function metadata(database: SqlDatabase): VaultMeta | undefined { const row = rows(database, "SELECT value FROM vault_meta WHERE key = 'metadata'")[0] as { value?: string } | undefined; return row?.value ? JSON.parse(row.value) as VaultMeta : undefined; }
-function keyVerifier(key: Buffer) { return createHmac("sha256", key).update(VERIFIER).digest("base64url"); }
+function metadata(database: SqlDatabase): VaultMetadata | undefined {
+  const row = rows(database, "SELECT value FROM vault_meta WHERE key = 'metadata'")[0] as { value?: string } | undefined;
+  return row?.value ? vaultMetadataSchema.parse(JSON.parse(row.value)) : undefined;
+}
 function crypt(key: Buffer, payload: unknown) { const iv = randomBytes(12); const cipher = createCipheriv("aes-256-gcm", key, iv); const ciphertext = Buffer.concat([cipher.update(JSON.stringify(payload), "utf8"), cipher.final()]); return { iv, authTag: cipher.getAuthTag(), ciphertext }; }
 function decrypt(key: Buffer, row: { ciphertext: Uint8Array; iv: Uint8Array; auth_tag: Uint8Array }) { const cipher = createDecipheriv("aes-256-gcm", key, Buffer.from(row.iv)); cipher.setAuthTag(Buffer.from(row.auth_tag)); return JSON.parse(Buffer.concat([cipher.update(Buffer.from(row.ciphertext)), cipher.final()]).toString("utf8")) as unknown; }
 
@@ -91,16 +94,18 @@ export async function vaultImportMarkers() {
 export async function initialiseVault(passphrase: string) {
   const database = await openDatabase();
   if (metadata(database)) { database.close(); throw new Error("This device already has a Storywalker Vault. Unlock it instead of creating a new one."); }
-  const salt = randomBytes(16).toString("base64url"); const key = keyFrom(passphrase, salt); const next: VaultMeta = { schemaVersion: 1, salt, verifier: keyVerifier(key), createdAt: new Date().toISOString() };
+  const salt = randomBytes(16).toString("base64url"); const key = keyFrom(passphrase, salt); const next: VaultMetadata = { schemaVersion: 1, salt, verifier: keyVerifier(key), createdAt: new Date().toISOString() };
   database.run("INSERT INTO vault_meta (key, value) VALUES ('metadata', ?)", [JSON.stringify(next)]); try { persistDatabase(database); return { createdAt: next.createdAt }; } finally { key.fill(0); database.close(); }
 }
 
 export async function openVault(passphrase: string): Promise<OpenVault> {
   if (!vaultExists()) throw new Error("Create the local Vault before unlocking it.");
-  const database = await openDatabase(); const meta = metadata(database); if (!meta) { database.close(); throw new Error("Vault metadata is missing."); }
-  const key = keyFrom(passphrase, meta.salt); const expected = Buffer.from(meta.verifier, "base64url"); const actual = Buffer.from(keyVerifier(key), "base64url");
-  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) { key.fill(0); database.close(); throw new Error("That passphrase cannot unlock this Vault."); }
-  return { database, key };
+  const database = await openDatabase();
+  try {
+    const meta = metadata(database);
+    if (!meta) throw new Error("Vault metadata is missing.");
+    return { database, key: unlockRecoveryKey(meta, passphrase) };
+  } catch (error) { database.close(); throw error; }
 }
 
 /** A previously verified, process-local session key. Never accept this from a client. */
@@ -116,9 +121,7 @@ export async function verifyVaultKey(key: Buffer) {
   try {
     const meta = metadata(database);
     if (!meta) throw new Error("Vault metadata missing.");
-    const expected = Buffer.from(meta.verifier, "base64url");
-    const actual = Buffer.from(keyVerifier(key), "base64url");
-    if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) throw new Error("Vault key mismatch.");
+    verifyRecoveryDataKey(meta, key);
   } finally { database.close(); }
 }
 
@@ -129,8 +132,35 @@ export async function vaultKeyIdentity() {
   try {
     const meta = metadata(database);
     if (!meta) throw new Error("Vault metadata missing.");
-    return createHash("sha256").update(JSON.stringify([meta.schemaVersion, meta.salt, meta.createdAt])).digest("base64url");
+    return recoveryVaultIdentity(meta);
   } finally { database.close(); }
+}
+
+/** Called only with a guarded, freshly opened Vault and explicit Author action. */
+export function changeVaultRecoveryPassphrase(vault: OpenVault, current: string, next: string, onCommitted?: () => void) {
+  const meta = metadata(vault.database);
+  if (!meta) throw new Error("Vault metadata missing.");
+  const replacement = replaceRecoveryEnvelope(meta, vault.key, current, next);
+  let committed = false;
+  try {
+    vault.database.run("UPDATE vault_meta SET value = ? WHERE key = 'metadata'", [JSON.stringify(replacement)]);
+    // Remove old recovery metadata from SQLite free pages before atomic replacement.
+    vault.database.run("VACUUM");
+    persistDatabase(vault.database, vault.storagePath, () => {
+      committed = true;
+      onCommitted?.();
+    });
+  } catch (error) {
+    // Cleanup failure after rename cannot roll back the file already on disk.
+    if (!committed) vault.database.run("UPDATE vault_meta SET value = ? WHERE key = 'metadata'", [JSON.stringify(meta)]);
+    throw error;
+  }
+}
+
+/** A passphrase checked against an older snapshot must not grant fresh authority. */
+export function assertVaultSnapshotCurrent(vault: OpenVault) {
+  const file = vault.storagePath ?? VAULT_PATH;
+  if (!diskVersions.has(vault.database) || !existsSync(file) || diskVersions.get(vault.database) !== fingerprint(readFileSync(file))) throw new VaultWriteConflictError();
 }
 
 export function closeVault(vault: OpenVault) { try { vault.database.close(); } finally { vault.key.fill(0); } }

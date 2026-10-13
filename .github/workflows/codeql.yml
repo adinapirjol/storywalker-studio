@@ -17,9 +17,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Select analysis scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      actions: ${{ steps.scope.outputs.actions }}
+      javascript-typescript: ${{ steps.scope.outputs.javascript-typescript }}
+      python: ${{ steps.scope.outputs.python }}
+      swift: ${{ steps.scope.outputs.swift }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Verify change selection
+        run: node --test scripts/ci-scope.test.mjs
+      - name: Select checks from the complete PR diff
+        id: scope
+        run: node scripts/ci-scope.mjs
+
   analyze:
     name: Analyze (${{ matrix.language }})
-    runs-on: ${{ matrix.runner }}
+    needs: changes
+    # A failed selector must fail the required jobs, not turn them into successful skips.
+    # Superseded or manually cancelled runs must not start more analysis jobs.
+    if: ${{ !cancelled() }}
+    runs-on: ${{ matrix.language == 'swift' && needs.changes.outputs.swift != 'true' && 'ubuntu-latest' || matrix.runner }}
     timeout-minutes: 45
     permissions:
       contents: read
@@ -41,16 +67,32 @@ jobs:
             runner: macos-26
             build-mode: manual
     steps:
+      - name: Validate selection
+        id: selection
+        env:
+          PLAN_RESULT: ${{ needs.changes.result }}
+          SELECTED: ${{ needs.changes.outputs[matrix.language] }}
+        run: |
+          test "$PLAN_RESULT" = success || exit 1
+          case "$SELECTED" in true|false) ;; *) exit 1 ;; esac
+          echo "enabled=$SELECTED" >> "$GITHUB_OUTPUT"
+
+      - name: Explain analysis that is not applicable
+        if: steps.selection.outputs.enabled == 'false'
+        run: echo 'No relevant changes in the complete PR diff. This lane did not run an analysis; full scans remain enabled on main, schedule and manual runs.' >> "$GITHUB_STEP_SUMMARY"
+
       - uses: actions/checkout@v6
+        if: steps.selection.outputs.enabled == 'true'
 
       - name: Initialize CodeQL
+        if: steps.selection.outputs.enabled == 'true'
         uses: github/codeql-action/init@f3c49fd1ef3281abc41069b3dd22807a60c963f6 # v4
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
 
       - name: Build iPhone and embedded Watch app for analysis
-        if: matrix.language == 'swift'
+        if: steps.selection.outputs.enabled == 'true' && matrix.language == 'swift'
         working-directory: research/body-context-native
         run: |
           # A scheme resolves CollectorCore; autobuild's bare -target did not.
@@ -66,10 +108,11 @@ jobs:
             SWIFT_USE_INTEGRATED_DRIVER=NO
 
       - name: Build and test the fictional Swift package
-        if: matrix.language == 'swift'
+        if: steps.selection.outputs.enabled == 'true' && matrix.language == 'swift'
         run: swift test --package-path research/body-context-native --scratch-path "$RUNNER_TEMP/storywalker-swift-tests"
 
       - name: Analyze
+        if: steps.selection.outputs.enabled == 'true'
         uses: github/codeql-action/analyze@f3c49fd1ef3281abc41069b3dd22807a60c963f6 # v4
         with:
           category: /language:${{ matrix.language }}

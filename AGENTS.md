@@ -24,3 +24,14 @@ Use design patterns only where they clarify a concrete responsibility. Review
 streaming and iteration for bounded memory, cancellation, backpressure, ordering
 and failure recovery. Security and privacy checks are part of correctness, not a
 separate optional pass. Do not introduce a framework merely to reorganize code.
+
+## Independent security review before merge
+
+Recommend an independent external security review for every Storywalker PR.
+Require it before merging changes to authentication, sessions, Vault storage,
+cryptography, migrations, private-data handling, consent/export boundaries, or
+security controls in CI. Follow the review and evidence requirements in
+`docs/code-review-guidelines.md`; use the PR template to record the result.
+Passing tests, CodeQL and the implementer's own review do not replace this review.
+Continue implementation and verification while review is pending, but do not
+merge or describe the PR as merge-ready until the review gate is satisfied.

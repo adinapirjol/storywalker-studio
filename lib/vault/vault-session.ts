@@ -51,6 +51,12 @@ export function vaultSessionFailure(error: unknown) {
 }
 export function deleteVaultSession(token: string | undefined) { if (token) { sessions.get(token)?.key.fill(0); sessions.delete(token); } }
 
+/** Successful recovery changes end all existing process-local access. */
+export function deleteAllVaultSessions() {
+  for (const session of sessions.values()) session.key.fill(0);
+  sessions.clear();
+}
+
 /** Both access methods replace the caller's old authority after verification. */
 export function rotateVaultSession(key: Buffer, previousToken: string | undefined) {
   const next = createVaultSession(key);

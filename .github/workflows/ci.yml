@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,16 +15,40 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
 
+      - name: Verify change selection
+        run: node --test scripts/ci-scope.test.mjs
+
+      - name: Select checks from the complete PR diff
+        id: scope
+        run: node scripts/ci-scope.mjs
+
+      - name: Validate quality selection
+        env:
+          SELECTED: ${{ steps.scope.outputs.quality }}
+        run: |
+          case "$SELECTED" in true|false) ;; *) exit 1 ;; esac
+
+      - name: Audit public repository
+        run: node scripts/audit-public-repo.mjs
+
+      - name: Explain documentation-only validation
+        if: steps.scope.outputs.quality == 'false'
+        run: echo 'Documentation-only PR; selector tests and repository privacy audit passed. Build and coverage are not applicable.' >> "$GITHUB_STEP_SUMMARY"
+
       - name: Install from lockfile
+        if: steps.scope.outputs.quality == 'true'
         run: npm ci
 
       - name: Install the Python validator runtime
+        if: steps.scope.outputs.quality == 'true'
         uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           version: "0.10.0"
@@ -32,22 +57,26 @@ jobs:
           cache-dependency-glob: research/rehearsal-dramaturg/uv.lock
 
       - name: Install validator dependencies from lockfile
+        if: steps.scope.outputs.quality == 'true'
         run: uv sync --frozen --project research/rehearsal-dramaturg
 
       - name: Test local Python contracts
+        if: steps.scope.outputs.quality == 'true'
         working-directory: research/rehearsal-dramaturg
         env:
           COVERAGE_FILE: ../../coverage/.coverage
         run: .venv/bin/python -m pytest tests -q --cov=dramaturg --cov-report=term --cov-report=xml:../../coverage/python.xml --cov-fail-under=50
 
       - name: Verify fictional demo
+        if: steps.scope.outputs.quality == 'true'
         run: npm run demo:aurora-coast
 
       - name: Test with coverage
+        if: steps.scope.outputs.quality == 'true'
         run: npm run test:coverage
 
       - name: Upload coverage reports
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.scope.outputs.quality == 'true' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: coverage-${{ github.sha }}
@@ -59,16 +88,17 @@ jobs:
           retention-days: 14
 
       - name: Typecheck
+        if: steps.scope.outputs.quality == 'true'
         run: npm run typecheck
 
       - name: Lint
+        if: steps.scope.outputs.quality == 'true'
         run: npm run lint
 
       - name: Build
+        if: steps.scope.outputs.quality == 'true'
         run: npm run build
 
-      - name: Audit public repository
-        run: npm run audit:public
-
       - name: Audit generated browser bundles
+        if: steps.scope.outputs.quality == 'true'
         run: npm run audit:build-private

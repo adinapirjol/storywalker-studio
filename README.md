@@ -18,6 +18,8 @@ The system is deliberately deterministic first. It does not claim that a song ex
 
 See the [29 September NOVA report and next tasks](docs/research/xr/nova-report-2026-09-29.md) and [rehearsal guide](docs/research/xr/README.md). The full fictional Aurora Coast immersive preview is available at `/research/xr/aurora-coast`; it needs no Vault. The earlier editorial demo remains available below.
 
+See the [prioritized future work](docs/roadmap.md) for rehearsal goals and the deferred Vault security and usability improvements.
+
 ## BODY companion and shared private access
 
 `/research/xr/body` is a creature-first study in warm mineral light and wire form.

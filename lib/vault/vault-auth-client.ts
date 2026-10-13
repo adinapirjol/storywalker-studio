@@ -2,7 +2,7 @@
 export type BrowserVaultSession = { active: boolean; expiresAt?: string };
 
 export async function vaultAuthRequest<T>(
-  endpoint: "/api/vault" | "/api/vault/passkeys",
+  endpoint: "/api/vault" | "/api/vault/passkeys" | "/api/vault/recovery-passphrase",
   body: Record<string, unknown>,
   signal?: AbortSignal,
 ): Promise<T> {

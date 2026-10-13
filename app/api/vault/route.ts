@@ -1,3 +1,4 @@
+import { assertVaultSnapshotCurrent } from "@/lib/vault/private-vault";
 import {isLocalSameOrigin,isLocalRead} from "@/lib/http/local-origin";
 import {boundedText} from "@/lib/http/context-request";
 import {researchSessionSchema,researchPayload} from "@/lib/research/research-session";
@@ -187,6 +188,7 @@ export async function POST(request: Request) {
       const vault = await openVault(body.passphrase);
       try {
         request.signal.throwIfAborted();
+        assertVaultSnapshotCurrent(vault);
         const session = rotateVaultSession(vault.key, sessionToken);
         return sessionResponse({ created, summary: vaultSummary(vault), session: { active: true, expiresAt: session.expiresAt } }, session.token, session.expiresAt);
       } finally { closeVault(vault); }
@@ -203,7 +205,7 @@ export async function POST(request: Request) {
     }
     try {
       request.signal.throwIfAborted();
-      if (body.passphrase) newSession = rotateVaultSession(vault.key, sessionToken);
+      if (body.passphrase) { assertVaultSnapshotCurrent(vault); newSession = rotateVaultSession(vault.key, sessionToken); }
       const assertAccess = () => assertVaultSessionActive(newSession?.token ?? sessionToken);
       assertAccess();
       setVaultAccessGuard(vault, assertAccess);

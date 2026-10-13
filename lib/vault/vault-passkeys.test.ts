@@ -112,7 +112,7 @@ describe("Passkey request isolation", () => {
 
 
 describe("Complete local Vault lifecycle", () => {
-  it("enrolls, unlocks encrypted records, rejects replay/bad PRF/removal, and preserves passphrase recovery", async () => {
+  it.each([false, true])("enrolls, unlocks encrypted records and rejects replay/bad PRF/removal (replace recovery: %s)", async replaceRecovery => {
     const workspace = process.cwd();
     mkdirSync(path.join(workspace, "tmp"), { recursive: true });
     const temporary = mkdtempSync(path.join(workspace, "tmp", "passkey-test-"));
@@ -121,14 +121,14 @@ describe("Complete local Vault lifecycle", () => {
     try {
       const vault = await import("./private-vault"), sessions = await import("./vault-session");
       const { POST } = await import("@/app/api/vault/passkeys/route");
-      const passphrase = "synthetic-test-recovery-only";
+      let passphrase = "synthetic-test-recovery-only";
       await vault.initialiseVault(passphrase);
       const opened = await vault.openVault(passphrase);
       vault.putVaultRecords(opened, [{ id: "test:record", kind: "reference", capturedAt: new Date().toISOString(), payload: { text: "synthetic evidence" } }]);
       let session = sessions.createVaultSession(opened.key);
       jar.set(sessions.VAULT_SESSION_COOKIE, session.token); vault.closeVault(opened);
       const dbPath = path.join(temporary, "private-data/vault/storywalker-vault.sqlite");
-      const originalDatabase = readFileSync(dbPath);
+      let originalDatabase = readFileSync(dbPath);
       const vaultRoute = await import("@/app/api/vault/route");
       async function call(body: Record<string, unknown>, endpoint = "/api/vault/passkeys") {
         const handler = endpoint === "/api/vault" ? vaultRoute.POST : POST;
@@ -151,6 +151,20 @@ describe("Complete local Vault lifecycle", () => {
       const persisted = readFileSync(sidecarPath, "utf8");
       expect(persisted).not.toContain(secret); expect(persisted).not.toContain(passphrase);
       expect((await call({ action: "status" })).body.credentials).toHaveLength(1);
+      if (replaceRecovery) {
+        const recovery = await import("@/app/api/vault/recovery-passphrase/route");
+        const replacement = "synthetic-new-recovery-only";
+        const changed = await recovery.POST(new Request("http://localhost:3000/api/vault/recovery-passphrase", { method: "POST", headers: { origin: "http://localhost:3000" }, body: JSON.stringify({ currentPassphrase: passphrase, newPassphrase: replacement, confirmation: replacement }) }));
+        expect(changed.status).toBe(200);
+        expect(sessions.vaultSessionActive(session.token)).toBe(false);
+        expect(readFileSync(sidecarPath, "utf8")).toBe(persisted);
+        await expect(vault.openVault(passphrase)).rejects.toThrow();
+        passphrase = replacement;
+        const renewed = await vault.openVault(passphrase);
+        session = sessions.createVaultSession(renewed.key); vault.closeVault(renewed);
+        jar.set(sessions.VAULT_SESSION_COOKIE, session.token);
+        originalDatabase = readFileSync(dbPath);
+      }
       const identity = vault.vaultKeyIdentity;
       const pendingIdentity = vi.spyOn(vault, "vaultKeyIdentity").mockImplementationOnce(async () => {
         const id = await identity(); sessions.deleteVaultSession(session.token); return id;
