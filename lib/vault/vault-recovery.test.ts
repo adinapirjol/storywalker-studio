@@ -162,7 +162,7 @@ it("revokes every session even if expiry is detected just after the replacement"
   vi.spyOn(vault, "changeVaultRecoveryPassphrase").mockImplementation((...args) => {
     change(...args); sessions.deleteVaultSession(token);
   });
-  expect((await call()).status).toBe(401);
+  await expectChanged(await call());
   expect(sessions.vaultSessionActive(other)).toBe(false);
   const changed = await vault.openVault(next); vault.closeVault(changed);
 });
@@ -186,8 +186,40 @@ it("requires the session key to match the authenticated recovery key", async () 
 
 it("revokes sessions when lock cleanup fails after the passphrase was saved", async () => {
   io.fail = "unlock";
-  expect((await call()).status).toBe(400);
+  await expectChanged(await call());
   const changed = await vault.openVault(next); vault.closeVault(changed);
   await expect(vault.openVault(original)).rejects.toThrow();
   expect(sessions.vaultSessionActive(token)).toBe(false);
+});
+
+async function expectChanged(response: Response) {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({ changed: true, session: { active: false } });
+  expect(response.headers.get("set-cookie")).toContain("Max-Age=0");
+  expect(response.headers.get("cache-control")).toBe("no-store");
+}
+
+it("denies an old-passphrase unlock whose snapshot predates a completed change", async () => {
+  const open = vault.openVault;
+  let changing = false;
+  vi.spyOn(vault, "openVault").mockImplementation(async passphrase => {
+    const snapshot = await open(passphrase);
+    if (!changing) {
+      changing = true;
+      await expectChanged(await call());
+    }
+    return snapshot;
+  });
+  const { POST } = await import("@/app/api/vault/route");
+  const response = await POST(new Request("http://localhost:3000/api/vault", {
+    method: "POST", headers: { origin: "http://localhost:3000" },
+    body: JSON.stringify({ action: "unlock", passphrase: original }),
+  }));
+  expect(response.status).toBe(400);
+  expect((await response.json()).error).toContain("Vault changed");
+  expect(response.headers.get("set-cookie")).toBeNull();
+  expect(sessions.vaultSessionActive(token)).toBe(false);
+  const store = (globalThis as typeof globalThis & { __storywalkerVaultSessions: Map<string, unknown> }).__storywalkerVaultSessions;
+  expect(store.size).toBe(0);
+  const changed = await open(next); vault.closeVault(changed);
 });

@@ -32,6 +32,9 @@ export async function POST(request: Request) {
         setVaultAccessGuard(vault, guard);
         changeVaultRecoveryPassphrase(vault, currentPassphrase, newPassphrase, () => { committed = true; });
       });
+    } catch (error) {
+      // Once replacement succeeded, cleanup or expiry cannot undo the change.
+      if (!committed) throw error;
     } finally {
       // Even an expiry detected after replacement must revoke the other sessions.
       if (committed) deleteAllVaultSessions();
@@ -44,6 +47,6 @@ export async function POST(request: Request) {
     if (expiry) return expiry;
     if (error instanceof VaultWriteBusyError || error instanceof VaultWriteConflictError) return reply({ error: error.message }, 409);
     if (error instanceof VaultRecoveryError) return reply({ error: error.message }, 400);
-    return reply({ error: "The change could not be confirmed. Unlock with your new passphrase to check the outcome; if it fails, use your previous passphrase or an existing passkey. Do not retry automatically." }, 400);
+    return reply({ error: "The recovery passphrase could not be changed. Your previous passphrase still applies." }, 400);
   }
 }

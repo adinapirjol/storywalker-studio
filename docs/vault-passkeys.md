@@ -199,7 +199,9 @@ The replacement is verified before persistence. SQLite is compacted to discard
 old recovery metadata from free pages, then written using the existing exclusive
 lock, stale-snapshot check, temporary-file fsync and atomic rename. Authorization
 and cancellation are checked immediately before replacement. A failure before
-replacement keeps the previous database. A lost response or cancellation after
+replacement keeps the previous database. Once replacement is confirmed, the route
+reports success and clears the session cookie even if cleanup or a later session
+check fails. A lost response or cancellation after
 replacement cannot undo the change: check by unlocking with the new passphrase,
 then the previous one or an existing passkey. Never retry a change automatically.
 
