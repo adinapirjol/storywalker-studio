@@ -74,7 +74,16 @@ cached scan or old result is presented as a fresh analysis.
 PR event's base/head SHAs and full Git history. Both sides of renames/deletions
 count. A docs commit on top of code changes does not erase the code's requirements.
 Unknown paths, unavailable history, malformed events and empty/uncertain diffs
-select all checks. Workflow and selector changes also select all lanes.
+select all checks. The current selector selects all lanes for workflow and
+selector changes.
+
+This is a scheduling policy, not a security boundary against a PR author. Both
+workflows and the selector execute the PR's version, which the PR can modify.
+The self-change rule is therefore not independently enforced by trusted base
+code. Independent review of CI changes remains required; a green check alone
+does not establish that this policy was preserved. Both workflows reject missing
+or malformed selection outputs. CodeQL dependency failures fail the required
+analysis jobs, while cancelled runs do not start those jobs.
 
 | Changes anywhere in the PR | Required work |
 | --- | --- |

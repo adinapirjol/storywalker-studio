@@ -30,6 +30,12 @@ jobs:
         id: scope
         run: node scripts/ci-scope.mjs
 
+      - name: Validate quality selection
+        env:
+          SELECTED: ${{ steps.scope.outputs.quality }}
+        run: |
+          case "$SELECTED" in true|false) ;; *) exit 1 ;; esac
+
       - name: Audit public repository
         run: node scripts/audit-public-repo.mjs
 

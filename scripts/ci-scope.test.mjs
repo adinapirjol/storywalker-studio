@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { mkdtempSync, mkdirSync, writeFileSync, renameSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, renameSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { classifyPaths, fullScope, selectScope, changedPaths } from './ci-scope.mjs';
 
 const event = { pull_request: { base: { sha: 'a'.repeat(40) }, head: { sha: 'b'.repeat(40) } } };
@@ -65,4 +65,17 @@ test('cross-language project tooling retains both language analyses', () => {
   assert.equal(classifyPaths(['research/body-context-native/generator.py']).swift, true);
   assert.equal(classifyPaths(['research/rehearsal-dramaturg/helper.ts'])['javascript-typescript'], true);
   assert.equal(classifyPaths(['research/rehearsal-dramaturg/helper.ts']).python, true);
+});
+
+// Execute the workflow's actual shell guard, including malformed output cases.
+test('quality selection rejects missing or malformed output before conditional checks', () => {
+  const workflow = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
+  const guard = workflow.match(/ {6}- name: Validate quality selection\n([\s\S]*?)(?=\n {6}- name:)/)?.[1];
+  assert.ok(guard, 'quality must validate selector output');
+  const script = guard.split('        run: |\n')[1]?.split('\n').map(line => line.replace(/^ {10}/, '')).join('\n');
+  assert.ok(script, 'quality guard must have an executable shell block');
+  for (const selected of ['true', 'false', '', 'TRUE', 'unknown', 'true\nfalse']) {
+    const result = spawnSync('bash', ['-e', '-c', script], { env: { ...process.env, SELECTED: selected } });
+    assert.equal(result.status === 0, ['true', 'false'].includes(selected), `output ${JSON.stringify(selected)}`);
+  }
 });

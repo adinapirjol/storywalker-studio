@@ -43,7 +43,8 @@ jobs:
     name: Analyze (${{ matrix.language }})
     needs: changes
     # A failed selector must fail the required jobs, not turn them into successful skips.
-    if: ${{ always() }}
+    # Superseded or manually cancelled runs must not start more analysis jobs.
+    if: ${{ !cancelled() }}
     runs-on: ${{ matrix.language == 'swift' && needs.changes.outputs.swift != 'true' && 'ubuntu-latest' || matrix.runner }}
     timeout-minutes: 45
     permissions:
