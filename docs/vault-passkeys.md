@@ -178,3 +178,39 @@ browser prompts. It verifies required user verification, PRF rejection/cleanup,
 one-use challenges, exact origin/RP and counters, explicit lock/recovery,
 cancellation, fixed expiry and non-replayed expired mutations. It does not
 establish real biometric hardware or browser/provider compatibility.
+
+## Change the recovery passphrase
+
+Unlock `/vault`, then use **Change recovery passphrase**. Enter the current
+recovery passphrase and a different new one twice (12–512 characters). Keep the
+new passphrase somewhere safe before submitting. Success locks every session in
+the local server process; unlock again with the new passphrase or an existing
+passkey. This operation cannot recover a forgotten current passphrase.
+
+The first explicit change upgrades only recovery metadata from version 1 to
+version 2. There is no automatic migration on opening the Vault. A fresh scrypt
+salt derives a wrapping key with the existing parameters (N=16384, r=8, p=1).
+AES-256-GCM protects the existing data key, with authenticated metadata bindings.
+The data key, encrypted record rows and passkey sidecar remain unchanged. The
+old stable Vault identity is retained for passkey compatibility. Strict parsing
+rejects malformed/unknown metadata rather than falling back to legacy recovery.
+
+The replacement is verified before persistence. SQLite is compacted to discard
+old recovery metadata from free pages, then written using the existing exclusive
+lock, stale-snapshot check, temporary-file fsync and atomic rename. Authorization
+and cancellation are checked immediately before replacement. A failure before
+replacement keeps the previous database. A lost response or cancellation after
+replacement cannot undo the change: check by unlocking with the new passphrase,
+then the previous one or an existing passkey. Never retry a change automatically.
+
+Older backups still require their original passphrase. Version-2 Vaults cannot
+be opened by older versions of the app; retain compatible app code when backing
+up. This is credential replacement, not full data-key rotation or compromise
+recovery: a previously copied database plus its old passphrase, an exposed data
+key, filesystem snapshots or forensic remnants are not revoked. No secure disk
+erasure is promised. Session revocation applies to the supported single local
+server process; do not operate multiple server instances against one Vault.
+
+Tests use disposable fictional Vaults, injected write failures and synthetic
+passkey wrappers. They do not change the Author's Vault or exercise a physical
+authenticator. Real-device acceptance remains an explicit Author action.
