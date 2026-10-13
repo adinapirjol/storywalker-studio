@@ -63,3 +63,39 @@ traveller is the Author; source evidence, interpretation and canon remain separa
   fictional signals and keep their rehearsal disconnected from real exports.
 - Before commit/push preparation, inspect the whole proposed diff and run privacy
   audits. A prepared package is not a successful device installation or deployment.
+
+## Independent security review before merge
+
+Recommend an independent external review for every PR. Require a security-focused
+review for changes to authentication, sessions, Vault storage, cryptography,
+migrations, private-data handling, consent/export boundaries, or CI security
+controls. For a PR outside these areas, record the scope assessment and, if no
+external review is obtained, the reason in the PR description.
+
+- Use a reviewer independent of the implementation: another person or a separate
+  AI review session, such as an Author-arranged Claude review. Self-review, passing
+  tests and automated security scanners are complementary evidence, not substitutes.
+- Supply the proposed diff and relevant public source, the reviewed commit SHA,
+  threat assumptions, test results and known limitations. Share only public code
+  and fictional fixtures. This policy does not authorize sending private Vault
+  contents, credentials, health data or other private evidence to an external
+  reviewer or contacting someone on the Author's behalf.
+- Ask the reviewer to examine authorization and consent boundaries, key and session
+  lifetimes, data preservation, races, cancellation, expiry, retries and partial
+  failures. Check that the reported outcome matches the actual persisted state,
+  including errors after a successful write. Distinguish credential replacement
+  from recovery after a compromise and identify compatibility/rollback limits.
+- Record the review link or a sanitized report, reviewer, reviewed SHA, findings,
+  and any checks the reviewer could not run. A pasted Author-supplied review is
+  valid evidence; do not claim independent verification the reviewer did not do.
+- Reproduce actionable findings with fictional regression tests where feasible,
+  fix them, and rerun the relevant checks. Map each finding to its resolution.
+  Any remaining finding needs explicit Author acceptance with its impact and a
+  follow-up recorded; an agent must not silently dismiss or waive it.
+- Have the independent reviewer recheck security-relevant fixes and later changes.
+  Record the final reviewed SHA. For later changes that do not affect security,
+  document their scope and why the existing review remains applicable.
+- Before merging, confirm the review evidence applies to the proposed head,
+  findings are resolved or explicitly accepted, required CI checks pass on that
+  head, and merge authorization exists. Pending review blocks merging, not local
+  implementation, tests or PR preparation. A review is not proof of zero risk.
