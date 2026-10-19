@@ -498,6 +498,13 @@ sketch**. The file is decoded only in the tab; no private audio is bundled, serv
 from private storage or uploaded. The source must already be at 148 BPM: this
 prototype preserves its rate and does not detect or convert tempo.
 
+The IOANA-based local sketch is a **private experiment, with public use on hold**.
+No clearance is documented. Do not use its result in a public XR demo, CTM talk,
+DJ set, upload, recorded/streamed presentation or release until written permissions
+cover the intended use of both the recording and underlying music/lyrics. If those
+permissions are unavailable, the public version uses original or appropriately
+licensed replacement sound. Loading a file locally is not a clearance check.
+
 **Enable hand shaping** reuses the local XR camera worker. Two palm centres moving
 apart stretch the ribbon and open a low-pass filter; finger openness controls
 folding and the amount of beat-timed echo. Echo feedback and output gain are

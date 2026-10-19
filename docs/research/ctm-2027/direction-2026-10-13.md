@@ -9,6 +9,23 @@ direction; this is neither a submitted proposal nor a report of research finding
 Implementation status below describes local development as of 19 October. It
 does not establish that the corresponding software has merged into the repository.
 
+## IOANA material — private experiment; public use on hold
+
+The IOANA-based Ableton/XR study is a **private learning and rehearsal experiment**.
+No sample clearance is documented. It will not be used for public playback,
+including CTM presentations, DJ sets or public XR demonstrations, nor for public
+uploads, portfolio/social clips, streamed/recorded talks or release, unless written
+permissions covering the intended use have been obtained from all relevant rights
+holders or their authorised representatives. This includes the sound recording
+and the underlying music/lyrics; the artist, label, publisher or an agency may
+represent different rights. Artist credit, short duration, distortion, noncommercial
+intent or a venue's general music licence is not our evidence of sample clearance.
+
+If clearance is unavailable, refused or too narrow for the planned use, the public
+version will use fully original or appropriately licensed replacement sound.
+Private experimentation and local playback do not mark the material as cleared.
+This is the Author's release policy, not a finding that a legal exception applies.
+
 ## Central proposition
 
 **Listening Again explores how an author can reshape both a musical fragment and
@@ -235,7 +252,7 @@ The work does not claim to represent all neurodivergent listeners.
 | Private research notebook | Can retain encrypted snapshots and show earlier readings after unlock. It does not automatically restore an old scene as interactive state. |
 | Spatial Rehearsal | WORLD / TIME / MEMORY provides authored geography, source windows and displacement. No new geographic or emotional relationship is established by this direction. |
 | Music-making | An original instrumental sketch with stems and MIDI now supports a private 16-bar Ableton chop study at 148 BPM. Codex-assisted construction and the Author's source choices and live trials are identified separately; this remains a working composition. |
-| IOANA material and Ableton work | The Author confirmed the recording, chose 00:26–00:30 and 00:35–00:46, and anchored the main drop at 00:42. The native Live set and render were verified, and the Author confirmed the correct section and playable keyboard chops. The earlier disputed cut remains inactive in the revised set. Source files, audio and production receipts remain private. |
+| IOANA material and Ableton work | The Author confirmed the recording, chose 00:26–00:30 and 00:35–00:46, and anchored the main drop at 00:42. The native Live set and render were verified, and the Author confirmed the correct section and playable keyboard chops. The earlier disputed cut remains inactive in the revised set. Private experiment; no clearance is documented and public playback/release is on hold. Source files, audio and production receipts remain private. |
 | Hand-shaped sound and ambient XR response | The corrected Ableton render has been loaded and played through Shape sound · 148 BPM. The Author confirmed the corrected XR version worked; earlier trials also confirmed hand shaping and nearby-sound ripples. Hands currently colour and echo the whole rendered mix while its tempo stays fixed. Sliders remain available. No physical Tabula hardware or haptics is implemented. |
 | Next Listening Again scene | Musical and form controls now have an initial prototype. Saved versions, a linked editorial reading and a later return remain proposed; the instrument does not save input or accept an interpretation. |
 | CTM preparation | This revision develops the argument. Final application wording, rehearsal, selected public extract and submission still require their own evidence. |
@@ -250,8 +267,9 @@ the proposed musical scene.
 Build from the verified source choices and short arrangement. Compare a restrained
 version with the heavier chop treatment, and decide what should remain recognisable
 and which transformations are worth keeping. Preserve the source, the rejected cut
-and each selected version privately. Public playback requires a separately chosen
-and suitable extract with its source-credit and permission basis recorded. The
+and each selected version privately. The IOANA-based result remains private under
+the public-use hold above. Any public extract requires written clearance for that specific use, with the rights
+holders, scope and source credit recorded; otherwise use replacement sound. The
 public demo continues to contain no bundled IOANA audio.
 
 For the next XR rehearsal, compare hand shaping with sliders, and ambient influence

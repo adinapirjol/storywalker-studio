@@ -18,6 +18,11 @@ notes and locally vendored tracking models/runtime. It excludes private-data,
 credentials, exports, audio recordings, Ableton projects and production receipts.
 The IOANA/Ableton/XR progress in the direction file is a bounded account of
 Author-confirmed local trials; it does not distribute the source or sampled mix.
+The IOANA version is a private experiment, with no documented clearance and no
+public playback, demonstration, upload or release unless written permissions from
+the relevant rights holders cover that use. Original or appropriately licensed
+replacement sound is the public fallback. This hold is separate from software
+security review; neither a merge nor a successful local trial clears the sample.
 
 ## Review method and threat assumptions
 
