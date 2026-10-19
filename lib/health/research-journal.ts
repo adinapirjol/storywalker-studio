@@ -5,6 +5,7 @@ export type ResearchRun = { id: string; at: string; algorithm: "observatory-v1" 
 export type ResearchJournal = {
   version: 1; connected: boolean; mode: "synthetic" | "healthkit"; source: string | null;
   history: ResearchRun[]; dropped: number;
+  refreshRequired?: boolean;
   cycleContext?: CycleContext;
   hypothesis?: { text: string; enteredAt: string; from: string; to: string };
 };
@@ -13,6 +14,7 @@ export type ResearchView = {
   range: { from: string; to: string; offset: number };
   sources: Array<{ key: string; label: string; count: number }>;
   omitted: number;
+  unavailable?: boolean;
 };
 
 /** Individual source keys are JSON arrays, so this value cannot collide. */

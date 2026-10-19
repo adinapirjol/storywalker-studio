@@ -1,3 +1,4 @@
+import { isRetrievableRecord } from "@/lib/vault/record-policy";
 import type { VaultRecord } from "@/lib/vault/private-vault";
 
 export type EvidenceAuthority = "author-stated" | "source-recorded" | "editorial-proposal" | "derived-context";
@@ -111,7 +112,7 @@ function snippet(text: string, matched: string[]) {
 export function buildEvidencePack(records: VaultRecord[], query: string): EvidencePack {
   const requestedTerms = terms(query);
   const evidence = records
-    .filter((record) => record.kind !== "recovery-document")
+    .filter(isRetrievableRecord)
     .map((record) => {
       const text = boundedRecordText(record);
       const matchedTerms = requestedTerms.filter((term) => text.toLocaleLowerCase().includes(term));

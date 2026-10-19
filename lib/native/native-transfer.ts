@@ -62,12 +62,12 @@ export function stageNativeTransfer(vault:OpenVault,batch:ValidatedTransfer,dige
  const next:Stage={...(receiverID?{receiverID}:{}),validatedAt:new Date().toISOString(),version:1,digest,mode:batch.mode,status:'pending-review',revision:1,count:observations.length,deletionCount:batch.deletions.length,observations,deletionKeys:batch.deletions.map(d=>evidenceKey(batch.mode,d)),observationKeys:observations.map(o=>evidenceKey(batch.mode,o.id)),receipt,privacy:'private',canonical:false};
  putVaultRecords(vault,[record(id,next)]);return summary(vault,id,next);
 }
-/** Only the authenticated receiver calls this; legacy stages are reconsidered on phone retry.
+/** Only the authenticated receiver calls this; unowned legacy stages require manual review.
  * Deletions must target known accepted sleep/heart evidence; unknown targets stay reviewable.
  */
 export function canAutomaticallyAcceptHealthStage(vault:OpenVault,id:string,receiverID:string){
  const current=stage(vault,id);
- if(current.status!=='pending-review'||current.mode!=='healthkit'||(current.receiverID&&current.receiverID!==receiverID))return false;
+ if(current.status!=='pending-review'||current.mode!=='healthkit'||current.receiverID!==receiverID)return false;
  const supported=(o:Observation)=>o.source_type==='healthkit'&&o.provenance==='source_recorded'&&o.acquisition==='historical'&&['sleep','heart_rate'].includes(o.payload.kind);
  if(!current.observations.every(supported))return false;
  for(const key of current.deletionKeys){

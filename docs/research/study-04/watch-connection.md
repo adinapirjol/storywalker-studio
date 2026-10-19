@@ -17,13 +17,13 @@ Watch measurement. No new Watch workout or Watch application is needed for sleep
 
 The existing paired HTTPS receiver requires its pinned certificate, pairing
 secret, unlocked Vault and local network. Enable private Watch research in HEALTH
-separately from transport pairing. That saved consent permits automatic acceptance
-only of Watch-labelled sleep from one source/device. The first identifiable
-source is selected; mixed, different-source, unidentifiable and heart-rate batches
-still require manual review. Source identity is HealthKit metadata delivered by
-the trusted paired companion, not independent cryptographic proof of a Watch.
-An accepted deletion must refer to previously accepted selected-source sleep
-(or an existing tombstone) to be accepted automatically.
+separately from transport pairing. HEALTH consent permits analysis of accepted
+evidence only; it never grants automatic batch acceptance. BODY has a separate
+explicit setting for accepting supported HealthKit sleep/heart batches from the
+current pairing. An unset setting means Off. Unknown deletion targets, other
+pairings and pending legacy batches without receiver identity require manual
+review. Source identity is HealthKit metadata delivered by the trusted companion,
+not independent cryptographic proof of a Watch.
 
 New accepted evidence and recalculated notes commit in the same Vault transaction.
 A repeat of identical analytical input does not create a duplicate analysis. The
@@ -43,8 +43,12 @@ Timezones are taken from original metadata; unknown zones are omitted and counte
 never replaced with the phone's current zone. Offset changes are marked uncertain
 and excluded from comparisons. Records retain source timestamps and provenance.
 A window containing some samples is not proof of a complete night. Source
-inventory is bounded to 10,200 accepted-record candidates per update; exceeding
-it fails closed instead of silently dropping history. A later indexed store and
+inventory is bounded to 10,200 live sleep records per update, after applying the
+source-write overlay once. Heart-rate records and deletion tombstones do not
+consume that analysis limit. Calculation failure cannot block source acceptance
+or deletion: source writes and invalidation of obsolete derived notes commit
+together, with a visible refresh-required marker. An unavailable analysis is not
+zero sleep. Authored hypotheses and optional cycle context remain separate. A later indexed store and
 retention policy are needed for a long-running installation with larger history.
 
 Private sleep does not provide subjective mood, restedness or energy. The private
@@ -61,7 +65,8 @@ separate user-controlled feature; sleep delivery does not enable them.
    Unlock the Vault, then **Download private pairing file**. Keep this secret file
    local; transfer it to the phone without uploading it to chat or cloud storage.
 2. On the Mac, open HEALTH and select **Enable private Watch research**. This
-   grants matching-sleep acceptance and note saving; it does not grant iOS access.
+   enables analysis and note saving; it grants neither batch acceptance nor iOS access.
+   Choose automatic acceptance separately in BODY if desired.
 3. On the iPhone, open the updated Storywalker companion → **Connections & data**
    → **Sleep observatory**. Tap **Request Sleep read access** and allow reading
    Sleep in Apple's permission screen. No write access is requested.
@@ -103,7 +108,7 @@ usable recovery strategy. Independent security review of this new private-data
 integration is required before merge under repository policy. Automated tests do
 not satisfy that gate or establish device acceptance.
 
-- **Pause automatic research** stops automatic acceptance/recalculation but keeps
+- **Pause automatic research** stops automatic recalculation but keeps
   existing notes and source records. Phone collection/delivery are separate controls.
 - **Delete saved research notes & pause** removes the current journal's analyses and
   pauses it; it retains the source selection and accepted source evidence. It does
@@ -180,8 +185,8 @@ new research source, infer mood, enable exports or enable notifications.
 
 Incoming batches are tied to the receiver identity. Waiting batches are checked
 again when the phone polls for its receipt, resolving the previous stuck-batch
-behaviour. Legacy waiting batches without a receiver identity can be reconsidered
-only when the currently authenticated paired phone presents their batch ID.
+behaviour. Legacy waiting batches without a receiver identity require explicit manual
+review; presenting their batch ID does not assign ownership to a new pairing.
 Batches tied to another receiver are not automatically accepted. Unknown deletion
 targets remain pending review; supported accepted records and existing tombstones
 can be deleted without restoring older evidence. Malformed packets still fail

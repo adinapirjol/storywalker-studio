@@ -1,13 +1,15 @@
 /** Receives minimised connector results on stdin, never credentials or raw responses. */
-import {mkdirSync,openSync,closeSync,writeFileSync,renameSync,readFileSync,rmSync,realpathSync} from 'node:fs';
+import {mkdirSync,readFileSync,rmSync,realpathSync} from 'node:fs';
 import {resolve,join} from 'node:path';
 import {createHash,randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import {calendarCatalogSchema,calendarEventSchema} from '../lib/automation/contracts';
 import {readPrivateStage} from '../lib/automation/staged-files';
+import {writePrivateExclusive,replacePrivateStage,syncPrivateDirectory,StageCommitUncertain} from '../lib/automation/durable-stage';
 
 const folder=resolve('private-data/calendar');
 const selectionSchema=z.object({version:z.literal(1),selectedAt:z.string(),events:z.array(z.object({key:z.string(),calendarId:z.string(),eventId:z.string()})).max(2000)});
+let catalogSaved=false;
 async function main(){
   mkdirSync(folder,{recursive:true,mode:0o700});
   if(realpathSync(folder)!==folder)throw Error('Unsafe folder');
@@ -33,14 +35,21 @@ async function main(){
     if(JSON.stringify(selectionSchema.parse(readPrivateStage('calendar/selected.private.json')))!==stamp)throw Error('Selection changed');
     const id=new Date().toISOString().replaceAll(':','-')+'-'+randomUUID();
     const backup=join(folder,`before-${id}.private.json`);
-    const fd=openSync(backup,'wx',0o600);try{writeFileSync(fd,readFileSync(join(folder,'candidates.private.json')));}finally{closeSync(fd);}
-    const temp=join(folder,`update-${id}.tmp`);
-    const out=openSync(temp,'wx',0o600);try{writeFileSync(out,JSON.stringify({...catalog,events:[...events.values()]}));}finally{closeSync(out);}
-    if(JSON.stringify(selectionSchema.parse(readPrivateStage('calendar/selected.private.json')))!==stamp){rmSync(temp);throw Error('Selection changed');}
-    renameSync(temp,join(folder,'candidates.private.json'));
+    writePrivateExclusive(backup,readFileSync(join(folder,'candidates.private.json')));
+    replacePrivateStage(folder,'candidates.private.json',JSON.stringify({...catalog,events:[...events.values()]}),()=>{
+      if(JSON.stringify(selectionSchema.parse(readPrivateStage('calendar/selected.private.json')))!==stamp)throw Error('Selection changed');
+    });
+    catalogSaved=true;
     const receipt={at:new Date().toISOString(),selected:allowed.size,refreshed:input.events.length,unavailable:allowed.size-seen.size,vaultIngested:false};
-    const receiptFile=openSync(join(folder,`receipt-${id}.private.json`),'wx',0o600);try{writeFileSync(receiptFile,JSON.stringify(receipt));}finally{closeSync(receiptFile);}
+    writePrivateExclusive(join(folder,`receipt-${id}.private.json`),JSON.stringify(receipt));
+    syncPrivateDirectory(folder);
     console.log(JSON.stringify(receipt));
   }finally{rmSync(lock,{recursive:true});}
 }
-main().catch(()=>{console.error('Calendar staging failed; inspect selection, permissions and prior state before retrying.');process.exitCode=1;});
+main().catch(error=>{
+  const message=error instanceof StageCommitUncertain
+    ? 'Calendar catalog replacement occurred; durability could not be confirmed. Inspect saved state before retrying.'
+    : catalogSaved?'Calendar catalog saved; the collection receipt could not finish. Inspect saved state before retrying.'
+    : 'Calendar staging failed; inspect selection, permissions and prior state before retrying.';
+  console.error(message);process.exitCode=1;
+});

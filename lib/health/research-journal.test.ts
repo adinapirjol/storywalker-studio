@@ -3,7 +3,7 @@ import { createCipheriv, randomBytes, randomUUID } from "node:crypto";
 import { rmSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { openContextSandbox, closeVault, readVaultRecords, putVaultRecords, type OpenVault } from "@/lib/vault/private-vault";
-import { configureResearch, researchView, readResearchJournal, canAutoAcceptResearch, journalID } from "./server/research-journal";
+import { configureResearch, researchView, readResearchJournal, journalID } from "./server/research-journal";
 import { receiveTransfer, type ReceiverConfig } from "@/lib/native/native-receiver";
 import type { Observation } from "@/lib/native/native-transfer-contract";
 const opened: { vault: OpenVault; directory: string }[] = [];
@@ -38,35 +38,28 @@ it("persists encrypted notes across reopen, excludes general retrieval, and make
   expect(readResearchJournal(reopened)).toEqual(first);
   expect(configureResearch(reopened, "delete-notes").journal).toMatchObject({ connected: false, history: [] });
 });
-it("accepts only opted-in selected Watch sleep and saves one new analysis per changed input", async () => {
+it("accepts explicitly opted-in Watch sleep and saves one new analysis per changed input", async () => {
   const { vault } = await sandbox();
-  const batch = { mode: "healthkit", observations: [sleep()], deletions: [] };
-  expect(canAutoAcceptResearch(vault, batch)).toBe(false);
   configureResearch(vault, "connect");
-  expect(canAutoAcceptResearch(vault, batch)).toBe(true);
-  expect(canAutoAcceptResearch(vault, { ...batch, observations: [{ ...sleep(), quality: [] }] })).toBe(false);
-  expect(canAutoAcceptResearch(vault, { ...batch, observations: [{ ...sleep(), payload: { kind: "heart_rate", value: 60, unit: "bpm" } }] })).toBe(false);
-  expect(canAutoAcceptResearch(vault, { ...batch, observations: [sleep(), sleep(2,"other")] })).toBe(false);
-  expect((await receiveTransfer(vault, config, envelope([sleep()]))).status).toBe("accepted-evidence");
+  const paired = { ...config, id: "explicit-watch-test", autoAcceptHealth: true };
+  expect((await receiveTransfer(vault, paired, envelope([sleep()]))).status).toBe("accepted-evidence");
   const first = researchView(vault);
   expect(first.records).toHaveLength(1); expect(first.journal?.source).toBe(JSON.stringify(["invented-watch", "invented-device"]));
   expect(first.records[0].startRaw).toContain("+02:00");
-  expect(canAutoAcceptResearch(vault, { ...batch, observations: [sleep(2,"other")] })).toBe(false);
-  await receiveTransfer(vault, config, envelope([sleep()]));
+  await receiveTransfer(vault, paired, envelope([sleep()]));
   expect(readResearchJournal(vault)?.history).toEqual(first.journal?.history);
-  await receiveTransfer(vault, config, envelope([sleep(2)]));
+  await receiveTransfer(vault, paired, envelope([sleep(2)]));
   expect(readResearchJournal(vault)?.history.length).toBe(first.journal!.history.length + 1);
   const oldIDs = readResearchJournal(vault)!.history.map(r => r.id);
-  await receiveTransfer(vault, config, envelope([], [sleep().id]));
+  await receiveTransfer(vault, paired, envelope([], [sleep().id]));
   expect(researchView(vault).records).toHaveLength(1);
   expect(readResearchJournal(vault)?.history.some(r => oldIDs.includes(r.id))).toBe(false);
   configureResearch(vault,"disconnect");
-  expect(canAutoAcceptResearch(vault,batch)).toBe(false);
-  expect((await receiveTransfer(vault,config,envelope([sleep(3)]))).status).toBe("pending-review");
+  expect((await receiveTransfer(vault,{...paired,autoAcceptHealth:false},envelope([sleep(3)]))).status).toBe("pending-review");
 }, 20000);
 it("omits unknown timezone rather than substituting the current location", async () => {
   const { vault } = await sandbox(); configureResearch(vault,"connect");
-  await receiveTransfer(vault,config,envelope([{ ...sleep(), original_offset:"unknown" }]));
+  await receiveTransfer(vault,{...config,id:"timezone-test",autoAcceptHealth:true},envelope([{ ...sleep(), original_offset:"unknown" }]));
   const view = researchView(vault);
   expect(view.omitted).toBe(1); expect(view.records).toEqual([]);
   expect(view.journal?.history.at(-1)?.notes.some(n=>n.id === "coverage")).toBe(true);
@@ -120,8 +113,7 @@ it("combines sources durably, preserves previous analyses, and updates on new ac
   const combined = configureResearch(f.vault, "connect", "all");
   expect(combined.journal!.history[0].id).toBe(old.history[0].id);
   expect(combined.journal!.history.at(-1)).toMatchObject({ source: "all", algorithm: "observatory-v4" });
-  // Selecting all for analysis does not expand the legacy acceptance grant.
-  expect(canAutoAcceptResearch(f.vault, {mode:"healthkit", observations:[sleep(2,"second")], deletions:[]})).toBe(false);
+  // Analysis selection and receiver acceptance have independent consent.
   await receiveTransfer(f.vault, paired, envelope([sleep(2,"second"), sleep(3,"third")]));
   const saved = researchView(f.vault);
   expect(saved.records).toHaveLength(3);

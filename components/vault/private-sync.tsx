@@ -3,22 +3,30 @@ import {useEffect,useState} from 'react';
 import {vaultFetch} from '@/lib/vault/vault-access';
 import {emptySettings,MAX_SYNC_PLAYLISTS,suggestCalendarEvent,syncSettingsSchema,type CalendarEvent,type SyncSettings} from '@/lib/automation/contracts';
 
-type SyncResult={source:string;status:string;count?:number;added?:number;changed?:number};
+type SyncResult={source:string;status:string;count?:number;added?:number;changed?:number;missing?:number};
 function describeResults(results:SyncResult[]){
-  return results.map(r=>`${r.source}: ${r.status}${r.count!==undefined?`, ${r.count} retained`:''}${r.added!==undefined?`, ${r.added} added`:''}${r.changed!==undefined?`, ${r.changed} updated`:''}`).join('. ');
+  return results.map(r=>`${r.source}: ${r.status}${r.count!==undefined?`, ${r.count} retained`:''}${r.added!==undefined?`, ${r.added} added`:''}${r.changed!==undefined?`, ${r.changed} updated`:''}${r.missing?`, ${r.missing} unavailable`:''}`).join('. ');
 }
 
-/** Poll only on visible pages. Does not prompt, unlock, renew sessions or call providers. */
+/** Only a completed browser unlock starts the receiver. Polling imports local stages. */
 export function PrivateSyncMonitor(){
   useEffect(()=>{
-    const abort=new AbortController();let busy=false;
+    const abort=new AbortController();let busy=false,runRequested=false;
     async function poll(){
-      if(busy||document.hidden)return;busy=true;
-      try{const response=await fetch('/api/private-sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'poll'}),signal:abort.signal,cache:'no-store'});if(response.status===401)window.dispatchEvent(new Event('storywalker-vault-locked'));}catch{/* Status is available in the private sync panel. */}finally{busy=false;}
+      if(busy||document.hidden||abort.signal.aborted)return;
+      busy=true;
+      const action=runRequested?'run':'poll';runRequested=false;
+      try{
+        const response=await fetch('/api/private-sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action}),signal:abort.signal,cache:'no-store',credentials:'same-origin'});
+        if(response.status===401)window.dispatchEvent(new Event('storywalker-vault-locked'));
+      }catch{/* Never replay a possibly completed mutation; inspect the sync panel. */}
+      finally{busy=false;if(runRequested&&!abort.signal.aborted)void poll();}
     }
+    const unlocked=()=>{runRequested=true;void poll();};
     const timer=setInterval(()=>void poll(),60_000);
     document.addEventListener('visibilitychange',poll);
-    return()=>{abort.abort();clearInterval(timer);document.removeEventListener('visibilitychange',poll);};
+    window.addEventListener('storywalker-vault-unlocked',unlocked);
+    return()=>{abort.abort();clearInterval(timer);document.removeEventListener('visibilitychange',poll);window.removeEventListener('storywalker-vault-unlocked',unlocked);};
   },[]);
   return null;
 }
@@ -53,7 +61,7 @@ export function PrivateSyncPanel(){
   }catch(e){setMessage((e as Error).message);}finally{setBusy(false);}}
   async function run(){setBusy(true);try{
     const data=await call({action:'run'});
-    setMessage(`Watch: ${data.watch}. ${describeResults(data.results??[])}`);
+    setMessage(data.status==='saved-reload-required'?'Evidence was saved. Unlock and reload to confirm its current state.':`Watch: ${data.watch}. ${describeResults(data.results??[])} ${data.warning??''}`);
   }catch(e){setMessage((e as Error).message);}finally{setBusy(false);}}
   function choose(key:string,enabled:boolean){setSettings(s=>({...s,calendarKeys:enabled?[...new Set([...s.calendarKeys,key])]:s.calendarKeys.filter(k=>k!==key)}));}
   const shown=events.filter(e=>filter==='all'||suggestCalendarEvent(e).startsWith(filter));

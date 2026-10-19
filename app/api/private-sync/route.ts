@@ -27,7 +27,7 @@ export async function POST(request:NextRequest){
   if(!vaultSessionActive(token))return json({code:'VAULT_LOCKED'},401);
   try {
     const body=schema.parse(JSON.parse(await boundedText(request,160_000)));
-    if(body.action==='run')return json(await syncAfterUnlock(token!));
+    if(body.action==='run')return json(await syncAfterUnlock(token!,request.signal));
     return await nativeTransaction(()=>withBrowserVault(token,vault=>{
       if(body.action==='poll')return json(ingestSelectedStages(vault,syncSettings(vault)));
       let catalog;try{catalog=calendarCandidates();}catch{catalog=undefined;}
@@ -45,7 +45,7 @@ export async function POST(request:NextRequest){
         return json({saved:true,...(warnings.length?{warning:`Choices saved in Vault. ${warnings.join(' ')} Reload and save again.`}:{})});
       }
       return json({settings,choices,catalog,receipt:readVaultRecord(vault,receiptId)?.payload,unlockReceipt:readVaultRecord(vault,'automation:unlock-receipt:v1')?.payload});
-    }));
+    },request.signal));
   }catch(error){
     if(error instanceof z.ZodError)return json({code:'INVALID_SYNC_CHOICES'},422);
     return vaultSessionFailure(error)??json({code:'SYNC_UNAVAILABLE'},422);

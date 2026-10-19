@@ -1,6 +1,6 @@
 # Claude review brief — private sources, HEALTH and Listening Again XR
 
-Prepared 19 October 2026. Independent review is pending. This document is a
+Prepared 19 October 2026. Initial independent review received; security recheck is pending. This document is a
 review request and evidence map, not a security approval.
 
 ## Scope and revision
@@ -61,7 +61,7 @@ silently assume local file permissions prevent all such interference.
    acceptance scope, replay/deletion ordering, durable receipts, queue bounds,
    backpressure, cancellation and session loss. Resumption must preserve saved
    consent. Explicit address repair must retain pairing identity and queued data,
-   preserve the previous configuration, and require the updated phone pin. It
+   preserve credential-free address history, and require the updated phone pin. It
    must not enable export or reset pairing. Physical acceptance is separate from
    test success; do not infer delivery from a listening socket.
 4. **HEALTH data, research and recovery.** Examine `app/api/health-*`,
@@ -124,9 +124,9 @@ independent approval is claimed, and merge authorisation has not been given.
 
 ## Independent review record
 
-- Reviewer: Claude, pending Author-arranged independent review.
-- Review link or sanitised report: pending.
-- Reviewed SHA and final recheck: pending.
-- Findings, fixes and explicitly accepted residual issues: pending.
+- Reviewer: Claude, independent session; report supplied by the Author.
+- Sanitised report: [Claude security review](2026-10-19-claude-pr6-security-report.md).
+- Reviewed SHA: `7a28fe40460d4b78a9a13cf74fa777a2362a0ec9`; final recheck pending.
+- Findings: three blockers plus follow-up issues; see the [remediation matrix](2026-10-19-full-local-validation.md#security-remediation-follow-up--19-october-2026). Implementer checks passed; independent recheck is pending. Retention and the Safari concern remain open; no issue has been waived.
 - Reviewer limitations and unperformed checks: pending; private artifacts and
   live device/account trials are outside the supplied review package.

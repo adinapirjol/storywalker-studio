@@ -27,3 +27,11 @@ it('rejects malformed pagination before source access',async()=>{
  state.token=createVaultSession(Buffer.alloc(32,1)).token;
  const result=await GET(new Request('http://localhost:3000/api/private-review?view=evidence&offset=-1'));expect(result.status).toBe(400);expect(state.catalog).not.toHaveBeenCalled();
 });
+
+it('returns a content-free saved acknowledgement when access ends after a decision commits',async()=>{
+ state.token=createVaultSession(Buffer.alloc(32,1)).token;
+ state.save.mockImplementationOnce(async()=>{deleteVaultSession(state.token);return {changed:true,proposal:{text:'PRIVATE-CANARY'}};});
+ const result=await POST(request('POST'));
+ expect(result.status).toBe(409);expect(await result.json()).toMatchObject({code:'PRIVATE_WRITE_COMMITTED_RELOAD',saved:true});
+ expect(result.headers.get('cache-control')).toBe('no-store');
+});

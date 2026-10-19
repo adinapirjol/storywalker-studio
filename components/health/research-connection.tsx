@@ -67,7 +67,9 @@ export function ResearchConnection({ onView }: { onView: (view: ResearchView | n
     {view?.journal?.connected && <button disabled={busy} onClick={() => void action("disconnect")}>Pause automatic research</button>}
     <p role="status">{busy ? "Updating encrypted research…" : message}</p>
     {view?.journal && <>
-      <p><strong>{view.journal.mode === "synthetic" ? "Saved invented example" : view.journal.connected ? "Private research enabled" : "Private research paused"}</strong> · {view.records.length} usable source intervals · {view.omitted} omitted for uncertain source timing.</p>
+      {view.journal.refreshRequired && <p role="status">Source changes were saved, but calculations need a refresh. Earlier derived notes were cleared. Your hypothesis and optional cycle context remain separate.</p>}
+      {view.unavailable && <p>The current analysis limit was reached. Source evidence remains saved and can still be deleted. An unavailable analysis does not mean zero sleep.</p>}
+      {!view.unavailable && <p><strong>{view.journal.mode === "synthetic" ? "Saved invented example" : view.journal.connected ? "Private research enabled" : "Private research paused"}</strong> · {view.records.length} usable source intervals · {view.omitted} omitted for uncertain source timing.</p>}
       {view.journal.mode === "healthkit" && !view.journal.source && <p>Choose all sleep sources to combine your recordings, or inspect one source below.</p>}
       {view.journal.mode === "healthkit" && view.sources.length > 0 && <label>Sleep source / device
         <select value={view.journal.source ?? ""} disabled={busy} onChange={e => { if (e.target.value) void action("connect", e.target.value); }}>

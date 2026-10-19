@@ -1,3 +1,5 @@
+import { isRetrievableRecord as isAtlasSource } from "@/lib/vault/record-policy";
+export { isArchivedEvidence, isRetrievableRecord as isAtlasSource } from "@/lib/vault/record-policy";
 import { xrSceneSchema } from "@/lib/xr/xr-scene";
 import { episodeSpaces } from "@/lib/xr/journey-experience";
 import { evidenceMatchAttached } from "@/lib/xr/xr-evidence";
@@ -20,13 +22,6 @@ export type AtlasNow = {
   whatChanged: AtlasChange[]; convergences: AtlasConvergence[]; needsYou: AtlasNeed[]; placeReadings: AtlasPlaceReading[]; placeCoverage: { timelineWindows: number; windowsWithCandidates: number; directTimelineLabels: number }; caveat: string;
 };
 
-/** Archive identities are deliberately narrow: retain ordinary reference records. */
-export function isArchivedEvidence(record: Pick<VaultRecord, "id">) {
-  return record.id.startsWith("xr:spatial-draft:before-") || record.id.startsWith("xr:spatial-draft:archive:") || record.id.startsWith("lastfm:before-") || record.id.startsWith("arena:private-rehearsal:v1:archive:");
-}
-export function isAtlasSource(record: Pick<VaultRecord, "id" | "kind">) {
-  return !record.id.startsWith("automation:") && !record.id.startsWith("native:") && !record.id.startsWith("health:stage:") && !isArchivedEvidence(record) && !record.id.startsWith("xr:spatial-draft:") && !["recovery-document", "retrieval-index", "atlas", "scenario-studio", "public-draft"].includes(record.kind);
-}
 function sourceCoverage(rows: unknown[]) {
   const dated = rows.flatMap(row => {
     const r = asRecord(row); if (!r) return [];

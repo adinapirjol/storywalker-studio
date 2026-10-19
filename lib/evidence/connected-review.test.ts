@@ -86,3 +86,12 @@ it('returns bounded pages without merging independent source records',async()=>{
   const first=await connectedReviewPage(f.root,{offset:0},guard);expect(first.total).toBe(30);expect(first.next).toBeGreaterThan(0);expect(Buffer.byteLength(JSON.stringify(first))).toBeLessThan(700000);
   const next=await connectedReviewPage(f.root,{offset:first.next!},guard);expect(next.records[0].record.id).not.toBe(first.records[0].record.id);
 });
+
+it('acknowledges a committed decision after access ends without releasing its private proposal',async()=>{
+ const {root}=await fixture(), page=await connectedReviewPage(root,{offset:0},guard);
+ const input={packageId:'fictional',recordId:'fictional:window',proposalId:proposal.id,decision:'refuse',revision:page.revision};
+ const {existsSync}=await import('node:fs');
+ const expiresAfterCommit=()=>{if(existsSync(path.join(root,'review/decisions.private.json')))throw Error('Session ended');};
+ await expect(saveConnectedProposal(root,input,expiresAfterCommit)).rejects.toThrow('PRIVATE_WRITE_COMMITTED_RELOAD');
+ const after=await connectedReviewPage(root,{offset:0},guard);expect(after.records[0].proposals[0].status).toBe('refused');
+});

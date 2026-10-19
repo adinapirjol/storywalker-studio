@@ -1,5 +1,4 @@
 /** Local pinned HTTPS only. No request/error logging. Matching Watch sleep has a separate persisted acceptance opt-in. External aggregate summaries have a separate explicit opt-in. */
-import {canAutoAcceptResearch} from '@/lib/health/server/research-journal';
 import {createServer,type Server} from 'node:https';
 import {randomBytes,randomUUID,timingSafeEqual,X509Certificate,createHash} from 'node:crypto';
 import {networkInterfaces,tmpdir} from 'node:os';
@@ -9,7 +8,7 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import type {IncomingMessage,ServerResponse} from 'node:http';
 import {readVaultSession} from '@/lib/vault/vault-session';
-import {openVaultWithKey,closeVault,readVaultRecord,putVaultRecords,setVaultAccessGuard,type OpenVault} from '@/lib/vault/private-vault';
+import {openVaultWithKey,closeVault,readVaultRecord,putVaultRecords,replaceVaultRecords,vaultRecordHeaders,setVaultAccessGuard,type OpenVault} from '@/lib/vault/private-vault';
 import {decodeTransfer,validateNativePacket,stageNativeTransfer,nativeTransferSummary,nativeReceipt,decideNativeTransfer,canAutomaticallyAcceptHealthStage} from './native-transfer';
 import {clearLiveSummary} from '@/lib/body/health-summary';
 import {observeThresholdBatch,clearThresholdSession} from '@/lib/body/health-threshold';
@@ -124,6 +123,10 @@ export async function resumeSavedHealthReceiver(vault:OpenVault,sessionID:string
  return result;
 }
 function save(vault:OpenVault,config:ReceiverConfig|{revoked:true}){putVaultRecords(vault,[{id:recordID,kind:'reference',capturedAt:new Date().toISOString(),payload:config}]);}
+function revokePairing(vault:OpenVault){
+ const copies=vaultRecordHeaders(vault).filter(r=>r.id.startsWith('native:pairing:before-address:')).map(r=>r.id);
+ replaceVaultRecords(vault,[{id:recordID,kind:'reference',capturedAt:new Date().toISOString(),payload:{revoked:true}}],[recordID,...copies]);
+}
 /** Explicit network repair: retain queue ownership and consent, replace only the TLS address binding. */
 export async function updateReceiverAddress(vault:OpenVault,sessionID:string,host:string,generate=makeReceiverConfig){
  if(!receiverSessionActive(sessionID))throw Error('VAULT_LOCKED');
@@ -137,11 +140,15 @@ export async function updateReceiverAddress(vault:OpenVault,sessionID:string,hos
  const config={...previous,host,certificate:tls.certificate,privateKey:tls.privateKey};
  const at=new Date().toISOString();
  putVaultRecords(vault,[
-  {id:`native:pairing:before-address:${randomUUID()}`,kind:'reference',capturedAt:at,payload:previous},
+  {id:`native:pairing:before-address:${randomUUID()}`,kind:'reference',capturedAt:at,payload:{version:previous.version,id:previous.id,host:previous.host,port:previous.port,mode:previous.mode,revoked:previous.revoked,autoAcceptHealth:previous.autoAcceptHealth}},
   {id:recordID,kind:'reference',capturedAt:at,payload:config},
  ]);
  await stopReceiver();
  return {pairingUpdated:true};
+}
+/** Cancellation must not stop a receiver owned by a different browser session. */
+export async function stopReceiverForSession(sessionID:string){
+ if(shared.__nativeReceiver?.sessionID===sessionID)await stopReceiver();
 }
 export async function stopReceiver(){
  clearLiveSummary();
@@ -150,7 +157,7 @@ export async function stopReceiver(){
  if(active){active.viewer?.push({type:'closed',code:'HEALTHKIT_RECEIVER_REQUIRED'});active.viewer?.close();clearInterval(active.timer);active.server.closeAllConnections();await new Promise<void>(resolve=>active.server.close(()=>resolve()));}
 }
 export async function configureReceiver(vault:OpenVault,sessionID:string,action:'create'|'resume'|'stop'|'revoke'|'pairing'|'follow'|'auto-accept-health'|'manual-review-health',host?:string,mode?:'simulated'|'healthkit'){
- if(action==='stop'||action==='revoke'){await stopReceiver();if(action==='revoke')save(vault,{revoked:true});return receiverStatus();}
+ if(action==='stop'||action==='revoke'){await stopReceiver();if(action==='revoke')revokePairing(vault);return receiverStatus();}
  let config=saved(vault);
  if(action==='create'){
   if(!host||!receiverAddresses().some(a=>a.address===host)||!mode)throw Error('INVALID_BIND');
@@ -197,9 +204,7 @@ export async function receiveTransfer(vault:OpenVault,config:ReceiverConfig,body
   if(batch.mode!==config.mode)throw Error('MODE_MISMATCH');
   let item=stageNativeTransfer(vault,batch,decoded.digest,decoded.key,config.id);
   if(item.status==='pending-review'){
-   const accept=config.autoAcceptHealth===true&&config.mode==='healthkit'&&config.id
-    ? canAutomaticallyAcceptHealthStage(vault,item.id,config.id)
-    : config.autoAcceptHealth===undefined&&canAutoAcceptResearch(vault,batch);
+   const accept=config.autoAcceptHealth===true&&config.mode==='healthkit'&&!!config.id&&canAutomaticallyAcceptHealthStage(vault,item.id,config.id);
    if(accept){check();item=decideNativeTransfer(vault,item.id,item.revision,'accept');}
   }
   if(batch.deletions.length)clearThresholdSession();

@@ -9,7 +9,7 @@ import {createVaultSession,deleteVaultSession} from '@/lib/vault/vault-session';
 const namespace=`context-sandbox-address-${randomUUID()}`;
 let vault:OpenVault|undefined,token:string|undefined;
 afterEach(()=>{deleteVaultSession(token);if(vault)closeVault(vault);vault=undefined;rmSync(join('private-data',namespace),{recursive:true,force:true});});
-it('repairs address and TLS binding while retaining queue identity, token and acceptance with encrypted backup',async()=>{
+it('repairs address and TLS binding while retaining queue identity, token and acceptance with credential-free address history',async()=>{
  vault=await openContextSandbox(namespace);token=createVaultSession(vault.key).token;
  const before:ReceiverConfig={version:1,id:'fictional-pair',host:'10.1.2.3',port:8766,mode:'healthkit',token:'fictional-token',certificate:'old-fixture',privateKey:'old-fixture',revoked:false,autoAcceptHealth:true};
  putVaultRecords(vault,[{id:'native:pairing:receiver',kind:'reference',capturedAt:new Date().toISOString(),payload:before}]);
@@ -17,7 +17,7 @@ it('repairs address and TLS binding while retaining queue identity, token and ac
  await expect(updateReceiverAddress(vault,token,'8.8.8.8',generate)).rejects.toThrow('INVALID_BIND');expect(generate).not.toHaveBeenCalled();
  await updateReceiverAddress(vault,token,'10.20.30.40',generate);
  expect(readVaultRecord(vault,'native:pairing:receiver')?.payload).toEqual({...before,host:'10.20.30.40',certificate:'new-fixture',privateKey:'new-fixture'});
- expect(vaultRecordHeaders(vault).filter(r=>r.id.startsWith('native:pairing:before-address:')).map(r=>readVaultRecord(vault!,r.id)?.payload)).toEqual([before]);
+ expect(vaultRecordHeaders(vault).filter(r=>r.id.startsWith('native:pairing:before-address:')).map(r=>readVaultRecord(vault!,r.id)?.payload)).toEqual([{version:before.version,id:before.id,host:before.host,port:before.port,mode:before.mode,revoked:before.revoked,autoAcceptHealth:before.autoAcceptHealth}]);
  await updateReceiverAddress(vault,token,'10.20.30.40',generate);expect(generate).toHaveBeenCalledTimes(1);
 });
 it('does not persist an address change if the session expires during certificate preparation',async()=>{

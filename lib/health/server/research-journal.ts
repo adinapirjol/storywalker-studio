@@ -14,6 +14,7 @@ const empty = (): ResearchJournal => ({ version: 1, connected: false, mode: "hea
 const journalSchema = z.object({
   version: z.literal(1), connected: z.boolean(), mode: z.enum(["synthetic", "healthkit"]), source: z.string().max(220).nullable(), dropped: z.number().int().nonnegative(),
   cycleContext: cycleContextSchema.optional(),
+  refreshRequired: z.boolean().optional(),
   hypothesis: z.object({ text: z.string().min(1).max(1200), enteredAt: z.string().datetime(), from: z.string().max(10), to: z.string().max(10) }).strict().optional(),
   history: z.array(z.object({ id: z.string().uuid(), at: z.string().datetime(), algorithm: z.enum(["observatory-v1", "observatory-v2", "observatory-v3", "observatory-v4"]), source: z.string().max(220).nullable().optional(), digest: z.string().regex(/^[a-f0-9]{64}$/), change: z.string().max(500), range: z.object({ from: z.string().max(10), to: z.string().max(10), offset: z.number().min(-840).max(840) }).strict().optional(), recordCount: z.number().int().nonnegative().max(10200).optional(), omitted: z.number().int().nonnegative().max(10200).optional(),
     notes: z.array(z.object({ id: z.string().max(100), title: z.string().max(500), evidence: z.string().max(2000), uncertainty: z.string().max(2000) }).strict()).max(20),
@@ -42,14 +43,16 @@ function offsetAt(at: number, zone: string) {
 /** Accepted evidence only. An overlay lets source deletions and notes commit together. */
 function observations(vault: OpenVault, writes: VaultRecord[] = []) {
   const headers = vaultRecordHeaders(vault).filter(h => h.id.startsWith("native:evidence:"));
-  if (headers.length + writes.filter(r => r.id.startsWith("native:evidence:")).length > 10200) throw Error("RESEARCH_SOURCE_LIMIT");
   const overlay = new Map(writes.map(r => [r.id, r]));
   const ids = new Set([...headers.map(h => h.id), ...writes.filter(r => r.id.startsWith("native:evidence:")).map(r => r.id)]);
   const result: Observation[] = [];
   for (const id of ids) {
     const payload = (overlay.get(id) ?? readVaultRecord(vault, id))?.payload as { deleted?: boolean; observation?: Observation } | undefined;
     const o = payload?.observation;
-    if (!payload?.deleted && o?.source_type === "healthkit" && o.payload.kind === "sleep") result.push(o);
+    if (!payload?.deleted && o?.source_type === "healthkit" && o.payload.kind === "sleep") {
+      if (result.length >= 10200) throw Error("RESEARCH_SOURCE_LIMIT");
+      result.push(o);
+    }
   }
   return result;
 }
@@ -80,12 +83,20 @@ function view(vault: OpenVault, journal: ResearchJournal | null, writes: VaultRe
   } else { range.from = ""; range.to = ""; }
   return { journal, records: records.filter(r => r.end > Date.parse(range.from) - DAY), range, sources: [...sources.values()], omitted };
 }
-export function researchView(vault: OpenVault) { return view(vault, readResearchJournal(vault)); }
+function presentView(vault: OpenVault, journal: ResearchJournal | null) {
+  try { return view(vault, journal); }
+  catch (error) {
+    if (!(error instanceof Error) || error.message !== "RESEARCH_SOURCE_LIMIT") throw error;
+    return { journal: journal ? { ...journal, refreshRequired: true } : null, records: [], sources: [], omitted: 0,
+      range: { from: "", to: "", offset: 0 }, unavailable: true } satisfies ResearchView;
+  }
+}
+export function researchView(vault: OpenVault) { return presentView(vault, readResearchJournal(vault)); }
 function update(vault: OpenVault, journal: ResearchJournal, writes: VaultRecord[] = [], now = new Date().toISOString()) {
   const result = view(vault, journal, writes);
   const cycle = journal.mode === "healthkit" ? selectedCycleContext(journal.cycleContext, result.range) : undefined;
   const digest = createHash("sha256").update(JSON.stringify(["observatory-v4", journal.mode, journal.source, result.records, result.omitted, ...(cycle ? [cycle] : [])])).digest("hex");
-  if (journal.history.at(-1)?.digest === digest) return journal;
+  if (journal.history.at(-1)?.digest === digest) return { ...journal, refreshRequired: undefined };
   const ns = journal.mode === "healthkit" ? researchTimeline(result.records, result.range.from, result.range.to) : timeline(result.records, result.range.from, result.range.to, result.range.offset, new Set(dates(result.range.from, result.range.to)));
   const notes = (journal.mode === "synthetic" ? exampleInsights(ns) : observatoryInsights(ns)).notes;
   if (cycle) notes.push(cycleContextNote(cycle));
@@ -93,7 +104,7 @@ function update(vault: OpenVault, journal: ResearchJournal, writes: VaultRecord[
   const previous = journal.history.at(-1);
   const history = [...journal.history, { id: randomUUID(), at: now, algorithm: "observatory-v4" as const, source: journal.source, digest, notes, range: result.range, recordCount: result.records.length, omitted: result.omitted,
     change: previous ? "Source data or selected context changed; findings recalculated. Earlier findings describe earlier data, not the current state." : "First saved analysis of the available source data." }];
-  return { ...journal, history: history.slice(-30), dropped: journal.dropped + Math.max(0, history.length - 30) };
+  return { ...journal, refreshRequired: undefined, history: history.slice(-30), dropped: journal.dropped + Math.max(0, history.length - 30) };
 }
 export function configureResearch(vault: OpenVault, action: "connect" | "disconnect" | "refresh" | "example" | "delete-notes" | "set-hypothesis" | "set-cycle-context", source?: string, hypothesis?: string, cycleContext?: CycleContext | null) {
   const old = readResearchJournal(vault) ?? empty();
@@ -116,36 +127,34 @@ export function configureResearch(vault: OpenVault, action: "connect" | "disconn
   else if (action === "delete-notes") next = { ...old, connected: false, history: [], dropped: 0, hypothesis: undefined, cycleContext: undefined };
   if (next.connected || action === "set-cycle-context") next = update(vault, next);
   if (JSON.stringify(old) !== JSON.stringify(next) || !readResearchJournal(vault)) replaceVaultRecords(vault, [record(next)], [journalID]);
-  return view(vault, next);
+  return presentView(vault, next);
 }
 /** Source and derived-history deletion are committed in the same Vault transaction. */
 export function researchJournalWrite(vault: OpenVault, writes: VaultRecord[]): VaultRecord | null {
-  const journal = readResearchJournal(vault);
+  let journal: ResearchJournal | null;
+  try { journal = readResearchJournal(vault); }
+  catch (error) {
+    if (!(error instanceof Error) || error.message !== "RESEARCH_STATE_INVALID") throw error;
+    // Preserve authored fields in an invalid journal, but invalidate derived notes.
+    // Its normal read path still fails closed until the state is repaired.
+    const original = readVaultRecord(vault, journalID)!;
+    return { ...original, payload: { ...(original.payload as object), history: [], dropped: 0, refreshRequired: true } };
+  }
   if (!journal || journal.mode !== "healthkit") return null;
   const deleted = writes.some(r => r.id.startsWith("native:evidence:") && (r.payload as { deleted?: boolean }).deleted);
   let base = deleted ? { ...journal, history: [], dropped: 0 } : journal;
-  if (base.connected && base.source === null) {
-    const watch = observations(vault, writes).filter(o => o.quality.includes("recorded_on_apple_watch"));
-    const keys = [...new Set(watch.map(sourceKey))];
-    if (keys.length === 1) base = { ...base, source: keys[0] };
+  let next: ResearchJournal;
+  try {
+    if (base.connected && base.source === null) {
+      const watch = observations(vault, writes).filter(o => o.quality.includes("recorded_on_apple_watch"));
+      const keys = [...new Set(watch.map(sourceKey))];
+      if (keys.length === 1) base = { ...base, source: keys[0] };
+    }
+    next = base.connected ? update(vault, base, writes) : base;
+  } catch {
+    // A disposable analysis must never prevent acceptance or source deletion.
+    // Clear old calculations atomically with source writes; keep authored context.
+    next = { ...base, history: [], dropped: 0, refreshRequired: true };
   }
-  const next = base.connected ? update(vault, base, writes) : base;
   return JSON.stringify(journal) === JSON.stringify(next) ? null : record(next);
-}
-
-/** Consent is limited to one Watch sleep source, never arbitrary native evidence. */
-export function canAutoAcceptResearch(vault: OpenVault, batch: { mode: string; observations: Observation[]; deletions: string[] }) {
-  if (batch.mode !== "healthkit" || (!batch.observations.length && !batch.deletions.length)) return false;
-  const keys = new Set(batch.observations.map(sourceKey));
-  if (keys.size > 1 || batch.observations.some(o => o.payload.kind !== "sleep" || !o.quality.includes("recorded_on_apple_watch"))) return false;
-  const journal = readResearchJournal(vault);
-  if (!journal?.connected || journal.mode !== "healthkit") return false;
-  if (journal.source !== null && batch.observations.some(o => sourceKey(o) !== journal.source)) return false;
-  for (const id of batch.deletions) {
-    const key = "native:evidence:" + createHash("sha256").update("healthkit\n" + id).digest("hex");
-    const value = readVaultRecord(vault, key)?.payload as { observation?: Observation; deleted?: boolean } | undefined;
-    if (value?.deleted) continue;
-    if (!value?.observation || value.observation.payload.kind !== "sleep" || sourceKey(value.observation) !== journal.source) return false;
-  }
-  return batch.observations.length > 0 || batch.deletions.length > 0;
 }

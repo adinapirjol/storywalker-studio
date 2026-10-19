@@ -1,5 +1,5 @@
+import { privateWriteCommittedResponse } from "@/lib/vault/private-write-outcome";
 import { preparePrivateCandidateImport, missingCandidateRecords } from "@/lib/evidence/private-candidate-import";
-import {syncAfterUnlock} from '@/lib/automation/unlock-sync';
 import { saveResearchSnapshot } from "@/lib/research/research-persistence";
 import { assertVaultSnapshotCurrent } from "@/lib/vault/private-vault";
 import {isLocalSameOrigin,isLocalRead} from "@/lib/http/local-origin";
@@ -165,6 +165,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  let importCommitted=false;
   if (!isLocalSameOrigin(request)) return noStore({code:"LOCAL_ORIGIN_REQUIRED"},403);
   try {
     let raw: string;
@@ -221,8 +222,7 @@ export async function POST(request: Request) {
           session?.key.fill(0);
           return noStore({ summary: vaultSummary(vault), session: { active: true, expiresAt: session?.expiresAt } });
         }
-        const sync = await syncAfterUnlock(newSession.token);
-        return sessionResponse({ summary: vaultSummary(vault), sync, session: { active: true, expiresAt: newSession.expiresAt } }, newSession.token, newSession.expiresAt);
+        return sessionResponse({ summary: vaultSummary(vault), session: { active: true, expiresAt: newSession.expiresAt } }, newSession.token, newSession.expiresAt);
       }
       if (body.action === "save-research-session" || body.action === "list-research-sessions") {
         if(!isLocalSameOrigin(request)) return noStore({error:"Use the local Storywalker page."},403);
@@ -415,7 +415,7 @@ export async function POST(request: Request) {
         const additions = missingCandidateRecords(prepared.records, existingIds);
         request.signal.throwIfAborted();
         assertAccess();
-        if (body.action === "import-candidate-bundle" && additions.length) putVaultRecords(vault, additions);
+        if (body.action === "import-candidate-bundle" && additions.length) { putVaultRecords(vault, additions); importCommitted=true; }
         const verified = prepared.records.every(record => {
           const saved = readVaultRecord(vault, record.id);
           const payload = saved?.payload as { bundleHash?: string; privacy?: string; canonical?: boolean; reviewStatus?: string } | undefined;
@@ -433,7 +433,7 @@ export async function POST(request: Request) {
         const additions = prepared.records.filter(record=>!existing.has(record.id));
         request.signal.throwIfAborted();
         assertAccess();
-        if(body.action === "import-side-quest" && additions.length)putVaultRecords(vault, additions);
+        if(body.action === "import-side-quest" && additions.length){putVaultRecords(vault, additions);importCommitted=true;}
         const verified=verifySideQuestVaultImport(prepared,id=>readVaultRecord(vault,id));
         if(!verified)throw new Error("Control Room storage verification failed.");
         const atlas=body.action === "import-side-quest"?refreshVaultDerivedViews(vault).atlas:readAtlasNow(vault) as {imports?:Array<{id:string;retained:number}>}|null;
@@ -493,5 +493,5 @@ export async function POST(request: Request) {
       putVaultRecords(vault, [record]);
       return Response.json({ captured: { id: record.id, capturedAt }, derived: refreshVaultDerivedViews(vault), summary: vaultSummary(vault) }, { headers: { "Cache-Control": "no-store" } });
     } finally { closeVault(vault); }
-  } catch (error) { return vaultSessionFailure(error) ?? noStore({ error: error instanceof VaultWriteBusyError || error instanceof VaultWriteConflictError ? error.message : "Local Vault request failed. Check your inputs and unlock state before retrying." }, 400); }
+  } catch (error) { if(importCommitted)return privateWriteCommittedResponse(); return vaultSessionFailure(error) ?? noStore({ error: error instanceof VaultWriteBusyError || error instanceof VaultWriteConflictError ? error.message : "Local Vault request failed. Check your inputs and unlock state before retrying." }, 400); }
 }

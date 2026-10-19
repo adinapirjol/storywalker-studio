@@ -1,3 +1,4 @@
+import { PrivateWriteCommittedError } from "@/lib/vault/private-write-outcome";
 import { constants } from 'node:fs';
 import { open, realpath, mkdir, rename, unlink } from 'node:fs/promises';
 import path from 'node:path';
@@ -143,7 +144,7 @@ export async function connectedReviewPage(root: string, query: { packageId?: str
   return { packageId: data.descriptor.id, label: data.descriptor.label, records, total: filtered.length, offset: query.offset, next: query.offset+records.length<filtered.length?query.offset+records.length:null, revision: data.revision };
 }
 let writeQueue: Promise<void> = Promise.resolve();
-async function persistDecisions(root: string, next: unknown, revision: string, guard: Guard) {
+async function persistDecisions(root: string, next: unknown, revision: string, guard: Guard, committed: () => void) {
   guard();
   const directory = below(root,'review');
   await mkdir(directory,{recursive:true,mode:0o700});
@@ -157,6 +158,7 @@ async function persistDecisions(root: string, next: unknown, revision: string, g
     if (current.revision!==revision) throw new ReviewConflict('Review changed; reload before saving.');
     guard();
     await rename(temp,path.join(directory,'decisions.private.json'));
+    committed();
   } finally { await unlink(temp).catch(()=>undefined); }
 }
 export async function saveConnectedProposal(root: string, input: unknown, guard: Guard) {
@@ -171,9 +173,12 @@ export async function saveConnectedProposal(root: string, input: unknown, guard:
     if (!source || source.originalText.startsWith('Editor review prompt:')) throw new Error('An interpretation is required.');
     const key = decisionKey(record,source.id);
     const result = reviseProposal(source,data.document.decisions[key],action.decision,action.revisedText);
-    if (result.changed) await persistDecisions(root,{...data.document,decisions:{...data.document.decisions,[key]:result.proposal}},data.revision,guard);
-    guard();
-    return { changed: result.changed, proposal: result.proposal, storage: 'local-private-review; not an encrypted Vault import', canonical: false };
+    let committed = false;
+    try {
+      if (result.changed) await persistDecisions(root,{...data.document,decisions:{...data.document.decisions,[key]:result.proposal}},data.revision,guard,()=>{committed=true;});
+      guard();
+      return { changed: result.changed, proposal: result.proposal, storage: 'local-private-review; not an encrypted Vault import', canonical: false };
+    } catch (error) { if (committed) throw new PrivateWriteCommittedError(); throw error; }
   };
   const result = writeQueue.then(task,task); writeQueue=result.then(()=>undefined,()=>undefined);return result;
 }

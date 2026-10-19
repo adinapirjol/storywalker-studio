@@ -23,6 +23,12 @@ export async function vaultAuthRequest<T>(
     }
     throw new Error(result.error ?? "The Vault request could not complete.");
   }
+  const unlock = (endpoint === "/api/vault" && body.action === "unlock") ||
+    (endpoint === "/api/vault/passkeys" && body.action === "finish-unlock");
+  // The response (and its session cookie) has arrived before delivery can start.
+  if (unlock && result.session?.active === true && typeof window !== "undefined") {
+    window.dispatchEvent(new Event("storywalker-vault-unlocked"));
+  }
   return result as T;
 }
 

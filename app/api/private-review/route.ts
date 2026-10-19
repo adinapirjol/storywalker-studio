@@ -1,3 +1,4 @@
+import { PrivateWriteCommittedError, privateWriteCommittedResponse } from "@/lib/vault/private-write-outcome";
 import { connectedReviewCatalog, connectedReviewPage, saveConnectedProposal, ReviewConflict } from '@/lib/evidence/connected-review-store';
 import { readVaultSession } from '@/lib/vault/vault-session';
 import { readFile, writeFile } from "node:fs/promises";
@@ -64,8 +65,14 @@ export async function POST(request: Request) {
     if (body.action === 'review-bundle-proposal') {
       const {action: _action,...input} = JSON.parse(raw) as Record<string,unknown>; void _action;
       const guard = () => { request.signal.throwIfAborted(); assertVaultSessionActive(token); };
-      try { const result = await saveConnectedProposal(path.join(process.cwd(),'private-data'),input,guard); guard(); return Response.json(result,{headers:{'Cache-Control':'no-store'}}); }
-      catch(error) { if(error instanceof ReviewConflict) return Response.json({error:error.message},{status:409,headers:{'Cache-Control':'no-store'}}); throw error; }
+      let committed=false;
+      try {
+        const result = await saveConnectedProposal(path.join(process.cwd(),'private-data'),input,guard);
+        committed=result.changed;
+        guard();
+        return Response.json(result,{headers:{'Cache-Control':'no-store'}});
+      }
+      catch(error) { if(committed || error instanceof PrivateWriteCommittedError) return privateWriteCommittedResponse(); if(error instanceof ReviewConflict) return Response.json({error:error.message},{status:409,headers:{'Cache-Control':'no-store'}}); throw error; }
     }
     if (body.action === "answer-question") {
       const input = novaQuestionResponseInputSchema.parse({ questionId: body.questionId, question: body.question, sourceQuestionId: body.sourceQuestionId, response: body.response, targetMomentIds: body.targetMomentIds ?? [] });

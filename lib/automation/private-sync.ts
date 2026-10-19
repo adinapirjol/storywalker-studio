@@ -22,7 +22,7 @@ export function musicChoices(vault:OpenVault) {
 }
 export function calendarCandidates() {return calendarCatalogSchema.parse(readPrivateStage('calendar/candidates.private.json'));}
 
-type SourceResult={source:string;status:'saved'|'unchanged'|'unavailable';count?:number;added?:number;changed?:number};
+type SourceResult={source:string;status:'saved'|'unchanged'|'partial'|'unavailable';count?:number;added?:number;changed?:number;missing?:number};
 /** Stage readers are injected for fictional tests. No account calls or key persistence. */
 export function ingestSelectedStages(vault:OpenVault,settings:SyncSettings,read=readPrivateStage,now=new Date().toISOString()) {
   const writes:VaultRecord[]=[], results:SourceResult[]=[];
@@ -76,7 +76,7 @@ export function ingestSelectedStages(vault:OpenVault,settings:SyncSettings,read=
         }
         count++;
       }
-      results.push({source:'calendar',status:missing?'unavailable':changed?'saved':'unchanged',count,changed});
+      results.push({source:'calendar',status:missing?(count?'partial':'unavailable'):changed?'saved':'unchanged',count,changed,missing});
     }catch {writes.splice(startWrites);results.push({source:'calendar',status:'unavailable'});}
   }
   const receipt={at:now,results};

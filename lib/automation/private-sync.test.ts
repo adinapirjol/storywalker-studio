@@ -82,3 +82,10 @@ it('rejects wrong source identity, future snapshots, symlinks and public stage p
     chmodSync(join(root,'source.json'),0o644);expect(()=>readPrivateStage('source.json',100,root)).toThrow();
   }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+it('reports selected Calendar gaps separately from confirmed saved events',async()=>{
+ vault=await openContextSandbox(namespace);
+ const result=ingestSelectedStages(vault,{...emptySettings,calendarKeys:[event.key,'a'.repeat(64)]},()=>({version:1,from:'2026-05-01',toExclusive:now,complete:false,events:[event]}),now);
+ expect(result.results[0]).toMatchObject({status:'partial',count:1,changed:1,missing:1});
+ expect(readVaultRecord(vault,`import:calendar-selected:${event.key}`)).toBeDefined();
+});
