@@ -1,3 +1,5 @@
+import { connectedReviewCatalog, connectedReviewPage, saveConnectedProposal, ReviewConflict } from '@/lib/evidence/connected-review-store';
+import { readVaultSession } from '@/lib/vault/vault-session';
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {cookies} from "next/headers";
@@ -32,6 +34,23 @@ async function access(request:Request,write=false) {
 export async function GET(request: Request) {
   const authorization = await access(request);
   if (authorization instanceof Response) return authorization;
+  if (new URL(request.url).searchParams.get("view") === "evidence") {
+    try {
+      const guard = () => { request.signal.throwIfAborted(); assertVaultSessionActive(authorization.token); };
+      const params = new URL(request.url).searchParams;
+      const packageId = params.get('package') ?? undefined;
+      const offsetText = params.get('offset') ?? '0';
+      const offset = Number(offsetText);
+      if ((packageId && !/^[a-z0-9-]{1,100}$/.test(packageId)) || !/^\d{1,5}$/.test(offsetText) || offset>30000 || (params.get('scope')?.length??0)>160 || (params.get('record')?.length??0)>300 || (params.get('q')?.length??0)>200) throw new Error('Invalid review query.');
+      const root = path.join(process.cwd(),'private-data');
+      const result = params.get('mode') === 'page'
+        ? await connectedReviewPage(root,{packageId,scope:params.get('scope')??undefined,recordId:params.get('record')??undefined,search:params.get('q')??undefined,offset,fragments:params.get('fragments')==='1',excluded:params.get('excluded')==='1'},guard)
+        : await connectedReviewCatalog(root,packageId,guard);
+      guard();
+      const session = readVaultSession(authorization.token); const expiresAt = session?.expiresAt; session?.key.fill(0);
+      return Response.json({...result,expiresAt},{headers:{'Cache-Control':'no-store'}});
+    } catch(error) { return vaultSessionFailure(error) ?? Response.json({error:'Connected review is unavailable or its registered files changed. Existing evidence is preserved.'},{status:400,headers:{'Cache-Control':'no-store'}}); }
+  }
   try { return Response.json(await readReview(authorization.token), { headers: { "Cache-Control": "no-store" } }); }
   catch (error) { return vaultSessionFailure(error) ?? Response.json({ error: "Local private recovery source is unavailable." }, { status: 404, headers: { "Cache-Control": "no-store" } }); }
 }
@@ -41,7 +60,13 @@ export async function POST(request: Request) {
   const token = authorization.token;
   try {
     let raw:string;try {raw=await boundedText(request,65_536);}catch{return Response.json({error:"Request too large or malformed."},{status:413});}
-    const body = JSON.parse(raw) as { momentId?: string; action?: RecoveryDecisionAction | "answer-question" | "process-inbox" | "resolve-question" | "record-author-evidence" | "propose-thread"; note?: string; questionId?: string; question?: string; sourceQuestionId?: string; response?: string; responseId?: string; targetMomentIds?: string[]; title?: string; label?: string; claims?: string[] };
+    const body = JSON.parse(raw) as { momentId?: string; action?: RecoveryDecisionAction | "review-bundle-proposal" | "answer-question" | "process-inbox" | "resolve-question" | "record-author-evidence" | "propose-thread"; note?: string; questionId?: string; question?: string; sourceQuestionId?: string; response?: string; responseId?: string; targetMomentIds?: string[]; title?: string; label?: string; claims?: string[] };
+    if (body.action === 'review-bundle-proposal') {
+      const {action: _action,...input} = JSON.parse(raw) as Record<string,unknown>; void _action;
+      const guard = () => { request.signal.throwIfAborted(); assertVaultSessionActive(token); };
+      try { const result = await saveConnectedProposal(path.join(process.cwd(),'private-data'),input,guard); guard(); return Response.json(result,{headers:{'Cache-Control':'no-store'}}); }
+      catch(error) { if(error instanceof ReviewConflict) return Response.json({error:error.message},{status:409,headers:{'Cache-Control':'no-store'}}); throw error; }
+    }
     if (body.action === "answer-question") {
       const input = novaQuestionResponseInputSchema.parse({ questionId: body.questionId, question: body.question, sourceQuestionId: body.sourceQuestionId, response: body.response, targetMomentIds: body.targetMomentIds ?? [] });
       const result = await serialisePrivateWrite(async () => { const recorded = recordNovaQuestionResponse(await readReview(token), input); const processed = processNovaInbox(recorded.document); if (recorded.created || processed.created) await saveReview(token, `${JSON.stringify(processed.document, null, 2)}\n`, { encoding: "utf8", mode: 0o600 }); return { ...recorded, document: processed.document, triage: processed }; });

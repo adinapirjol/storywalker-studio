@@ -14,3 +14,9 @@ it("does not continue after cancellation even if a response arrives", async () =
   vi.stubGlobal("fetch", vi.fn(async () => { controller.abort(); return Response.json({ session: { active: true } }); }));
   await expect(browserVaultSession(controller.signal)).rejects.toThrow();
 });
+it("explains an unidentified unlock failure without assuming a wrong passphrase or retrying", async () => {
+  const send=vi.fn().mockResolvedValue(Response.json({error:"Local Vault request failed. Check your inputs and unlock state before retrying."},{status:400}));
+  vi.stubGlobal("fetch",send);
+  await expect(vaultAuthRequest('/api/vault',{action:'unlock',passphrase:'fictional-only'})).rejects.toThrow('The server did not identify the cause');
+  expect(send).toHaveBeenCalledOnce();
+});

@@ -18,6 +18,7 @@
 		D9791D929381FD2D354A02CB /* WatchSignal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7438B340D36ACD025A521461 /* WatchSignal.swift */; };
 		ED3AD0752930EB98188E5765 /* CompanionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE24544FEEB0B32A84A88405 /* CompanionApp.swift */; };
 		F7FAD89079233AF6CF96F366 /* CollectorCore in Frameworks */ = {isa = PBXBuildFile; productRef = 32CDF07CFC0ADD8A56D47A35 /* CollectorCore */; };
+		1A05CD21031ED36D2CB8566B /* SleepObservatory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26080003A0D64B31E7014A17 /* SleepObservatory.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -60,6 +61,7 @@
 		E03860C1FF3A6D7898FBFDB6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E333BC2C8A3C4DA37B4B819E /* Watch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Watch.entitlements; sourceTree = "<group>"; };
 		FE24544FEEB0B32A84A88405 /* CompanionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionApp.swift; sourceTree = "<group>"; };
+		26080003A0D64B31E7014A17 /* SleepObservatory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepObservatory.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,6 +121,7 @@
 				FE24544FEEB0B32A84A88405 /* CompanionApp.swift */,
 				67D396885B7D90DF275F71A6 /* PetWatchFace.swift */,
 				D249C8DCB06EA05A49A4706F /* PhoneWatchBridge.swift */,
+				26080003A0D64B31E7014A17 /* SleepObservatory.swift */,
 				9FC7B24220A9D64AA1DCB9D0 /* TransferView.swift */,
 			);
 			path = iPhone;
@@ -243,6 +246,7 @@
 				ED3AD0752930EB98188E5765 /* CompanionApp.swift in Sources */,
 				D211104245D1A12AEE77A00E /* PetWatchFace.swift in Sources */,
 				5B27371B16AA905EE0423CB8 /* PhoneWatchBridge.swift in Sources */,
+				1A05CD21031ED36D2CB8566B /* SleepObservatory.swift in Sources */,
 				06FC22BBA2C638CA1241DEE5 /* TransferView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -277,7 +281,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.example.plist;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Review selected heart-rate observations in a private wellbeing journal, with your own notes and control over deletion.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Read selected heart-rate and sleep records for your private observatory, with separate collection and deletion controls.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Add an approximate place to a wellbeing note when you explicitly request it.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -301,7 +305,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.example.plist;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Review selected heart-rate observations in a private wellbeing journal, with your own notes and control over deletion.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Read selected heart-rate and sleep records for your private observatory, with separate collection and deletion controls.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Add an approximate place to a wellbeing note when you explicitly request it.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

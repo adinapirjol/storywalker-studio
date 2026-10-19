@@ -2,6 +2,7 @@
 import { useState, type ReactNode } from "react";
 import { XREvidenceReport } from "./xr-evidence-report";
 import { XREpisodeExperience } from "./xr-episode-experience";
+import { XRSoundInstrument } from "./xr-sound-instrument";
 import { XRRehearsalModes } from "./xr-rehearsal-modes";
 import { XRJourneyMap } from "./xr-journey-map";
 import { journeyAtTime } from "@/lib/xr/journey-basemap";
@@ -10,8 +11,9 @@ import { moveJourneyEpisode } from "@/lib/xr/journey-grounding";
 import type { XRScene, Decision } from "@/lib/xr/xr-scene";
 import styles from "./xr-lab.module.css";
 
-export function XRJourneyRoom({ scene, decisions, onChange, activated, bodyStudy, onEnterBody, showBodyStudy = false, saveNotice = "Save review to Vault to keep Author moves and fragment placements." }: { bodyStudy?: ReactNode; onEnterBody?: () => void; showBodyStudy?: boolean; saveNotice?: string; activated: boolean; scene: XRScene; decisions: Record<string, Decision>; onChange: (scene: XRScene) => void }) {
+export function XRJourneyRoom({ allowHeadPerspective = false, scene, decisions, onChange, activated, bodyStudy, onEnterBody, onEnterInstrument, showBodyStudy = false, saveNotice = "Save review to Vault to keep Author moves and fragment placements." }: { allowHeadPerspective?: boolean; bodyStudy?: ReactNode; onEnterBody?: () => void; onEnterInstrument?: () => void; showBodyStudy?: boolean; saveNotice?: string; activated: boolean; scene: XRScene; decisions: Record<string, Decision>; onChange: (scene: XRScene) => void }) {
   const [bodyOpen, setBodyOpen] = useState(false);
+  const [instrumentOpen, setInstrumentOpen] = useState(false);
   const [selected, setSelected] = useState(0), [x, setX] = useState(""), [z, setZ] = useState(""), [message, setMessage] = useState("");
   const [calibration, setCalibration] = useState(false), [evidenceOpen, setEvidenceOpen] = useState(false);
   const [asOf, setAsOf] = useState<number | null>(null);
@@ -37,8 +39,12 @@ export function XRJourneyRoom({ scene, decisions, onChange, activated, bodyStudy
     {bodyStudy}
   </div>;
   return <div className={styles.journey}>
+    <div className={styles.actions} role="group" aria-label="XR space mode">
+      <button aria-pressed={!instrumentOpen} onClick={() => setInstrumentOpen(false)}>Walk the archive</button>
+      <button aria-pressed={instrumentOpen} onClick={() => { onEnterInstrument?.(); setInstrumentOpen(true); }}>Shape sound · 148 BPM</button>
+    </div>
     {showBodyStudy&&<p><a href="#context-body-composition">BODY · open the fictional spherical companion study above</a></p>}
-    <XREpisodeExperience onBody={bodyStudy ? () => { onEnterBody?.(); setBodyOpen(true); } : undefined} scene={scene} decisions={decisions} activated={activated} onChange={onChange} onInspect={i=>{choose(i);setEvidenceOpen(true);requestAnimationFrame(()=>{const desk=document.getElementById("xr-source-desk");desk?.scrollIntoView({block:"start"});desk?.focus();});}} onCalibrate={()=>setCalibration(v=>!v)} />
+    {instrumentOpen ? <XRSoundInstrument onLeave={() => setInstrumentOpen(false)} /> : <XREpisodeExperience allowHeadPerspective={allowHeadPerspective} onBody={bodyStudy ? () => { onEnterBody?.(); setBodyOpen(true); } : undefined} scene={scene} decisions={decisions} activated={activated} onChange={onChange} onInspect={i=>{choose(i);setEvidenceOpen(true);requestAnimationFrame(()=>{const desk=document.getElementById("xr-source-desk");desk?.scrollIntoView({block:"start"});desk?.focus();});}} onCalibrate={()=>setCalibration(v=>!v)} />}
     {calibration && scene.experience?.regime === "WORLD" && <div><div className={styles.actions}><h3>Temporary geographic calibration</h3><button onClick={()=>setCalibration(false)}>Close calibration map</button></div>
     <XRJourneyMap episodes={episodes} mode="WORLD" layout={{...layout,mode:"WORLD"}} asOf={asOf} selected={index} counts={episodes.map(selectedPlays)} onSelect={index => choose(index, true)}
       onTimeChange={at => { setAsOf(at); if (at !== null) { const latest = journeyAtTime(episodes, at).latest; if (latest >= 0) choose(latest, true); } }}

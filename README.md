@@ -156,7 +156,13 @@ npm run demo:aurora-coast
 npm run dev
 ```
 
-When Next.js reports that it is ready, open the local address shown in the terminal. Choose **Load Aurora Coast Demo**, verify the memory-only preview, then choose **Seed Author workspace**.
+Open **http://localhost:3000** for local browsing and Vault passkeys. Page visits
+to `127.0.0.1` redirect to the same path on `localhost`. The server remains bound
+to loopback so both addresses can reach it; API requests and form submissions
+are not redirected or replayed. Existing tabs with unsaved edits should be kept
+until those edits are saved; sessions remain specific to their browser address.
+
+When Next.js reports that it is ready, open http://localhost:3000. Choose **Load Aurora Coast Demo**, verify the memory-only preview, then choose **Seed Author workspace**.
 
 No Spotify account, credentials, network connection, private file, or local editorial export is required for the demo.
 

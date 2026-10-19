@@ -64,7 +64,7 @@ export function drawBodyCompanion(ctx:CanvasRenderingContext2D,width:number,heig
  }
  if(appearance.inspectEvidence){ctx.lineCap='butt';ctx.textAlign='center';ctx.fillStyle='#fff5e4';ctx.font='26px Georgia';ctx.fillText(heart===null?'—':`${Math.round(heart)} bpm`,cx,height-43);ctx.font='10px sans-serif';ctx.fillStyle='#bfccd5';ctx.fillText('SELECTED MEASUREMENT',cx,height-22);ctx.textAlign='left';}
 }
-export function renderEpisodeRoom(ctx: CanvasRenderingContext2D, width:number,height:number, spaces:EpisodeSpace[], regime:Regime, base:'WORLD'|'TIME', camera:WalkCamera, selected:number, decisions:Record<string,Decision>, placements:Map<string,string[]>,windows:WindowEvidence[]=[],windowPage=0,dim=false) {
+export function renderEpisodeRoom(ctx: CanvasRenderingContext2D, width:number,height:number, spaces:EpisodeSpace[], regime:Regime, base:'WORLD'|'TIME', camera:WalkCamera, selected:number, decisions:Record<string,Decision>, placements:Map<string,string[]>,windows:WindowEvidence[]=[],windowPage=0,dim=false,selectedWindow?:string) {
   const hits:Hit[]=[];
   ctx.clearRect(0,0,width,height);
   const backdrop=ctx.createLinearGradient(0,0,0,height); backdrop.addColorStop(0,'#090c18');backdrop.addColorStop(.52,'#161d2b');backdrop.addColorStop(1,'#070b11');ctx.fillStyle=backdrop;ctx.fillRect(0,0,width,height);
@@ -127,7 +127,7 @@ export function renderEpisodeRoom(ctx: CanvasRenderingContext2D, width:number,he
     }
     if(regime==='TIME'&&near&&focused&&!dim){
       const contained=space.members.map(i=>windows[i]).filter(Boolean);
-      hits.push(...drawSourceWindows(ctx,width,height,camera,contained,p,focused?windowPage:0).map(h=>({...h,index})));
+      hits.push(...drawSourceWindows(ctx,width,height,camera,contained,p,focused?windowPage:0,selectedWindow).map(h=>({...h,index})));
     }
     if(!dim){
       const corners=[project({x:p.x-half,z:p.z},0),project({x:p.x-half,z:p.z},top),project({x:p.x+half,z:p.z},top),project({x:p.x+half,z:p.z},0)];

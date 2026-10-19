@@ -31,7 +31,7 @@ function indexText(record: VaultRecord) {
  * not called an embedding/vector index: it can be rebuilt before any model or
  * external embedding provider is consented. */
 export function buildLocalRetrievalIndex(records: VaultRecord[], derivedAt = new Date().toISOString()): LocalRetrievalIndex {
-  const indexed = records.filter((record) => record.kind !== "recovery-document" && record.kind !== "retrieval-index" && record.kind !== "atlas").map((record) => {
+  const indexed = records.filter((record) => !record.id.startsWith("automation:") && record.kind !== "recovery-document" && record.kind !== "retrieval-index" && record.kind !== "atlas").map((record) => {
     const text = indexText(record);
     return { id: record.id, kind: record.kind, terms: terms(text), dates: [...new Set(text.match(/20\d{2}-\d{2}-\d{2}/gu) ?? [])].slice(0, 64) };
   });

@@ -67,3 +67,29 @@ export const RESEARCH_TEMPLATES = [
   "Project decision: decision, evidence, alternatives, reviewer, date.",
   "Application draft: exact biography and proposal character counts, including spaces.",
 ] as const;
+
+/** Current editorial checkpoint; the August tracker above remains historical. */
+export const CTM_2027_SNAPSHOT = {
+  date: "19 October 2026",
+  verifiedAt: "2026-10-19",
+  callStatus: "Open call; official page rechecked",
+  submissionStatus: "Submission not confirmed in the reviewed project records",
+  deadline: "25 October 2026, 23:59 CET · 26 October, 00:59 Bucharest",
+  internalTarget: "24 October 2026, 18:00 Bucharest · retained planning target",
+  direction: "Who Gets to Process? Neurodivergent Access and the Rejectable Edit",
+  directionStatus: "Proposed in the 13 October method brief; Author approval remains unconfirmed",
+  changes: [
+    "The provisional focus moved from Public City, Private Echoes to Listening Again: one encounter, separate evidence and a revisable interpretation.",
+    "Biography and proposal drafts are recorded on 13 October, with character counts; final Author wording and recount remain outstanding.",
+    "The research overview now includes HEALTH and BODY as private workspaces. Their private records are not application evidence or public demonstration material.",
+    "The August 24% readiness estimate and September decision checkpoint remain historical; no replacement percentage is inferred.",
+    "The call deadline and presentation conditions were rechecked on 19 October; no change was identified against the 13 October record.",
+  ],
+  remaining: [
+    "Approve or revise the title, research question, biography and proposal; check final character counts.",
+    "Confirm a public-safe portfolio URL and personal application fields.",
+    "Record actual rehearsal observations and access checks; distinguish these from software tests.",
+    "Rehearse the ten-minute presentation and confirm travel/accommodation plans.",
+    "Check the final form and retain a submission receipt if the Author submits.",
+  ],
+} as const;

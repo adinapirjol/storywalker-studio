@@ -1,4 +1,5 @@
 /** Server-only native file boundary. Never instrument payloads or error inputs. */
+import {researchJournalWrite} from '@/lib/health/server/research-journal';
 import {createDecipheriv, createHash, createHmac} from 'node:crypto';
 import {privatePython} from '@/lib/validation/private-validator';
 import type {BodyReview} from '@/lib/body/body-review-contract';
@@ -8,7 +9,7 @@ import {replaceVaultRecords, putVaultRecords, readVaultRecord, vaultRecordHeader
 export const TRANSFER_LIMIT = 1_048_604;
 const prefix='native:batch:';
 type Receipt={version:1;batch_id:string;envelope_sha256:string;status:'accepted-evidence';mac:string};
-type Stage={validatedAt?:string;acceptedAt?:string;version:1;digest:string;mode:'simulated'|'healthkit';status:'pending-review'|'accepted-evidence'|'deleted';revision:number;count:number;deletionCount:number;observations:Observation[];deletionKeys:string[];observationKeys:string[];receipt:Receipt|null;privacy:'private';canonical:false};
+type Stage={receiverID?:string;validatedAt?:string;acceptedAt?:string;version:1;digest:string;mode:'simulated'|'healthkit';status:'pending-review'|'accepted-evidence'|'deleted';revision:number;count:number;deletionCount:number;observations:Observation[];deletionKeys:string[];observationKeys:string[];receipt:Receipt|null;privacy:'private';canonical:false};
 export type NativeTiming={measuredStart:string;measuredEnd:string;receivedStart:string;receivedEnd:string};
 export type NativeSummary={validatedAt?:string;acceptedAt?:string;timing?:NativeTiming;id:string;mode:Stage['mode'];status:Stage['status'];revision:number;count:number;deletionCount:number};
 export function decodeTransfer(envelope:Buffer,keyText:string){
@@ -52,14 +53,28 @@ function summary(vault:OpenVault,id:string,s:Stage,observations=sourceObservatio
  return {id,mode:s.mode,status:s.status,revision:s.revision,count:s.count,deletionCount:s.deletionCount,validatedAt:s.validatedAt,acceptedAt:s.acceptedAt,timing};
 }
 export function listNativeTransfers(vault:OpenVault){return vaultRecordHeaders(vault).filter(h=>h.id.startsWith(prefix)).map(h=>summary(vault,h.id,stage(vault,h.id)));}
-export function stageNativeTransfer(vault:OpenVault,batch:ValidatedTransfer,digest:string,key:Buffer){
+export function stageNativeTransfer(vault:OpenVault,batch:ValidatedTransfer,digest:string,key:Buffer,receiverID?:string){
  const id=prefix+batch.batch_id,existing=readVaultRecord(vault,id)?.payload as Stage|undefined;
  if(existing){if(existing.digest!==digest)throw Error('BATCH_CONFLICT');return summary(vault,id,existing);}
  if(listNativeTransfers(vault).filter(s=>s.status==='pending-review').length>=100)throw Error('REVIEW_LIMIT');
  const observations=batch.observations.filter(o=>!(readVaultRecord(vault,evidenceKey(batch.mode,o.id))?.payload as {deleted?:boolean})?.deleted);
  const receipt:Receipt={version:1,batch_id:batch.batch_id,envelope_sha256:digest,status:'accepted-evidence',mac:createHmac('sha256',key).update(`storywalker-receipt-v1\n${batch.batch_id}\n${digest}\naccepted-evidence`).digest('base64')};
- const next:Stage={validatedAt:new Date().toISOString(),version:1,digest,mode:batch.mode,status:'pending-review',revision:1,count:observations.length,deletionCount:batch.deletions.length,observations,deletionKeys:batch.deletions.map(d=>evidenceKey(batch.mode,d)),observationKeys:observations.map(o=>evidenceKey(batch.mode,o.id)),receipt,privacy:'private',canonical:false};
+ const next:Stage={...(receiverID?{receiverID}:{}),validatedAt:new Date().toISOString(),version:1,digest,mode:batch.mode,status:'pending-review',revision:1,count:observations.length,deletionCount:batch.deletions.length,observations,deletionKeys:batch.deletions.map(d=>evidenceKey(batch.mode,d)),observationKeys:observations.map(o=>evidenceKey(batch.mode,o.id)),receipt,privacy:'private',canonical:false};
  putVaultRecords(vault,[record(id,next)]);return summary(vault,id,next);
+}
+/** Only the authenticated receiver calls this; legacy stages are reconsidered on phone retry.
+ * Deletions must target known accepted sleep/heart evidence; unknown targets stay reviewable.
+ */
+export function canAutomaticallyAcceptHealthStage(vault:OpenVault,id:string,receiverID:string){
+ const current=stage(vault,id);
+ if(current.status!=='pending-review'||current.mode!=='healthkit'||(current.receiverID&&current.receiverID!==receiverID))return false;
+ const supported=(o:Observation)=>o.source_type==='healthkit'&&o.provenance==='source_recorded'&&o.acquisition==='historical'&&['sleep','heart_rate'].includes(o.payload.kind);
+ if(!current.observations.every(supported))return false;
+ for(const key of current.deletionKeys){
+  const item=readVaultRecord(vault,key)?.payload as {deleted?:boolean;observation?:Observation}|undefined;
+  if(!item?.deleted&&(!item?.observation||!supported(item.observation)))return false;
+ }
+ return true;
 }
 export function nativeTransferSummary(vault:OpenVault,id:string){return summary(vault,id,stage(vault,id));}
 export function previewNativeTransfer(vault:OpenVault,id:string){
@@ -75,7 +90,7 @@ export function privateBodyEvidence(vault:OpenVault,id:string,revision:number){
  return selected;
 }
 /** This source never enters Atlas, public scenes, proposal providers or the fictional graph.
- * Deletion removes every staged/accepted copy here; no derived health copies exist elsewhere.
+ * Deletion also invalidates the Study 04 derived note history in the same transaction.
  */
 export function decideNativeTransfer(vault:OpenVault,id:string,revision:number,action:'accept'|'delete'){
  const current=stage(vault,id);
@@ -98,6 +113,7 @@ export function decideNativeTransfer(vault:OpenVault,id:string,revision:number,a
  const remaining=current.observationKeys.filter(key=>!deletedKeys.has(key));
  const next:Stage={...current,acceptedAt:action==='accept'?new Date().toISOString():current.acceptedAt,status:action==='accept'?'accepted-evidence':'deleted',revision:current.revision+1,observations:[],deletionKeys:[],observationKeys:action==='delete'?[]:remaining,count:action==='delete'?0:remaining.length,deletionCount:0,receipt:action==='delete'?null:current.receipt};
  writes.push(record(id,next));
+ const journalWrite=researchJournalWrite(vault,writes);if(journalWrite)writes.push(journalWrite);
  replaceVaultRecords(vault,writes,writes.map(r=>r.id)); // Source writes + receipt status in one encrypted durable save.
  return summary(vault,id,next);
 }

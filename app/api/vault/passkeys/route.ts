@@ -1,3 +1,4 @@
+import {syncAfterUnlock} from '@/lib/automation/unlock-sync';
 import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -105,7 +106,8 @@ export async function POST(request: Request) {
       return items.map((item) => item === current ? { ...item, counter } : item);
     });
     const unlocked = rotateVaultSession(key, sessionToken);
-    const result = reply({ session: { active: true, expiresAt: unlocked.expiresAt } });
+    const sync = await syncAfterUnlock(unlocked.token);
+    const result = reply({ sync, session: { active: true, expiresAt: unlocked.expiresAt } });
     result.cookies.set(vaultSessionCookie(unlocked.token, unlocked.expiresAt));
     return result;
   } catch (error) {

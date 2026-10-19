@@ -50,14 +50,17 @@ def validate_transfer(raw: bytes, clock: Callable[[], datetime] = lambda: dateti
             deletions.append(target)
             continue
         observation = Observation.model_validate_json(packet)
-        if observation.id != item.id or observation.payload.kind != 'heart_rate':
+        if observation.id != item.id or observation.payload.kind not in ('heart_rate', 'sleep'):
             raise ValueError('reference_or_kind')
         if batch.mode == 'simulated':
             if observation.acquisition != 'simulated' or observation.source_type != 'fictional':
                 raise ValueError('mode')
         elif observation.source_type != 'healthkit' or observation.acquisition not in ('live', 'historical'):
             raise ValueError('mode')
-        if observation.provenance != 'source_recorded' or observation.semantics != 'measurement':
+        expected_semantics = 'interval' if observation.payload.kind == 'sleep' else 'measurement'
+        if observation.payload.kind == 'sleep' and observation.event_end <= observation.event_start:
+            raise ValueError('empty_sleep_interval')
+        if observation.provenance != 'source_recorded' or observation.semantics != expected_semantics:
             raise ValueError('provenance')
         if batch.mode == 'healthkit':
             validate_measurement_time(observation, now)

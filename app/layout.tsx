@@ -1,3 +1,4 @@
+import {PrivateSyncMonitor} from "@/components/vault/private-sync";
 import type { Metadata } from "next";
 import "./globals.css";
 import {VaultAccess} from "@/components/vault/vault-access";
@@ -13,7 +14,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}<VaultAccess /></body>
+      <body>{children}<VaultAccess /><PrivateSyncMonitor /></body>
     </html>
   );
 }

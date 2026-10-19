@@ -28,7 +28,7 @@ targets:
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
         INFOPLIST_FILE: Info.example.plist
-        INFOPLIST_KEY_NSHealthShareUsageDescription: Review selected heart-rate observations in a private wellbeing journal, with your own notes and control over deletion.
+        INFOPLIST_KEY_NSHealthShareUsageDescription: Read selected heart-rate and sleep records for your private observatory, with separate collection and deletion controls.
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: Add an approximate place to a wellbeing note when you explicitly request it.
         CODE_SIGN_ENTITLEMENTS: Collector.entitlements
         SWIFT_VERSION: '5.9'

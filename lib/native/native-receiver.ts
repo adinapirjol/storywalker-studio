@@ -1,4 +1,5 @@
-/** Local pinned HTTPS only. No request/error logging or automatic Author decisions. External aggregate summaries have a separate explicit opt-in. */
+/** Local pinned HTTPS only. No request/error logging. Matching Watch sleep has a separate persisted acceptance opt-in. External aggregate summaries have a separate explicit opt-in. */
+import {canAutoAcceptResearch} from '@/lib/health/server/research-journal';
 import {createServer,type Server} from 'node:https';
 import {randomBytes,randomUUID,timingSafeEqual,X509Certificate,createHash} from 'node:crypto';
 import {networkInterfaces,tmpdir} from 'node:os';
@@ -9,7 +10,7 @@ import {promisify} from 'node:util';
 import type {IncomingMessage,ServerResponse} from 'node:http';
 import {readVaultSession} from '@/lib/vault/vault-session';
 import {openVaultWithKey,closeVault,readVaultRecord,putVaultRecords,setVaultAccessGuard,type OpenVault} from '@/lib/vault/private-vault';
-import {decodeTransfer,validateNativePacket,stageNativeTransfer,nativeTransferSummary,nativeReceipt} from './native-transfer';
+import {decodeTransfer,validateNativePacket,stageNativeTransfer,nativeTransferSummary,nativeReceipt,decideNativeTransfer,canAutomaticallyAcceptHealthStage} from './native-transfer';
 import {clearLiveSummary} from '@/lib/body/health-summary';
 import {observeThresholdBatch,clearThresholdSession} from '@/lib/body/health-threshold';
 import {nativeTransaction} from './native-transaction';
@@ -17,7 +18,7 @@ import type {BodyLiveSample} from '@/lib/body/body-live';
 import {liveSampleValid} from '@/lib/body/body-live';
 const recordID='native:pairing:receiver';
 const PORT=8766;
-export type ReceiverConfig={version:1;id:string;host:string;port:number;mode:'simulated'|'healthkit';token:string;certificate:string;privateKey:string;revoked:boolean};
+export type ReceiverConfig={version:1;id:string;host:string;port:number;mode:'simulated'|'healthkit';token:string;certificate:string;privateKey:string;revoked:boolean;autoAcceptHealth?:boolean};
 export type ReceiverEvent={type:'sample';sample:BodyLiveSample|null}|{type:'contact';at:string;id:string}|{type:'closed';code:string};
 type Viewer={id:string;owner:string;push:(event:ReceiverEvent)=>boolean;close:(code?:string)=>void};
 type Active={previewBusy?:boolean;viewer?:Viewer;streamOwner?:{id:string;sessionID:string};deletedPreviewIDs?:Set<string>;server:Server;sessionID:string;config:ReceiverConfig;busy:boolean;preview?:BodyLiveSample;previewUntil?:number;previewOwner?:string;latestMeasured?:number;timer:ReturnType<typeof setInterval>};
@@ -28,7 +29,7 @@ export function privateIPv4(host:string){
 }
 export function receiverAddresses(){return Object.entries(networkInterfaces()).flatMap(([name,items])=>(items??[]).filter(i=>!i.internal&&i.family==='IPv4'&&privateIPv4(i.address)).map(i=>({name,address:i.address})));}
 export function receiverSessionActive(id:string|undefined){const session=readVaultSession(id);if(!session)return false;session.key.fill(0);return true;}
-export function receiverStatus(){const a=shared.__nativeReceiver;return {running:!!a&&receiverSessionActive(a.sessionID),mode:a?.config.mode??null,port:PORT,addresses:receiverAddresses()};}
+export function receiverStatus(){const a=shared.__nativeReceiver;return {running:!!a&&receiverSessionActive(a.sessionID),mode:a?.config.mode??null,port:PORT,autoAcceptHealth:a?.config.autoAcceptHealth===true,addresses:receiverAddresses()};}
 /** A short browser lease: no persisted subscription, acceptance, or telemetry. */
 export function receiverPreview(sessionID:string,enabled:boolean){
  const a=shared.__nativeReceiver;
@@ -111,14 +112,44 @@ export async function makeReceiverConfig(host:string,mode:'simulated'|'healthkit
  }finally{await rm(directory,{recursive:true,force:true});}
 }
 function saved(vault:OpenVault){return readVaultRecord(vault,recordID)?.payload as ReceiverConfig|undefined;}
+/** Resumption never creates credentials, changes source mode, or changes acceptance. */
+export async function resumeSavedHealthReceiver(vault:OpenVault,sessionID:string){
+ if(!receiverSessionActive(sessionID))throw Error('VAULT_LOCKED');
+ const config=saved(vault);
+ if(!config||config.revoked)throw Error('PAIRING_REQUIRED');
+ if(config.mode!=='healthkit')throw Error('HEALTHKIT_PAIRING_REQUIRED');
+ if(shared.__nativeReceiver?.sessionID===sessionID&&receiverStatus().running)return receiverStatus();
+ const result=await configureReceiver(vault,sessionID,'resume');
+ if(!receiverSessionActive(sessionID)){await stopReceiver();throw Error('VAULT_LOCKED');}
+ return result;
+}
 function save(vault:OpenVault,config:ReceiverConfig|{revoked:true}){putVaultRecords(vault,[{id:recordID,kind:'reference',capturedAt:new Date().toISOString(),payload:config}]);}
+/** Explicit network repair: retain queue ownership and consent, replace only the TLS address binding. */
+export async function updateReceiverAddress(vault:OpenVault,sessionID:string,host:string,generate=makeReceiverConfig){
+ if(!receiverSessionActive(sessionID))throw Error('VAULT_LOCKED');
+ const previous=saved(vault);
+ if(!previous||previous.revoked)throw Error('PAIRING_REQUIRED');
+ if(previous.mode!=='healthkit')throw Error('HEALTHKIT_PAIRING_REQUIRED');
+ if(!receiverAddresses().some(a=>a.address===host))throw Error('INVALID_BIND');
+ if(previous.host===host)return {pairingUpdated:false};
+ const tls=await generate(host,previous.mode,previous.port);
+ if(!receiverSessionActive(sessionID))throw Error('VAULT_LOCKED');
+ const config={...previous,host,certificate:tls.certificate,privateKey:tls.privateKey};
+ const at=new Date().toISOString();
+ putVaultRecords(vault,[
+  {id:`native:pairing:before-address:${randomUUID()}`,kind:'reference',capturedAt:at,payload:previous},
+  {id:recordID,kind:'reference',capturedAt:at,payload:config},
+ ]);
+ await stopReceiver();
+ return {pairingUpdated:true};
+}
 export async function stopReceiver(){
  clearLiveSummary();
  clearThresholdSession();
  const active=shared.__nativeReceiver;shared.__nativeReceiver=undefined;
  if(active){active.viewer?.push({type:'closed',code:'HEALTHKIT_RECEIVER_REQUIRED'});active.viewer?.close();clearInterval(active.timer);active.server.closeAllConnections();await new Promise<void>(resolve=>active.server.close(()=>resolve()));}
 }
-export async function configureReceiver(vault:OpenVault,sessionID:string,action:'create'|'resume'|'stop'|'revoke'|'pairing'|'follow',host?:string,mode?:'simulated'|'healthkit'){
+export async function configureReceiver(vault:OpenVault,sessionID:string,action:'create'|'resume'|'stop'|'revoke'|'pairing'|'follow'|'auto-accept-health'|'manual-review-health',host?:string,mode?:'simulated'|'healthkit'){
  if(action==='stop'||action==='revoke'){await stopReceiver();if(action==='revoke')save(vault,{revoked:true});return receiverStatus();}
  let config=saved(vault);
  if(action==='create'){
@@ -127,6 +158,10 @@ export async function configureReceiver(vault:OpenVault,sessionID:string,action:
  }
  if(!config||config.revoked)throw Error('PAIRING_REQUIRED');
  if(action==='pairing')return pairingDocument(config);
+ if(action==='auto-accept-health'||action==='manual-review-health'){
+  if(config.mode!=='healthkit')throw Error('HEALTHKIT_PAIRING_REQUIRED');
+  config={...config,autoAcceptHealth:action==='auto-accept-health'};save(vault,config);
+ }
  if(action==='follow'&&config.mode!=='healthkit')throw Error('HEALTHKIT_PAIRING_REQUIRED');
  if(!receiverAddresses().some(a=>a.address===config.host))throw Error('ADDRESS_CHANGED');
  await stopReceiver();
@@ -146,9 +181,12 @@ async function boundedBody(req:IncomingMessage){
 export async function receiveTransfer(vault:OpenVault,config:ReceiverConfig,body:Record<string,unknown>,check=()=>{}){
  check();
  if(body.action==='receipt'&&typeof body.id==='string'){
-  const batch=nativeTransferSummary(vault,body.id);
+  let batch=nativeTransferSummary(vault,body.id);
   check();
   if(batch.mode!==config.mode)throw Error('MODE_MISMATCH');
+  if(config.autoAcceptHealth===true&&config.mode==='healthkit'&&config.id&&canAutomaticallyAcceptHealthStage(vault,body.id,config.id)){
+   check();batch=decideNativeTransfer(vault,body.id,batch.revision,'accept');
+  }
   return batch.status==='accepted-evidence'?{status:'accepted-evidence',receipt:nativeReceipt(vault,body.id)}:{status:batch.status};
  }
  if(body.action!=='deliver'||typeof body.envelope!=='string'||typeof body.key!=='string')throw Error('INVALID_REQUEST');
@@ -157,7 +195,13 @@ export async function receiveTransfer(vault:OpenVault,config:ReceiverConfig,body
   const batch=await validateNativePacket(decoded.plaintext);
   check();
   if(batch.mode!==config.mode)throw Error('MODE_MISMATCH');
-  const item=stageNativeTransfer(vault,batch,decoded.digest,decoded.key);
+  let item=stageNativeTransfer(vault,batch,decoded.digest,decoded.key,config.id);
+  if(item.status==='pending-review'){
+   const accept=config.autoAcceptHealth===true&&config.mode==='healthkit'&&config.id
+    ? canAutomaticallyAcceptHealthStage(vault,item.id,config.id)
+    : config.autoAcceptHealth===undefined&&canAutoAcceptResearch(vault,batch);
+   if(accept){check();item=decideNativeTransfer(vault,item.id,item.revision,'accept');}
+  }
   if(batch.deletions.length)clearThresholdSession();
   return item.status==='accepted-evidence'?{status:item.status,receipt:nativeReceipt(vault,item.id)}:{status:item.status};
  }finally{decoded.key.fill(0);decoded.plaintext.fill(0);body.key=undefined;body.envelope=undefined;}

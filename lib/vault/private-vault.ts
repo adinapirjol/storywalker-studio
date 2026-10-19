@@ -7,6 +7,7 @@ import { migrateStagedRecovery } from "@/lib/evidence/private-recovery";
 import { inspectAndMinimiseTimeline, minimiseEchoesExport, minimisedGoogleCalendarSchema, minimisedGoogleMapsSchema, minimisedTimelineSchema, minimisedYouTubeHistorySchema, minimiseLastFmHistory, minimiseSpotifyHistory } from "@/lib/evidence/private-ingest";
 import { minimiseGoogleMapsSavedListCsv, minimisedGoogleMapsSavedListSchema, validateGoogleMapsListUrl } from "@/lib/evidence/google-maps-list";
 import { buildEvidencePack } from "@/lib/evidence/private-signal-engine";
+import { mergeLastFmHistory } from "@/lib/evidence/private-import-integrations";
 import { buildLocalRetrievalIndex } from "./private-retrieval-index";
 import { buildAtlasNow, isArchivedEvidence, isAtlasSource, type AtlasNow } from "@/lib/studio/private-atlas";
 import { VaultWriteConflictError, withVaultFileLock } from "./vault-file-lock";
@@ -271,12 +272,23 @@ export function importSelectedPrivateSource(vault: OpenVault, source: "spotify-h
  * document, so this source cannot become a profile archive by accident. */
 export function importLastFmHistory(vault: OpenVault, raw: unknown, importedAt = new Date().toISOString()) {
   const prepared = minimiseLastFmHistory(raw, importedAt);
+  const previous = readVaultRecord(vault, "import:lastfm-history:v1");
+  const previousPayload = previous?.payload as Record<string, unknown> | undefined;
+  const records = mergeLastFmHistory(previousPayload?.document, prepared.document.records);
+  const previousCount = previousPayload?.document
+    ? mergeLastFmHistory(previousPayload.document, []).length : 0;
+  const added = records.length - previousCount;
+  const document = { ...prepared.document, records };
+  const summary = { ...prepared.summary, retained: records.length };
   const record: VaultRecord = {
     id: "import:lastfm-history:v1", kind: "import", capturedAt: importedAt,
-    payload: { schemaVersion: 1, privacy: "private", canonical: false, consent: "explicit-lastfm-window", source: "lastfm-history", importedAt, summary: prepared.summary, document: prepared.document },
+    payload: { ...previousPayload, schemaVersion: 1, privacy: "private", canonical: false, consent: "explicit-lastfm-window", source: "lastfm-history", importedAt, summary, document },
   };
-  putVaultRecords(vault, [record]);
-  return { source: "lastfm-history", retained: prepared.summary.retained, total: prepared.summary.total, warnings: prepared.summary.warnings };
+  putVaultRecords(vault, [
+    ...(previous && added > 0 ? [{ ...previous, id: `lastfm:before-window-import:${importedAt}:${randomBytes(8).toString("hex")}` }] : []),
+    record,
+  ]);
+  return { source: "lastfm-history", retained: records.length, total: prepared.summary.total, added, previousCount, warnings: prepared.summary.warnings };
 }
 
 /** Imports one Author-selected Google Takeout Saved CSV after the Author

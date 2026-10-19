@@ -293,13 +293,17 @@
               "heart_rate": "#/$defs/Heart",
               "listening": "#/$defs/Listening",
               "location": "#/$defs/Location",
-              "marker": "#/$defs/Marker"
+              "marker": "#/$defs/Marker",
+              "sleep": "#/$defs/Sleep"
             },
             "propertyName": "kind"
           },
           "oneOf": [
             {
               "$ref": "#/$defs/Heart"
+            },
+            {
+              "$ref": "#/$defs/Sleep"
             },
             {
               "$ref": "#/$defs/Activity"
@@ -486,6 +490,35 @@
         "cooldown_s"
       ],
       "title": "ReviewRule",
+      "type": "object"
+    },
+    "Sleep": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "sleep",
+          "default": "sleep",
+          "title": "Kind",
+          "type": "string"
+        },
+        "stage": {
+          "enum": [
+            "inBed",
+            "awake",
+            "asleep",
+            "core",
+            "deep",
+            "rem"
+          ],
+          "title": "Stage",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "stage"
+      ],
+      "title": "Sleep",
       "type": "object"
     }
   },

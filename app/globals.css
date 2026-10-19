@@ -568,3 +568,21 @@ footer span:first-child { color: var(--paper); font-family: var(--sans); font-we
 .passkey-check-facts dd { margin: 0; }
 .passkey-check-progress { padding: 14px; border-left: 4px solid var(--blue); background: #e4eeee; }
 @media (max-width: 560px) { .passkey-check-facts > div { grid-template-columns: 1fr; gap: 4px; } }
+
+/* Listening Again keeps state changes still and legible without colour or motion. */
+.trace-unresolved .trace-diagram i { border-top: 2px dotted currentColor; opacity: .5; }
+.trace-unresolved .trace-diagram::after { content: "unanswered"; position: absolute; top: 115px; left: 40%; }
+.experiment-controls button:focus-visible, .experiment-controls textarea:focus-visible, .experiment-controls input:focus-visible { outline: 3px solid #394c88; outline-offset: 3px; }
+
+.listening-diagram { display: grid; grid-template-columns: minmax(0, 1fr) minmax(16px, .5fr) minmax(0, 1fr) minmax(16px, .5fr) minmax(0, 1fr); gap: 5px; text-align: center; }
+.listening-diagram .trace-origin, .listening-diagram .trace-target { padding: 8px 2px; overflow-wrap: anywhere; }
+.trace-gap .listening-diagram::after, .trace-interrupted .listening-diagram::after { top: 120px; left: 35%; }
+
+/* Keep Vault workspace navigation aligned with the archive content. */
+.vault-workspace-links { max-width: 936px; margin: 0 auto 28px; display: grid; gap: 12px; }
+.vault-workspace-links p { margin: 0; padding: 16px 18px; border: 1px solid var(--line); background: var(--paper); line-height: 1.5; }
+.vault-workspace-links a, .vault-workspace-links a:visited { color: var(--ink); text-decoration-color: var(--blue); text-underline-offset: .2em; }
+.vault-workspace-links a:hover { color: var(--blue); }
+.vault-workspace-links a:focus-visible { outline: 2px solid var(--blue); outline-offset: 4px; }
+.vault-workspace-links span { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; }
+@media (max-width: 760px) { .vault-workspace-links { margin-left: 20px; margin-right: 20px; } }

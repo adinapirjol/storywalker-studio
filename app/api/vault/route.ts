@@ -1,7 +1,10 @@
+import { preparePrivateCandidateImport, missingCandidateRecords } from "@/lib/evidence/private-candidate-import";
+import {syncAfterUnlock} from '@/lib/automation/unlock-sync';
+import { saveResearchSnapshot } from "@/lib/research/research-persistence";
 import { assertVaultSnapshotCurrent } from "@/lib/vault/private-vault";
 import {isLocalSameOrigin,isLocalRead} from "@/lib/http/local-origin";
 import {boundedText} from "@/lib/http/context-request";
-import {researchSessionSchema,researchPayload} from "@/lib/research/research-session";
+import {researchSessionSchema} from "@/lib/research/research-session";
 import { enrichWindowEvidence, eligibleArchiveRecord } from "@/lib/xr/xr-enrichment";
 import { vaultRecordHeaders } from "@/lib/vault/private-vault";
 import { calendarContextForEpisodes } from "@/lib/xr/journey-identifiers";
@@ -20,7 +23,7 @@ import { z } from "zod";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { closeVault, importEditorCut, importGoogleMapsSharedList, importLastFmHistory, importPreparedGoogleMapsSelectedList, importPreparedGoogleTakeout, importPrivateEditorialDraft, importSelectedPrivateSource, initialiseVault, migrateRecoveryIntoVault, openVault, openVaultWithKey, putVaultRecords, readAtlasNow, readPublicDrafts, readScenarioStudio, rebuildVaultRetrievalIndex, refreshVaultDerivedViews, retrieveVaultEvidence, searchVault, vaultDriverReady, vaultExists, vaultImportMarkers, vaultSummary, type OpenVault, type VaultRecord } from "@/lib/vault/private-vault";
-import { prepareSideQuestVaultImport } from "@/lib/evidence/side-quest-import";
+import { prepareSideQuestVaultImport, verifySideQuestVaultImport } from "@/lib/evidence/side-quest-import";
 import { buildDirectorModelBrief, buildDirectorPreview } from "@/lib/studio/nova-director";
 import { lastFmEnvironmentSchema, readLastFmScrobbles } from "@/lib/music/lastfm-server";
 import { privateEditorialCandidates, readPrivateEditorialCandidate } from "@/lib/evidence/private-editorial-candidates";
@@ -99,7 +102,8 @@ const scenarioStudioSchema = z.object({
 });
 
 const requestSchema = z.object({
-  action: z.enum(["save-research-session", "list-research-sessions", "enrich-xr-evidence", "enrich-xr-context", "ground-xr-journey", "sync-lastfm-delta", "prepare-xr-draft", "save-xr-review", "initialise", "unlock", "session-status", "lock-session", "migrate-recovery", "capture", "record-field-trace", "search", "build-evidence-pack", "rebuild-retrieval-index", "atlas-now", "scenario-studio", "save-scenario-studio", "director-preview", "director-model-proposal", "create-director-thread", "create-public-draft", "list-public-drafts", "list-private-editorial-candidates", "import-side-quest", "import-private-source", "import-private-editorial-draft", "import-lastfm-history", "import-google-maps-list", "import-prepared-google-maps-selected-list", "import-prepared-google-takeout", "probe"]),
+  researchSnapshotId: z.string().uuid().optional(),
+  action: z.enum(["save-research-session", "list-research-sessions", "enrich-xr-evidence", "enrich-xr-context", "ground-xr-journey", "sync-lastfm-delta", "prepare-xr-draft", "save-xr-review", "initialise", "unlock", "session-status", "lock-session", "migrate-recovery", "capture", "record-field-trace", "search", "build-evidence-pack", "rebuild-retrieval-index", "atlas-now", "scenario-studio", "save-scenario-studio", "director-preview", "director-model-proposal", "create-director-thread", "create-public-draft", "list-public-drafts", "list-private-editorial-candidates", "import-side-quest", "verify-side-quest", "import-candidate-bundle", "verify-candidate-bundle", "import-private-source", "import-private-editorial-draft", "import-lastfm-history", "import-google-maps-list", "import-prepared-google-maps-selected-list", "import-prepared-google-takeout", "probe"]),
   passphrase: z.string().min(12).max(512).optional(),
   researchSession: researchSessionSchema.optional(),
   xrReview: xrReviewSchema.optional(),
@@ -107,6 +111,8 @@ const requestSchema = z.object({
   capture: captureSchema.optional(),
   publicDraft: publicDraftSchema.optional(),
   sideQuest: z.unknown().optional(),
+  candidateBundle: z.unknown().optional(),
+  consent: z.literal(true).optional(),
   privateSource: privateSourceImportSchema.optional(),
   lastFm: lastFmImportSchema.optional(),
   googleMapsList: googleMapsListImportSchema.optional(),
@@ -215,7 +221,8 @@ export async function POST(request: Request) {
           session?.key.fill(0);
           return noStore({ summary: vaultSummary(vault), session: { active: true, expiresAt: session?.expiresAt } });
         }
-        return sessionResponse({ summary: vaultSummary(vault), session: { active: true, expiresAt: newSession.expiresAt } }, newSession.token, newSession.expiresAt);
+        const sync = await syncAfterUnlock(newSession.token);
+        return sessionResponse({ summary: vaultSummary(vault), sync, session: { active: true, expiresAt: newSession.expiresAt } }, newSession.token, newSession.expiresAt);
       }
       if (body.action === "save-research-session" || body.action === "list-research-sessions") {
         if(!isLocalSameOrigin(request)) return noStore({error:"Use the local Storywalker page."},403);
@@ -224,9 +231,12 @@ export async function POST(request: Request) {
         if(body.action === "list-research-sessions") return noStore({records:vaultRecordHeaders(vault).filter(r=>r.id.startsWith("research-session:")).map(r=>readVaultRecord(vault,r.id)),windows:(scene?.journeyEpisodes??[]).map(e=>({id:e.id,label:e.label,start:e.start}))});
         if(!body.researchSession)return noStore({error:"Research snapshot required."},400);
         if(body.researchSession.sourceWindowId&&!scene?.journeyEpisodes?.some(e=>e.id===body.researchSession!.sourceWindowId))return noStore({error:"That source window is no longer available. Load the scene windows again."},400);
-        const savedAt=new Date().toISOString(),id=`research-session:${crypto.randomUUID()}`;
-        putVaultRecords(vault,[{id,kind:"capture",capturedAt:savedAt,payload:researchPayload(body.researchSession,savedAt)}]);
-        return noStore({id,savedAt,derived:refreshVaultDerivedViews(vault)});
+        const saved = saveResearchSnapshot(vault, body.researchSession, body.researchSnapshotId);
+        try {
+          return noStore({ ...saved, derived: refreshVaultDerivedViews(vault) });
+        } catch {
+          return noStore({ ...saved, warning: "Snapshot saved. Derived views could not be refreshed; reload before refreshing Atlas." });
+        }
       }
       if (body.action === "enrich-xr-evidence") {
         if (!isLocalSameOrigin(request)) return noStore({error:"Use the local Storywalker page."},403);
@@ -398,10 +408,39 @@ export async function POST(request: Request) {
         return Response.json({ thread: { id: record.id, title: thread.title, capturedAt }, derived: refreshVaultDerivedViews(vault), summary: vaultSummary(vault) }, { headers: { "Cache-Control": "no-store" } });
       }
       if (body.action === "list-public-drafts") return Response.json({ drafts: readPublicDrafts(vault) }, { headers: { "Cache-Control": "no-store" } });
-      if (body.action === "import-side-quest") {
+      if (body.action === "import-candidate-bundle" || body.action === "verify-candidate-bundle") {
+        if (!body.consent) return noStore({ error: "Consent is required for this selected local import." }, 400);
+        const prepared = preparePrivateCandidateImport(body.candidateBundle);
+        const existingIds = new Set(vaultRecordHeaders(vault).map(record => record.id));
+        const additions = missingCandidateRecords(prepared.records, existingIds);
+        request.signal.throwIfAborted();
+        assertAccess();
+        if (body.action === "import-candidate-bundle" && additions.length) putVaultRecords(vault, additions);
+        const verified = prepared.records.every(record => {
+          const saved = readVaultRecord(vault, record.id);
+          const payload = saved?.payload as { bundleHash?: string; privacy?: string; canonical?: boolean; reviewStatus?: string } | undefined;
+          return payload?.bundleHash === prepared.bundleHash && payload.privacy === "private" && payload.canonical === false && payload.reviewStatus === "pending";
+        });
+        if (!verified) throw new Error("Candidate storage verification failed.");
+        const atlas = body.action === "import-candidate-bundle" ? refreshVaultDerivedViews(vault).atlas : readAtlasNow(vault) as { imports?: Array<{ id: string; retained: number }> } | null;
+        const atlasVisible = atlas?.imports?.some(source => source.id === prepared.snapshotId && source.retained === prepared.candidates) ?? false;
+        assertAccess();
+        return noStore({ candidateImport: { candidates: prepared.candidates, created: additions.length, snapshotId: prepared.snapshotId, bundleHash: prepared.bundleHash, verified, atlasVisible }, summary: vaultSummary(vault) });
+      }
+      if (body.action === "import-side-quest" || body.action === "verify-side-quest") {
         const prepared = prepareSideQuestVaultImport(body.sideQuest);
-        putVaultRecords(vault, prepared.records);
-        return Response.json({ import: prepared.summary, derived: refreshVaultDerivedViews(vault), summary: vaultSummary(vault) }, { headers: { "Cache-Control": "no-store" } });
+        const existing = new Set(vaultRecordHeaders(vault).map(record=>record.id));
+        const additions = prepared.records.filter(record=>!existing.has(record.id));
+        request.signal.throwIfAborted();
+        assertAccess();
+        if(body.action === "import-side-quest" && additions.length)putVaultRecords(vault, additions);
+        const verified=verifySideQuestVaultImport(prepared,id=>readVaultRecord(vault,id));
+        if(!verified)throw new Error("Control Room storage verification failed.");
+        const atlas=body.action === "import-side-quest"?refreshVaultDerivedViews(vault).atlas:readAtlasNow(vault) as {imports?:Array<{id:string;retained:number}>}|null;
+        const atlasVisible=atlas?.imports?.some(item=>item.id===prepared.records[0].id&&item.retained===prepared.summary.entities)??false;
+        assertAccess();
+        const imported={...prepared.summary,created:body.action === "import-side-quest"?additions.length:0,verified,atlasVisible};
+        return noStore({import:imported,sideQuestImport:imported,derived:{atlas},summary:vaultSummary(vault)});
       }
       if (body.action === "import-private-source") {
         const source = body.privateSource;

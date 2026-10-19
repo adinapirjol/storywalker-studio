@@ -38,6 +38,8 @@
     ".next-review/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "private-data",
+    "tmp"
   ]
 }

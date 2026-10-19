@@ -55,6 +55,16 @@ Both the directory and `*.private.json` files are ignored. The importer writes a
 
 Rows with a missing addition timestamp or unavailable Spotify item are retained and reported as diagnostics rather than silently dropped. The command prints actual previous and current occurrence counts after a successful authenticated import. The files contain private playlist metadata and must not be moved into `examples/`.
 
+## Build a local period delta
+
+`npm run private:month-delta` previews source coverage for 18 September through 18 October 2026 in `Europe/Bucharest`. It uses source event timestamps and reports missing or undated sources separately. The output is a local, noncanonical staging derivative; it does not imply an encrypted Vault import. Add `--write-private` to save it under `private-data/deltas/`. The command refuses to replace an existing window unless `--replace` is also supplied.
+
+The delta includes dated records from already minimised Google Timeline, Calendar, YouTube, Last.fm, Spotify Extended Streaming History, and the latest available snapshot of each Spotify playlist. It preserves duplicate playlist occurrences and labels playlist identity. Playlist additions are collection changes, not listening events; the delta is not a historical-removals report. Google Maps saved-place labels have no event time and are reported as undated. Google Drive search does not copy exports into the local workspace; prepare a user-selected Takeout folder with `npm run private:prepare-takeout -- /absolute/path/to/Takeout` before generating the delta.
+
+## Last.fm recent scrobbles
+
+The optional `lastfm:import` command calls the public `user.getRecentTracks` API with a local `LASTFM_API_KEY` and an explicitly configured `LASTFM_USERNAME` in `.env.local`. Copy both variable names from `.env.example`; enter your own values locally. It requests a bounded time window (`--from` and `--to` accept ISO dates or date-times), validates pagination and response size, excludes the current-playback row, merges new scrobbles with prior staged history, and writes only a minimized local derivative. It does not unlock or write the Vault. Missing username, invalid pagination, excess pages, or oversized responses stop the import without replacing the existing file. See the [Last.fm API method documentation](https://www.last.fm/api/show/user.getRecentTracks) for its required username, UTC range timestamps, and pagination limits.
+
 ## Delete local imported data
 
 Delete the specific ignored file under `private-data/spotify/`. Delete `.spotify-token.local.json` to remove local authorization material. Revoking the application in Spotify account settings invalidates the authorization at the provider.

@@ -25,7 +25,7 @@ export function isArchivedEvidence(record: Pick<VaultRecord, "id">) {
   return record.id.startsWith("xr:spatial-draft:before-") || record.id.startsWith("xr:spatial-draft:archive:") || record.id.startsWith("lastfm:before-") || record.id.startsWith("arena:private-rehearsal:v1:archive:");
 }
 export function isAtlasSource(record: Pick<VaultRecord, "id" | "kind">) {
-  return !record.id.startsWith("native:") && !record.id.startsWith("health:stage:") && !isArchivedEvidence(record) && !record.id.startsWith("xr:spatial-draft:") && !["recovery-document", "retrieval-index", "atlas", "scenario-studio", "public-draft"].includes(record.kind);
+  return !record.id.startsWith("automation:") && !record.id.startsWith("native:") && !record.id.startsWith("health:stage:") && !isArchivedEvidence(record) && !record.id.startsWith("xr:spatial-draft:") && !["recovery-document", "retrieval-index", "atlas", "scenario-studio", "public-draft"].includes(record.kind);
 }
 function sourceCoverage(rows: unknown[]) {
   const dated = rows.flatMap(row => {
@@ -80,7 +80,7 @@ function importRecord(record: VaultRecord): AtlasImport | undefined {
   const retained = Array.isArray(document?.records) ? document.records.length : Array.isArray(snapshot?.occurrences) ? snapshot.occurrences.length : typeof document?.recordCount === "number" ? document.recordCount : typeof summary?.retained === "number" ? summary.retained : 0;
   const playlistName = typeof snapshot?.playlist?.name === "string" ? snapshot.playlist.name : undefined;
   const playlistId = typeof snapshot?.playlist?.id === "string" ? snapshot.playlist.id : undefined;
-  const label = source === "spotify-playlist" && playlistName && playlistId ? `Spotify playlist: ${playlistName} (${playlistId})` : undefined;
+  const label = source === "spotify-playlist" && playlistName && playlistId ? `Spotify playlist: ${playlistName} (${playlistId})` : source === "private-candidate-bundle" && typeof content.title === "string" ? `Candidate bundle: ${content.title}` : undefined;
   return { id: record.id, source, label, importedAt: typeof importedAt === "string" ? importedAt : record.capturedAt, retained, coverage: sourceCoverage(document?.records ?? snapshot?.occurrences ?? []) };
 }
 

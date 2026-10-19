@@ -1,0 +1,214 @@
+.health-study {
+  max-width: 1400px;
+  margin: auto;
+  padding: 2rem;
+  background: #f6f5f1;
+  color: #29332f;
+  font-family: system-ui, sans-serif;
+  line-height: 1.6;
+}
+.health-study header {
+  padding: 2rem 0;
+  border-bottom: 1px solid #9da8a2;
+}
+.health-study h1 {
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1.12;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+.health-study h2 {
+  font-size: 1.55rem;
+  font-weight: 600;
+}
+.health-eyebrow {
+  letter-spacing: 0.15em;
+  font-size: 0.8rem;
+}
+.health-study section {
+  padding: 2rem 0;
+  border-bottom: 1px solid #a3aba6;
+}
+.health-study aside {
+  padding: 1rem;
+  background: #e5e9e3;
+  margin: 1rem 0;
+  border-left: 4px solid #58695f;
+}
+.health-study label {
+  display: block;
+  font-size: 0.95rem;
+  margin: 0.6rem 0;
+}
+.health-study input:not([type="checkbox"]),
+.health-study select,
+.health-study textarea {
+  display: block;
+  width: 100%;
+  padding: 0.65rem;
+  border: 1px solid #737e77;
+  border-radius: 0.2rem;
+  color: #202c25;
+  background: #fff;
+  font: inherit;
+}
+.health-study input[type="checkbox"] {
+  margin-right: 0.6rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: #425c4d;
+}
+.health-study button {
+  background: #344c40;
+  color: #fff;
+  padding: 0.7rem 1rem;
+  border: 1px solid #344c40;
+  border-radius: 0.25rem;
+  font: inherit;
+  margin: 0.5rem 0.6rem 0.5rem 0;
+  cursor: pointer;
+}
+.health-study button:disabled {
+  background: #e0e3df;
+  color: #586159;
+  border-color: #a3aaa5;
+  cursor: not-allowed;
+}
+.health-study :focus-visible {
+  outline: 3px solid #775626;
+  outline-offset: 3px;
+}
+.health-study a {
+  color: #314f40;
+  text-decoration: underline;
+}
+.health-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.4rem 1.4rem;
+}
+.health-stats {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  background: #e8ebe5;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+.health-stats span,
+.health-stats strong {
+  display: block;
+}
+.health-stats strong {
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+.health-table {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+.health-study table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+.health-study th,
+.health-study td {
+  padding: 0.8rem;
+  text-align: left;
+  border-bottom: 1px solid #b7bdb7;
+  vertical-align: top;
+  min-width: 130px;
+}
+.health-study th {
+  font-weight: 600;
+}
+.health-study caption {
+  text-align: left;
+  margin-bottom: 1rem;
+}
+.health-study details {
+  padding: 1rem 0;
+  border-bottom: 1px solid #c3c9c3;
+  overflow-wrap: anywhere;
+}
+.health-study summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.health-report {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: white;
+  padding: 1.3rem;
+  border: 1px solid #a3aaa5;
+  font:
+    0.95rem/1.6 system-ui,
+    sans-serif;
+}
+.health-study [hidden] {
+  display: none !important;
+}
+@media (max-width: 600px) {
+  .health-study {
+    padding: 1rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .health-study *,
+  .health-study *::before,
+  .health-study *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media print {
+  .health-study {
+    display: none !important;
+  }
+}
+.health-duration {
+  display: block;
+  height: 0.3rem;
+  background: #718679;
+  margin-top: 0.7rem;
+}
+
+.health-reading {
+  font-size: 1.15rem;
+  max-width: 65ch;
+}
+.health-chart {
+  display: grid;
+  grid-template-columns: repeat(28, minmax(14px, 1fr));
+  gap: 5px;
+  overflow-x: auto;
+  padding: 1rem 0;
+}
+.health-chart-day {
+  text-align: center;
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+.health-chart-track {
+  height: 150px;
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 1px solid #9da8a2;
+}
+.health-chart-bar, .health-chart-gap {
+  display: block;
+  width: 100%;
+  background: #718679;
+}
+.health-chart-gap {
+  background: repeating-linear-gradient(135deg, transparent, transparent 3px, #9da8a2 3px, #9da8a2 5px);
+}
+.health-insight {
+  border-left: 3px solid #718679;
+  padding: 0.5rem 1.25rem;
+  margin: 1.5rem 0;
+  background: #eef0eb;
+}
+.health-insight h3 { font-size: 1.1rem; font-weight: 600; }

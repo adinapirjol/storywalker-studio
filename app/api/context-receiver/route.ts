@@ -4,7 +4,7 @@ import {boundedText} from '@/lib/http/context-request';
 import {VAULT_SESSION_COOKIE,vaultSessionFailure} from '@/lib/vault/vault-session';
 import {withBrowserVault} from '@/lib/vault/vault-route-access';
 import {nativeTransaction} from '@/lib/native/native-transaction';
-import {configureReceiver,receiverStatus,receiverSessionActive,receiverPreview} from '@/lib/native/native-receiver';
+import {updateReceiverAddress,configureReceiver,receiverStatus,receiverSessionActive,receiverPreview} from '@/lib/native/native-receiver';
 import {receiverErrorCode} from '@/lib/native/receiver-errors';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -17,7 +17,11 @@ export async function POST(request:NextRequest){
   const body=JSON.parse(await boundedText(request,2048));
   if(body.action==='preview')return json(receiverPreview(id!,body.enabled===true));
   if(body.action==='status')return json(receiverStatus());
-  if(!['create','resume','stop','revoke','pairing','follow'].includes(body.action))return json({code:'INVALID_REQUEST'},422);
+  if(body.action==='update-address'){
+   if(typeof body.host!=='string')return json({code:'INVALID_BIND'},422);
+   return await nativeTransaction(()=>withBrowserVault(id,async vault=>{const updated=await updateReceiverAddress(vault,id!,body.host);return json({...receiverStatus(),...updated});}));
+  }
+  if(!['create','resume','stop','revoke','pairing','follow','auto-accept-health','manual-review-health'].includes(body.action))return json({code:'INVALID_REQUEST'},422);
   return await nativeTransaction(async()=>{
    return withBrowserVault(id,async vault=>json(await configureReceiver(vault,id!,body.action,typeof body.host==='string'?body.host:undefined,['simulated','healthkit'].includes(body.mode)?body.mode:undefined)));
   });

@@ -54,3 +54,16 @@ def test_errors_never_echo_input():
     assert result.returncode==2
     assert result.stdout==b''
     assert result.stderr==b'NATIVE_TRANSFER_INVALID\n'
+
+@pytest.mark.parametrize('stage',['inBed','asleep','awake','core','deep','rem'])
+def test_sleep_interval_contract(stage):
+    o=next(o for o in fixtures() if o.payload.kind == 'heart_rate').model_dump(mode='json')
+    o.update(source_type='healthkit',source_id='invented.watch',acquisition='historical',semantics='interval',
+             event_start='2030-05-01T00:00:00+03:00',event_end='2030-05-01T08:00:00+03:00',
+             payload={'kind':'sleep','stage':stage},original_offset='Europe/Bucharest')
+    result=validate_transfer(json.dumps(wire(o,mode='healthkit')).encode(),clock=lambda:datetime.fromisoformat(o['received_at']))
+    assert result['observations'][0]['payload']['stage']==stage
+    o['semantics']='measurement'
+    with pytest.raises(ValueError):validate_transfer(json.dumps(wire(o,mode='healthkit')).encode(),clock=lambda:datetime.fromisoformat(o['received_at']))
+    o['semantics']='interval';o['event_end']=o['event_start']
+    with pytest.raises(ValueError):validate_transfer(json.dumps(wire(o,mode='healthkit')).encode(),clock=lambda:datetime.fromisoformat(o['received_at']))

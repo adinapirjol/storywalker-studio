@@ -144,6 +144,7 @@ export function minimiseLastFmHistory(raw: unknown, importedAt = new Date().toIS
   const seenScrobbles = new Set<string>(); let duplicateRows = 0;
   const records = tracks.flatMap((rawTrack) => {
     const track = rawTrack as Record<string, unknown>;
+    if ((track?.["@attr"] as { nowplaying?: string } | undefined)?.nowplaying === "true") return [];
     const date = track.date as Record<string, unknown> | undefined;
     const uts = typeof date?.uts === "string" || typeof date?.uts === "number" ? Number(date.uts) : Number.NaN;
     const playedAt = Number.isFinite(uts) && uts > 0 ? new Date(uts * 1_000).toISOString() : undefined;
