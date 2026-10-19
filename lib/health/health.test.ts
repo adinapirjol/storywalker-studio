@@ -352,13 +352,17 @@ describe("selected report and public boundaries", () => {
       { encoding: "utf8" },
     );
     expect(ignored.trim().split("\n")).toHaveLength(4);
+    // Git already defines this test's source boundary; no optional search tool
+    // should be required to enforce it on a clean CI runner.
     const publicSources = execFileSync(
-      "rg",
-      ["-l", "lib/health|components/health", "app", "components"],
+      "git",
+      ["ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", "app", "components"],
       { encoding: "utf8" },
     )
-      .trim()
-      .split("\n");
+      .split("\0")
+      .filter(Boolean)
+      .filter((file) => /lib\/health|components\/health/.test(readFileSync(file, "utf8")));
+    expect(publicSources).toContain("app/research/health/page.tsx");
     expect(
       publicSources.every(
         (p) =>

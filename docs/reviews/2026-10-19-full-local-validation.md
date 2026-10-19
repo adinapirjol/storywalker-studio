@@ -72,3 +72,33 @@ aggregate or a prior documentation-only run is insufficient. Independent Claude
 security review, finding resolution/recheck and explicit merge authorisation
 remain pending under the [review policy](../code-review-guidelines.md).
 The PR remains a draft and has not been merged.
+
+## CI portability follow-up — 19 October 2026
+
+The first remote quality run on `7a28fe40460d4b78a9a13cf74fa777a2362a0ec9`
+passed 84 Python tests, then failed one of 570 JavaScript tests because the
+HEALTH source-boundary test spawned `rg`, which was not installed on the runner.
+This failure did not establish a private-data leak; the guard could not execute.
+
+The test now enumerates committable app/component paths with the already-required
+Git tool, then reads and checks them with Node. Its original HEALTH allowlist and
+transport/storage checks are retained. An explicit expected-page assertion prevents
+an empty scan from passing. No runtime, cryptography, session, collector, consent,
+workflow or permission policy was changed.
+
+Reproduction and follow-up used only fictional inputs in the isolated worktree:
+
+- With `PATH=/usr/bin:/bin`, the original test reproduced `spawnSync rg ENOENT`.
+- With the same restricted PATH, the corrected HEALTH suite passed all 17 tests.
+- The complete JavaScript coverage suite then passed all 570 tests in 120 files;
+  line coverage remained 55.77%, above the unchanged 50% threshold.
+- A disposable unapproved HEALTH reference outside the allowed paths was correctly
+  rejected by the guard. The probe was removed and the clean guard passed again.
+- Typecheck, lint, whitespace and public source privacy audit passed.
+
+Only the test and this receipt changed. Earlier production/Python/native results
+above remain dated evidence for the unchanged runtime source; they were not rerun
+or represented as new device acceptance. Remote CI must still pass on the updated
+head, and Claude's review must identify which revision and follow-up diff it covers.
+Artistic CTM critique is separate from the software security review and is not a
+PR merge gate. Independent security review and merge authorisation remain pending.
