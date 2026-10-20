@@ -12,6 +12,41 @@ The system is deliberately deterministic first. It does not claim that a song ex
 
 > **Fictional demonstration data:** Aurora Coast is invented for this public repository. Every song, artist, person, event, note, identifier, and timestamp in the committed demo is fictional.
 
+## Listening Again: The Right to Revise
+
+If the Author can reshape a musical fragment, can they also revise or refuse the
+meaning an AI Editor proposes around it? **Listening Again** explores that question
+through music-making and a browser instrument in the existing XR space.
+The traveller is the Author; the AI is the Editor.
+
+**Working in the local prototype:**
+
+- **Hand-shaped sound.** With camera access enabled, hand separation changes ribbon
+  width and tone; finger openness changes folds and echoes. Sliders provide the
+  same controls. An optional microphone-level input creates visual ripples.
+- **A rejectable Editor reading.** A selected local score separates source words
+  from prepared interpretations. The Author can accept, rewrite, refuse or leave
+  a reading unresolved. Refusal withholds its spatial and sound treatment while
+  keeping the source music and hand controls available. A downloaded score keeps
+  dated revisions; the instrument does not record hand or voice performances.
+
+The instrument plays a locally selected rendered mix. It does not automatically
+recognise lyrics, infer personal meaning or generate interpretations from the
+microphone. Camera and microphone inputs are opt-in and temporary.
+
+**Next rehearsal:** compare two retained musical directions—a 148 BPM industrial
+techno study and another electronic approach—then refuse one labelled Editor
+reading while the music continues. Both versions remain available for return and
+revision. This complete Author-led presentation is proposed; the working controls
+do not establish a completed performance or a finding about other listeners.
+
+To try the local instrument, open `/research/xr/aurora-coast`, choose
+**Shape sound · music + words**, and select an original or appropriately licensed
+WAV. See the [sound instrument and scene-score guide](docs/research/xr/README.md#listening-again--hand-shaped-sound-prototype-19-october-2026).
+Private recordings, lyrics, field notes and Vault records are not bundled here.
+Public demonstrations use fictional material and original or cleared audio;
+uncleared sampled experiments remain private.
+
 ## Current research: Spatial Rehearsal
 
 `/research/xr` develops WORLD / TIME / MEMORY: geographic calibration, a chronological archive of episode spaces, and Author recomposition with visible geographic ghosts. Private sources stay in the encrypted local Vault; passkey or recovery-passphrase access can resume an interrupted action on the same page.
@@ -156,7 +191,13 @@ npm run demo:aurora-coast
 npm run dev
 ```
 
-When Next.js reports that it is ready, open the local address shown in the terminal. Choose **Load Aurora Coast Demo**, verify the memory-only preview, then choose **Seed Author workspace**.
+Open **http://localhost:3000** for local browsing and Vault passkeys. Page visits
+to `127.0.0.1` redirect to the same path on `localhost`. The server remains bound
+to loopback so both addresses can reach it; API requests and form submissions
+are not redirected or replayed. Existing tabs with unsaved edits should be kept
+until those edits are saved; sessions remain specific to their browser address.
+
+When Next.js reports that it is ready, open http://localhost:3000. Choose **Load Aurora Coast Demo**, verify the memory-only preview, then choose **Seed Author workspace**.
 
 No Spotify account, credentials, network connection, private file, or local editorial export is required for the demo.
 

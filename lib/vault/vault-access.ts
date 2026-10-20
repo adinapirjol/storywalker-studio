@@ -25,6 +25,7 @@ export const requestVaultUnlock = gate.request;
 const protectedRoutes = new Set([
   "/api/vault", "/api/private-review", "/api/vault-demo", "/api/arena-rehearsal",
   "/api/context-health", "/api/context-native", "/api/context-receiver", "/api/context-summary",
+  "/api/private-sync", "/api/health-rehearsal", "/api/health-research",
   "/api/connectors/spotify/selection", "/api/connectors/spotify/playlists", "/api/connectors/spotify/import",
 ]);
 function canReplay(input: RequestInfo | URL, init?: RequestInit) {

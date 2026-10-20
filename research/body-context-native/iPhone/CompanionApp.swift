@@ -89,10 +89,11 @@ import UniformTypeIdentifiers
 }
 @MainActor final class CompanionDelegate:NSObject,UIApplicationDelegate {
     func application(_ application:UIApplication,didFinishLaunchingWithOptions launchOptions:[UIApplication.LaunchOptionsKey:Any]?=nil)->Bool {
+        SleepSession.shared.restore()
         HealthSession.shared.restore() // Register saved opt-in observer during launch, including background launch.
         return true
     }
-    func applicationProtectedDataDidBecomeAvailable(_ application:UIApplication) { HealthSession.shared.restore() }
+    func applicationProtectedDataDidBecomeAvailable(_ application:UIApplication) { HealthSession.shared.restore(); SleepSession.shared.restore() }
 }
 @main struct CompanionApp: App {
     @UIApplicationDelegateAdaptor(CompanionDelegate.self) private var delegate
@@ -100,6 +101,7 @@ import UniformTypeIdentifiers
 }
 struct WellbeingReview:View {
     @StateObject private var health=HealthSession.shared
+    @StateObject private var sleep=SleepSession.shared
     @State private var dryRunState="Ready. Fictional data only; no Health access or network."
     @State private var dryRunWorking=false
     @State private var confirmClear=false
@@ -131,6 +133,7 @@ struct WellbeingReview:View {
                         }
                 if let collector=health.collector { HealthControls(collector:collector) }
                 else { Section("Health collection") { Text(health.status);Button("Retry local setup") { health.restore() } } }
+                SleepObservatory(sleep:sleep)
                 AutomaticDeliveryView(health:health)
                 TransferView(healthQueue:health.queue,healthEnabled:true,sharedStore:health.transfers,sharedMockQueue:health.mockQueue).id(health.transferVersion)
                 Section("Collection controls") {
@@ -157,13 +160,14 @@ struct WellbeingReview:View {
                 }
             }
 
-            .onChange(of:phase) { _,value in if value == .active { health.restore();Task { await health.collector?.checkNow() } } }
+            .onChange(of:phase) { _,value in if value == .active { health.restore();sleep.restore();Task { await health.collector?.checkNow(); await sleep.collector?.checkNow() } } }
             .task(id:phase) {
                 guard phase == .active else{return}
-                health.restore()
+                health.restore(); sleep.restore()
                 // Connection maintenance belongs to the app, not the Connections sheet.
                 // Fresh Watch/collector events still trigger delivery immediately.
                 while !Task.isCancelled {
+                    await sleep.deliver()
                     if await health.automatic?.mode() == "healthkit" { await health.deliver() }
                     do { try await Task.sleep(nanoseconds:5_000_000_000) } catch { return }
                 }

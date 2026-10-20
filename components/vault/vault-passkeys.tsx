@@ -19,8 +19,8 @@ export function VaultPasskeys({ active, onUnlocked, onLock, compact = false }: P
   const unlock = <><p>Your device chooses how to verify you. Fingerprint or face verification stays on your device; Storywalker receives no biometric data.</p>{selection}
     <button type="button" className="primary-button" disabled={access.busy || !access.selected} onClick={() => void access.unlock()}>Unlock with passkey</button></>;
   const guidance = access.address?.supportedOrigin === false ? <p>
-    Passkeys use the Vault’s saved address. <a href={`${access.address.origin}/vault?returnTo=${encodeURIComponent(safeVaultReturn(path) ?? "/research/xr")}`}>Open the passkey Vault</a>.
-    Your current page stays available; you can use its recovery passphrase below. Sessions at different addresses are separate.
+    Passkey unlock is available at {access.address.origin}, not this page’s address. This does not mean your passkey is missing. <a target="_blank" rel="noopener noreferrer" href={`${access.address.origin}/vault?returnTo=${encodeURIComponent(safeVaultReturn(path) ?? "/research/xr")}`}>Open passkey unlock in a new tab</a>.
+    Your current page and unsaved edits stay here. Continue on the new tab after unlocking; its session does not unlock this address. To continue here instead, use the Vault recovery passphrase below.
   </p> : null;
 
   if (compact) return <section aria-label="Passkey unlock">

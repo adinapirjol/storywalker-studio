@@ -25,3 +25,9 @@ it('preserves normal authorized work and closes the snapshot',async()=>{
  try{expect(await withBrowserVault(token,()=>({saved:true}))).toEqual({saved:true});expect(io.close).toHaveBeenCalledOnce();}
  finally{deleteVaultSession(token);}
 });
+
+it('rejects cancellation before opening or reading a private file',async()=>{
+ const {token}=createVaultSession(Buffer.alloc(32,1)),controller=new AbortController(),work=vi.fn();controller.abort();
+ try{await expect(withBrowserVault(token,work,controller.signal)).rejects.toThrow();expect(io.open).not.toHaveBeenCalled();expect(work).not.toHaveBeenCalled();}
+ finally{deleteVaultSession(token);}
+});

@@ -30,3 +30,12 @@ it('Atlas separates saved compositions from source counts and ignores archived d
  const b=buildAtlasNow(records,at,acknowledged),c=buildAtlasNow(records,at,{...b,acknowledgedImports:b.imports,acknowledgedSourceIds:[]});
  expect(b).toEqual(c);expect(b.whatChanged).toEqual([]);expect(JSON.stringify(records)).toBe(original);
 });
+it('offers a larger deterministic rehearsal with pagination, silence and conflicting placements',()=>{
+ const fixture=auroraCoastXR(true);expect(fixture).toEqual(auroraCoastXR(true));
+ const windows=windowEvidence(fixture.scene,fixture.decisions);
+ expect(windows).toHaveLength(38);expect(episodeSpaces(fixture.scene)).toHaveLength(10);
+ expect(episodeSpaces(fixture.scene).some(s=>s.members.length===9)).toBe(true);
+ expect(windows[18].artifacts.length).toBeGreaterThan(12);
+ expect(windows[27].artifacts).toHaveLength(1);expect(windows[28].candidates).toBe(4);
+ expect(parseSceneFile(reviewExport(fixture.scene,fixture.decisions))).toEqual(fixture);
+});

@@ -1,3 +1,4 @@
+import { isRetrievableRecord } from "./record-policy";
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, openSync, closeSync, fsyncSync, unlinkSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -7,6 +8,7 @@ import { migrateStagedRecovery } from "@/lib/evidence/private-recovery";
 import { inspectAndMinimiseTimeline, minimiseEchoesExport, minimisedGoogleCalendarSchema, minimisedGoogleMapsSchema, minimisedTimelineSchema, minimisedYouTubeHistorySchema, minimiseLastFmHistory, minimiseSpotifyHistory } from "@/lib/evidence/private-ingest";
 import { minimiseGoogleMapsSavedListCsv, minimisedGoogleMapsSavedListSchema, validateGoogleMapsListUrl } from "@/lib/evidence/google-maps-list";
 import { buildEvidencePack } from "@/lib/evidence/private-signal-engine";
+import { mergeLastFmHistory } from "@/lib/evidence/private-import-integrations";
 import { buildLocalRetrievalIndex } from "./private-retrieval-index";
 import { buildAtlasNow, isArchivedEvidence, isAtlasSource, type AtlasNow } from "@/lib/studio/private-atlas";
 import { VaultWriteConflictError, withVaultFileLock } from "./vault-file-lock";
@@ -218,7 +220,7 @@ export function* readTimelineWindows(vault: OpenVault) {
 export function vaultSummary(vault: OpenVault) { const result = rows(vault.database, "SELECT kind, COUNT(*) AS count FROM vault_records GROUP BY kind ORDER BY kind") as Array<{ kind: VaultKind; count: number }>; return { exists: true, records: result.reduce<Record<string, number>>((summary, row) => ({ ...summary, [row.kind]: Number(row.count) }), {}) }; }
 export function searchVault(vault: OpenVault, query: string) {
   const terms = [...new Set(query.toLocaleLowerCase().match(/[\p{L}\p{N}][\p{L}\p{N}-]{2,}/gu) ?? [])].slice(0, 12); if (!terms.length) return [];
-  return readVaultRecords(vault).filter((record) => record.kind !== "recovery-document").map((record) => { const payload = record.payload as { document?: { records?: unknown[] } }; const records = payload.document?.records; const text = record.kind === "import" && Array.isArray(records) && records.length > 500 ? JSON.stringify({ ...payload, document: { ...payload.document, records: records.slice(0, 16), searchRecordCount: records.length, searchView: "bounded-import-summary" } }) : JSON.stringify(record.payload); const normalised = text.toLocaleLowerCase(); const matches = terms.flatMap((term) => normalised.includes(term) ? [term] : []); const firstMatch = matches.map((term) => normalised.indexOf(term)).filter((index) => index >= 0).sort((a, b) => a - b)[0]; return { id: record.id, kind: record.kind, score: matches.length, matchedTerms: matches, snippet: firstMatch === undefined ? "" : text.slice(Math.max(0, firstMatch - 100), firstMatch + 180) }; }).filter((record) => record.score > 0).sort((a, b) => b.score - a.score || a.id.localeCompare(b.id)).slice(0, 12);
+  return readVaultRecords(vault).filter(isRetrievableRecord).map((record) => { const payload = record.payload as { document?: { records?: unknown[] } }; const records = payload.document?.records; const text = record.kind === "import" && Array.isArray(records) && records.length > 500 ? JSON.stringify({ ...payload, document: { ...payload.document, records: records.slice(0, 16), searchRecordCount: records.length, searchView: "bounded-import-summary" } }) : JSON.stringify(record.payload); const normalised = text.toLocaleLowerCase(); const matches = terms.flatMap((term) => normalised.includes(term) ? [term] : []); const firstMatch = matches.map((term) => normalised.indexOf(term)).filter((index) => index >= 0).sort((a, b) => a - b)[0]; return { id: record.id, kind: record.kind, score: matches.length, matchedTerms: matches, snippet: firstMatch === undefined ? "" : text.slice(Math.max(0, firstMatch - 100), firstMatch + 180) }; }).filter((record) => record.score > 0).sort((a, b) => b.score - a.score || a.id.localeCompare(b.id)).slice(0, 12);
 }
 export function retrieveVaultEvidence(vault: OpenVault, query: string) { return buildEvidencePack(readVaultRecords(vault), query); }
 export function rebuildVaultRetrievalIndex(vault: OpenVault) {
@@ -271,12 +273,23 @@ export function importSelectedPrivateSource(vault: OpenVault, source: "spotify-h
  * document, so this source cannot become a profile archive by accident. */
 export function importLastFmHistory(vault: OpenVault, raw: unknown, importedAt = new Date().toISOString()) {
   const prepared = minimiseLastFmHistory(raw, importedAt);
+  const previous = readVaultRecord(vault, "import:lastfm-history:v1");
+  const previousPayload = previous?.payload as Record<string, unknown> | undefined;
+  const records = mergeLastFmHistory(previousPayload?.document, prepared.document.records);
+  const previousCount = previousPayload?.document
+    ? mergeLastFmHistory(previousPayload.document, []).length : 0;
+  const added = records.length - previousCount;
+  const document = { ...prepared.document, records };
+  const summary = { ...prepared.summary, retained: records.length };
   const record: VaultRecord = {
     id: "import:lastfm-history:v1", kind: "import", capturedAt: importedAt,
-    payload: { schemaVersion: 1, privacy: "private", canonical: false, consent: "explicit-lastfm-window", source: "lastfm-history", importedAt, summary: prepared.summary, document: prepared.document },
+    payload: { ...previousPayload, schemaVersion: 1, privacy: "private", canonical: false, consent: "explicit-lastfm-window", source: "lastfm-history", importedAt, summary, document },
   };
-  putVaultRecords(vault, [record]);
-  return { source: "lastfm-history", retained: prepared.summary.retained, total: prepared.summary.total, warnings: prepared.summary.warnings };
+  putVaultRecords(vault, [
+    ...(previous && added > 0 ? [{ ...previous, id: `lastfm:before-window-import:${importedAt}:${randomBytes(8).toString("hex")}` }] : []),
+    record,
+  ]);
+  return { source: "lastfm-history", retained: records.length, total: prepared.summary.total, added, previousCount, warnings: prepared.summary.warnings };
 }
 
 /** Imports one Author-selected Google Takeout Saved CSV after the Author

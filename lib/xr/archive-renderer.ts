@@ -47,19 +47,19 @@ function inventoryTexture(window:WindowEvidence,index:number){
  ctx.fillText('Open to explore',22,793);
  cards.set(key,c);if(cards.size>40)cards.delete(cards.keys().next().value!);return c;
 }
-export function drawSourceWindows(ctx:CanvasRenderingContext2D,w:number,h:number,camera:WalkCamera,windows:WindowEvidence[],position:Point,page:number):PlaneHit[]{
+export function drawSourceWindows(ctx:CanvasRenderingContext2D,w:number,h:number,camera:WalkCamera,windows:WindowEvidence[],position:Point,page:number,selectedWindow?:string):PlaneHit[]{
  const hits:PlaneHit[]=[];
  for(const p of sourceWindowPlanes(windows,position,page)){
   const tex=inventoryTexture(p.window,p.index);
-  const corners=plane(ctx,w,h,camera,{x:p.x,z:p.z},0,p.width,p.height,tex,.3,.9);if(corners){const center=projectPoint({x:p.x,z:p.z,y:1.25},camera,w,h)!;hits.push({windowId:p.window.windowId,x:center.x,y:center.y,radius:0,corners,depth:center.depth});}
+  const corners=plane(ctx,w,h,camera,{x:p.x,z:p.z},0,p.width,p.height,tex,.3,.9);if(corners){if(p.window.windowId===selectedWindow){ctx.save();ctx.strokeStyle='#efc58b';ctx.lineWidth=3;ctx.beginPath();corners.forEach((v,i)=>i?ctx.lineTo(v.x,v.y):ctx.moveTo(v.x,v.y));ctx.closePath();ctx.stroke();ctx.restore();}const center=projectPoint({x:p.x,z:p.z,y:1.25},camera,w,h)!;hits.push({windowId:p.window.windowId,x:center.x,y:center.y,radius:0,corners,depth:center.depth});}
  }
  return hits;
 }
 export function surfaceTexture(window:WindowEvidence,page:number){const rows=window.artifacts.slice(page*3,page*3+3);return texture(`surface:${window.windowId}:${page}`,window.label,`SOURCE WINDOW / ${window.start.slice(0,16)} / ${window.artifacts.length} ARTEFACTS`,rows.length?rows.flatMap(a=>[`${a.kind.toUpperCase()} / ${a.title}`,a.preview[0]??'Source has no textual preview.']):['No supported artefacts. This surface is intentionally sparse.'],`${window.windowId} · page ${page+1}/${Math.max(1,Math.ceil(window.artifacts.length/3))} · Cross this plane to enter the same archive.`);}
-export function drawEvidenceSurface(ctx:CanvasRenderingContext2D,w:number,h:number,camera:WalkCamera,view:ArchiveView,window:WindowEvidence,source:Point,now:number,reducedMotion:boolean){
+export function drawEvidenceSurface(ctx:CanvasRenderingContext2D,w:number,h:number,camera:WalkCamera,view:ArchiveView,window:WindowEvidence,source:Point,now:number,reducedMotion:boolean,openness?:number){
  if(!view.anchor)return;
  // Only representation animates: source anchors and chronology are untouched.
- const t=reducedMotion?1:Math.min(1,Math.max(0,(now-view.openedAt)/550)),ease=1-Math.pow(1-t,3),p={x:source.x+(view.anchor.x-source.x)*ease,z:source.z+(view.anchor.z-source.z)*ease};
+ const t=reducedMotion?1:Math.min(1,Math.max(0,(now-view.openedAt)/550)),ease=openness===undefined?1-Math.pow(1-t,3):Math.max(0,Math.min(1,openness)),p={x:source.x+(view.anchor.x-source.x)*ease,z:source.z+(view.anchor.z-source.z)*ease};
  plane(ctx,w,h,camera,p,view.yaw,1+(5-1)*ease,1.9+(2.7-1.9)*ease,surfaceTexture(window,view.artifactPage));
 }
 export function drawEvidenceChamber(ctx:CanvasRenderingContext2D,w:number,h:number,camera:WalkCamera,window:WindowEvidence,page:number){

@@ -1,18 +1,19 @@
 import Link from "next/link";
-import { CTM_2027_TRACKER, RESEARCH_DIRECTION, RESEARCH_TEMPLATES } from "@/lib/research/research";
+import { CTM_2027_TRACKER, CTM_2027_SNAPSHOT, RESEARCH_DIRECTION, RESEARCH_TEMPLATES } from "@/lib/research/research";
 import styles from "./research-lab.module.css";
 
 const experiments = [
   { href: "/research/xr/aurora-coast", name: "Aurora Coast", tag: "Public XR preview · fictional", text: "Walk six invented episode spaces, enter their evidence, compare WORLD and MEMORY, and audition a cleared sample. No Vault needed." },
   { href: "/research/arena-field", name: "A field of references", tag: "Are.na · private composition", text: "Orbit your channel fragments, hold a pair together, set material aside and save your composition encrypted. The relationship remains yours to author." },
   { href: "/research/linz", name: "Public City, Private Echoes", tag: "Linz · locative prototype", text: "A three-location rehearsal of public place data, private traces and the Author’s right to revise or refuse a proposal." },
-  { href: "/research/refusal", name: "The consequence of refusal", tag: "Experiment 01 · editorial agency", text: "Accept, revise or refuse a proposed fragment. Explore how an editorial decision changes the work without turning a proposal into canon." },
+  { href: "/research/refusal", name: "Listening Again", tag: "Experiment 01 · editorial agency", text: "Accept, revise, refuse or leave a proposed fragment unresolved. Explore how an editorial decision changes the work without turning a proposal into canon." },
   { href: "/research/echo-lab", name: "Locative Echo", tag: "Experiment 02 · movement & consent", text: "A bounded study of movement, uncertainty and consent. Location provides context; the Author decides what it means." },
   { href: "/research/13a-forever", name: "13A Forever", tag: "Are.na · archive reader", text: "A route through source-ordered cultural fragments. Available material depends on the saved Are.na snapshot; unavailable sources stay visibly absent." },
 ];
 
 export function ResearchLab() {
   const tracker = CTM_2027_TRACKER;
+  const snapshot = CTM_2027_SNAPSHOT;
   return (
     <main className={`research-main ${styles.lab}`}>
       <header className="site-header">
@@ -23,13 +24,13 @@ export function ResearchLab() {
         <p className="eyebrow"><span /> Research Lab · practice in progress</p>
         <h1>An archive you can enter.<br /><em>A memory you can move.</em></h1>
         <p>Storywalker explores how evidence becomes an artistic space while the traveller remains its Author. Walk through time, encounter the sources, and compose a different arrangement.</p>
-        <div className="research-links"><Link className="primary-button" href="/research/xr">Enter Spatial Rehearsal →</Link><a className="outline-button" href="#experiments">Explore the other studies</a></div>
-        <p className={styles.updated}>Research overview · 6 October 2026</p>
+        <div className="research-links"><Link className="primary-button" href="/research/refusal">Open Listening Again →</Link><a className="outline-button" href="#experiments">Explore the other studies</a></div>
+        <p className={styles.updated}>Research overview · 19 October 2026 · provisional CTM direction</p>
       </section>
 
       <section className={styles.feature} aria-labelledby="spatial-title">
         <div className={styles.featureCopy}>
-          <p className={styles.kicker}>Current practice / Spatial Rehearsal</p>
+          <p className={styles.kicker}>Existing foundation / Spatial Rehearsal</p>
           <h2 id="spatial-title">A passage made<br /><em>of intervals.</em></h2>
           <p>A browser-based audiovisual installation study. Episode spaces hold listening observations, cultural fragments and their sources. Approach a window, draw its evidence into view, then cross into an archival chamber.</p>
           <p className={styles.featureNote}>The public route begins with a demonstration. Personal scenes are loaded explicitly from the encrypted Vault.</p>
@@ -44,17 +45,42 @@ export function ResearchLab() {
       </section>
 
       <section className={`research-grid ${styles.current}`} aria-label="Current research state">
-        <article className="notebook-card"><p className="section-kicker">Working question</p><h2>What changes when evidence becomes a space you can walk through?</h2><p>The current study tests orientation, proximity and authored displacement. It keeps the earlier question of editorial agency alive: the Author can accept, reconsider, refuse and reposition a proposal.</p><h3>Implemented in the rehearsal</h3><ul><li>WORLD, TIME and MEMORY representations of the same episode evidence.</li><li>Source-window inventories, evidence surfaces and bounded archive chambers.</li><li>Timestamp-based listening alignment and provenance-aware Vault enrichment.</li><li>Saved review decisions, scene export and optional synthetic spatial sound after activation.</li></ul></article>
-        <article className="notebook-card"><p className="section-kicker">Next rehearsal · questions to test</p><h2>From working prototype to lived encounter.</h2><ol><li>Walk a TIME passage and record whether the source windows feel like entrances to an archive.</li><li>Compare WORLD and MEMORY: can a viewer distinguish recorded geography from an Author’s displacement?</li><li>Review uncertain evidence associations and document what accepting or refusing them changes.</li><li>Rehearse scale, projection and sound in a physical room before making installation claims.</li></ol><p className="small-note">These are proposed research actions. Headset tracking, sensors and a physical multi-speaker installation are not established by this browser prototype.</p></article>
+        <article className="notebook-card"><p className="section-kicker">Working question</p><h2>How can an autobiographical music system reuse platform data while giving neurodivergent listeners control over pace, disclosure and interpretation?</h2><p>Provisional question for Author review. Listening Again tests one encounter, separate sources and dated readings. WORLD supplies listening conditions, TIME separates encounter and review dates, and MEMORY holds disagreement without forcing closure.</p><h3>Implemented in the rehearsal</h3><ul><li>WORLD, TIME and MEMORY representations of the same episode evidence.</li><li>Source-window inventories, evidence surfaces and bounded archive chambers.</li><li>Timestamp-based listening alignment and provenance-aware Vault enrichment.</li><li>Saved review decisions, scene export and optional synthetic spatial sound after activation.</li></ul></article>
+        <article className="notebook-card"><p className="section-kicker">Next rehearsal · questions to test</p><h2>One encounter, revisited.</h2><ol><li>Compare the encounter account, playlist trace and present voice without filling missing evidence.</li><li>Try accepting, rewriting, refusing and leaving the same proposal unresolved.</li><li>Return on a later date and retain a reading that disagrees with the first.</li><li>Record actual observations about pace, disclosure, sound comfort and the authority of refusal.</li></ol><p className="small-note">These are proposed research actions. Headset tracking, sensors and a physical multi-speaker installation are not established by this browser prototype.</p></article>
       </section>
 
       <section className={styles.principles} aria-label="Evidence and authorship"><p className="section-kicker">The traveller is the Author; the AI is the Editor.</p><p>Evidence, interpretation and artistic composition remain separate. Strong source links can attach automatically; uncertain associations await review. Listening counts and duration can shape the space without claiming emotion or importance.</p><p className="small-note">This public overview contains no private itinerary, listening history or Vault artefacts. The current rehearsal uses deterministic methods and synthetic sound; no ML interpretation or Spotify audio.</p></section>
 
       <section id="experiments" className={styles.studies} aria-labelledby="studies-title"><div className={styles.sectionHeading}><p className="section-kicker">Alongside the current rehearsal</p><h2 id="studies-title">Other paths through the practice.</h2></div><div className={styles.studyGrid}>{experiments.map(item=><article key={item.href}><p className="section-kicker">{item.tag}</p><h3><Link href={item.href}>{item.name} <span aria-hidden="true">↗</span></Link></h3><p>{item.text}</p></article>)}</div></section>
 
+      <section className={styles.studies} aria-labelledby="private-studies-title">
+        <div className={styles.sectionHeading}><p className="section-kicker">Private workspaces</p><h2 id="private-studies-title">HEALTH & BODY.</h2></div>
+        <p>Explore with fictional examples, or unlock the Vault to work with private records. Personal readings and research notes are not shown on this overview.</p>
+        <div className={styles.studyGrid}>
+          <article><p className="section-kicker">Study 04 · private research</p><h3><Link href="/research/health" prefetch={false}>HEALTH · Sleep Observatory <span aria-hidden="true">↗</span></Link></h3><p>Explore recorded sleep, changes over time and recording gaps. Keep descriptive findings and personal hypotheses separate in saved private research notes.</p></article>
+          <article><p className="section-kicker">BODY · private companion workspace</p><h3><Link href="/research/xr/body" prefetch={false}>BODY · Companion evolution <span aria-hidden="true">↗</span></Link></h3><p>Explore a fictional companion, manage iPhone and Watch delivery, and review selected HealthKit evidence privately through the Vault.</p></article>
+        </div>
+      </section>
+
       <section className={styles.notes} aria-label="Research notebook and earlier planning">
         <details><summary>Research notebook · structures for documenting the work</summary><ul className="template-list">{RESEARCH_TEMPLATES.map(item=><li key={item}>{item}</li>)}</ul><a href="https://github.com/adinapirjol/storywalker-studio/tree/main/docs/research/ctm-2027" className="text-link" target="_blank" rel="noreferrer">Read the public templates ↗</a></details>
-        <details><summary>Earlier CTM 2027 planning · snapshot from 23 August 2026</summary><p>This is a retained planning record, not a current application status. Its 24% readiness estimate and 15 September checkpoint have not been reassessed. Check the official call before using its dates or requirements.</p><div className={styles.archiveGrid}><div><h3>Recorded call details</h3><dl className="facts-list"><div><dt>Recorded status</dt><dd>{tracker.status} as of {tracker.verifiedAt}</dd></div><div><dt>Recorded deadline</dt><dd>{tracker.officialDeadline}</dd></div><div><dt>Internal target</dt><dd>{tracker.internalDeadline}</dd></div><div><dt>Format</dt><dd>{tracker.format}</dd></div><div><dt>Event</dt><dd>{tracker.event}</dd></div><div><dt>Support</dt><dd>{tracker.support}</dd></div></dl><p className="source-links">Official references: {tracker.officialSources.map((source,index)=><a key={source} href={source} target="_blank" rel="noreferrer">{index===0?"Research Networking Day call":"Festival theme"}</a>)}</p></div><div><h3>Earlier research frame</h3><h4>{RESEARCH_DIRECTION.title}</h4><p>{RESEARCH_DIRECTION.question}</p><p>The former decision date was {RESEARCH_DIRECTION.provisionalUntil}. This frame remains part of the research history; the current practical focus is Spatial Rehearsal.</p></div></div></details>
+        <details open>
+          <summary>CTM 2027 planning · snapshot from {snapshot.date}</summary>
+          <p>{snapshot.callStatus} on {snapshot.verifiedAt}. {snapshot.submissionStatus}. This checkpoint records preparation evidence, not a completed application.</p>
+          <div className={styles.archiveGrid}>
+            <div><h3>Current call & planning</h3><dl className="facts-list">
+              <div><dt>Official deadline</dt><dd>{snapshot.deadline}</dd></div>
+              <div><dt>Internal target</dt><dd>{snapshot.internalTarget}</dd></div>
+              <div><dt>Presentation</dt><dd>Solo, on-site, English · ten minutes · 24 January 2027, Berlin.</dd></div>
+              <div><dt>Application limits</dt><dd>Biography: 500 characters. Proposal: 1,500 characters. Both include spaces.</dd></div>
+              <div><dt>Support</dt><dd>Festival pass and meals provided; travel and accommodation unfunded.</dd></div>
+            </dl><p className="source-links"><a href={tracker.officialSources[0]} target="_blank" rel="noreferrer">Official RND call ↗</a><a href={tracker.officialSources[1]} target="_blank" rel="noreferrer">Process…ing theme ↗</a></p></div>
+            <div><h3>Current proposed direction</h3><h4>{snapshot.direction}</h4><p>{snapshot.directionStatus}.</p><p>The applicant’s own voice and reasoning remain essential; assistance with preparation does not replace authorship.</p></div>
+          </div>
+          <h3>Changes since the earlier snapshot</h3><ul>{snapshot.changes.map(change => <li key={change}>{change}</li>)}</ul>
+          <h3>Still to confirm</h3><ul>{snapshot.remaining.map(item => <li key={item}>{item}</li>)}</ul>
+        </details>
+        <details><summary>Earlier CTM 2027 planning · snapshot from 23 August 2026</summary><p>This is a retained planning record, not a current application status. Its 24% readiness estimate and 15 September checkpoint have not been reassessed. Check the official call before using its dates or requirements.</p><div className={styles.archiveGrid}><div><h3>Recorded call details</h3><dl className="facts-list"><div><dt>Recorded status</dt><dd>{tracker.status} as of {tracker.verifiedAt}</dd></div><div><dt>Recorded deadline</dt><dd>{tracker.officialDeadline}</dd></div><div><dt>Internal target</dt><dd>{tracker.internalDeadline}</dd></div><div><dt>Format</dt><dd>{tracker.format}</dd></div><div><dt>Event</dt><dd>{tracker.event}</dd></div><div><dt>Support</dt><dd>{tracker.support}</dd></div></dl><p className="source-links">Official references: {tracker.officialSources.map((source,index)=><a key={source} href={source} target="_blank" rel="noreferrer">{index===0?"Research Networking Day call":"Festival theme"}</a>)}</p></div><div><h3>Earlier research frame</h3><h4>{RESEARCH_DIRECTION.title}</h4><p>{RESEARCH_DIRECTION.question}</p><p>The former decision date was {RESEARCH_DIRECTION.provisionalUntil}. This frame remains part of the research history; the current practical focus is Listening Again, using the existing browser rehearsal.</p></div></div></details>
       </section>
       <footer><span>Storywalker Research Lab</span><span>Public practice · private sources remain in the Vault</span></footer>
     </main>

@@ -7,6 +7,9 @@ import Combine
 @MainActor public final class HealthCollector: ObservableObject {
     public var onQueued: (() async -> Void)?
     private let store = HKHealthStore()
+    public enum Kind { case heart, sleep }
+    private let kind: Kind
+    private var sampleType: HKSampleType? { kind == .heart ? HKObjectType.quantityType(forIdentifier:.heartRate) : HKObjectType.categoryType(forIdentifier:.sleepAnalysis) }
     private let queue: ProtectedQueue
     private let transfers: TransferStore?
     private var observer: HKObserverQuery?
@@ -31,10 +34,10 @@ import Combine
     @Published public private(set) var selectedSince: Date?
     @Published public private(set) var recent: [HeartReview] = []
     public var available: Bool { HKHealthStore.isHealthDataAvailable() }
-    public init(queue: ProtectedQueue,transfers:TransferStore?=nil) { self.queue = queue;self.transfers=transfers }
+    public init(queue: ProtectedQueue,transfers:TransferStore?=nil,kind:Kind = .heart) { self.queue = queue;self.transfers=transfers;self.kind=kind; if kind == .sleep { status="Sleep collection paused. Request read access, then start." } }
 
     public func authorizeForWellbeing() async throws {
-        guard available, let heart=HKObjectType.quantityType(forIdentifier:.heartRate) else { status="Health data unavailable on this device";return }
+        guard available, let heart=sampleType else { status="Health data unavailable on this device";return }
         try await store.requestAuthorization(toShare:[],read:[heart])
         status="Read request completed. Apple does not reveal whether read access was granted. Start to check available samples."
     }
@@ -51,7 +54,7 @@ import Combine
         await enableDeliveryAndSync()
     }
     private func installObserver() {
-        guard observer == nil, let heart=HKObjectType.quantityType(forIdentifier:.heartRate) else { return }
+        guard observer == nil, let heart=sampleType else { return }
         paused=false;running=true;generation += 1
         let token=generation
         let query=HKObserverQuery(sampleType:heart,predicate:nil) { [weak self] _,completion,error in
@@ -65,7 +68,7 @@ import Combine
         observer=query;store.execute(query)
     }
     private func enableDeliveryAndSync() async {
-        guard let heart=HKObjectType.quantityType(forIdentifier:.heartRate),!paused else { return }
+        guard let heart=sampleType,!paused else { return }
         let token=generation
         do { try await store.enableBackgroundDelivery(for:heart,frequency:.immediate)
             backgroundStatus="Registered; delivery timing is controlled by iOS"
@@ -77,7 +80,7 @@ import Combine
         await incremental(heart)
     }
     public func checkNow() async {
-        guard !paused,let heart=HKObjectType.quantityType(forIdentifier:.heartRate) else { await refreshReview();return }
+        guard !paused,let heart=sampleType else { await refreshReview();return }
         retryTask?.cancel();retryTask=nil
         await incremental(heart)
     }
@@ -88,7 +91,7 @@ import Combine
         lastMeasurement=snapshot.lastMeasurement;lastReceived=snapshot.lastReceived
         recent=HeartReview.recent(snapshot)
     }
-    private func fetch(_ heart:HKQuantityType,anchor:HKQueryAnchor?,since:Date) async throws -> Page {
+    private func fetch(_ heart:HKSampleType,anchor:HKQueryAnchor?,since:Date) async throws -> Page {
         let id=UUID()
         return try await withCheckedThrowingContinuation { c in
             continuation=c;queryID=id
@@ -113,7 +116,7 @@ import Combine
         if let queryTask { store.stop(queryTask) };queryTask=nil
         c.resume(with:result)
     }
-    private func incremental(_ heart:HKQuantityType) async {
+    private func incremental(_ heart:HKSampleType) async {
         guard !paused else { drainCompletions();return }
         guard !syncing else { needsAnotherPass=true;return }
         syncing=true;let token=generation
@@ -132,6 +135,14 @@ import Combine
                 guard !paused,generation == token else { return }
                 let received=Date()
                 let additions=try samples.compactMap { sample -> Delivery? in
+                    if self.kind == .sleep {
+                        guard let q=sample as? HKCategorySample else { return nil }
+                        let packet=try ObservationMapping.sleep(id:q.uuid.uuidString,source:q.sourceRevision.source.bundleIdentifier,
+                            revision:q.sourceRevision.version ?? "unknown",start:q.startDate,end:q.endDate,received:received,
+                            stage:q.value,originalTimezone:q.metadata?[HKMetadataKeyTimeZone] as? String,
+                            watchRecorded:q.device?.model == "Watch",device:q.device?.localIdentifier ?? q.device?.model)
+                        return Delivery(id:q.uuid.uuidString,packet:packet)
+                    }
                     guard let q=sample as? HKQuantitySample else { return nil }
                     let packet=try ObservationMapping.heart(id:q.uuid.uuidString,source:q.sourceRevision.source.bundleIdentifier,
                         revision:q.sourceRevision.version ?? "unknown",start:q.startDate,end:q.endDate,received:received,
@@ -166,7 +177,7 @@ import Combine
         }
     }
     private func drainCompletions() { let callbacks=completions;completions=[];callbacks.forEach { $0() } }
-    private func scheduleRetry(_ type:HKQuantityType,delay:TimeInterval) {
+    private func scheduleRetry(_ type:HKSampleType,delay:TimeInterval) {
         retryTask?.cancel()
         retryTask=Task { [weak self] in
             do { try await Task.sleep(nanoseconds:UInt64(delay * 1_000_000_000)) } catch { return }
@@ -180,14 +191,14 @@ import Combine
         // Persist pause before awaiting the OS, so a relaunch cannot restart collection.
         var pauseError:Error?
         do { try await queue.pauseCollection() } catch { pauseError=error }
-        if let heart=HKObjectType.quantityType(forIdentifier:.heartRate) {
+        if let heart=sampleType {
             await disableDelivery(heart)
         }
         backgroundStatus="Stopped";status="Paused. Queued evidence retained; Health source records unchanged."
         await refreshReview()
         if let pauseError { throw pauseError }
     }
-    private func disableDelivery(_ heart:HKQuantityType) async {
+    private func disableDelivery(_ heart:HKSampleType) async {
         await withCheckedContinuation { c in store.disableBackgroundDelivery(for:heart) { _,_ in c.resume() } }
     }
 }

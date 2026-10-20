@@ -1,5 +1,7 @@
 # CTM 2027 tracker — verified 23 August 2026
 
+This is a historical snapshot. See the [19 October snapshot and change record](checkpoint-2026-10-19.md) for the latest review; the [13 October application draft](application-2026-10-13.md) remains provisional.
+
 ## Confirmed call facts
 
 - Status: open.

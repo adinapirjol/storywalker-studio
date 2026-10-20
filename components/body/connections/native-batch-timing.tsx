@@ -11,6 +11,7 @@ export function NativeBatchTimestamp({item}:{item:NativeSummary}){
  const start=item.timing?.measuredStart??item.validatedAt;
  const end=item.timing?.measuredEnd??start;
  return <span className={styles.batchTimestamp} title={`Times shown in ${format.resolvedOptions().timeZone}`}>
+  <span><strong>Received by app:</strong> {item.timing?.receivedStart&&item.timing?.receivedEnd?range(item.timing.receivedStart,item.timing.receivedEnd):'unavailable'}</span><br/>
   {start&&end?`${item.timing?'Measured':'Staged'} ${format.formatRange(new Date(start),new Date(end))}`:'Measurement date unavailable'}
  </span>;
 }

@@ -16,7 +16,19 @@ export async function vaultAuthRequest<T>(
   });
   const result = await response.json();
   signal?.throwIfAborted();
-  if (!response.ok) throw new Error(result.error ?? "The Vault request could not complete.");
+  if (!response.ok) {
+    if (endpoint === "/api/vault" && body.action === "unlock" &&
+      result.error === "Local Vault request failed. Check your inputs and unlock state before retrying.") {
+      throw new Error("The Vault could not complete this unlock. Check that you used the Vault recovery passphrase, not your device password or PIN. You can also use passkey unlock at the Vault’s saved address. The server did not identify the cause; no automatic retry was made.");
+    }
+    throw new Error(result.error ?? "The Vault request could not complete.");
+  }
+  const unlock = (endpoint === "/api/vault" && body.action === "unlock") ||
+    (endpoint === "/api/vault/passkeys" && body.action === "finish-unlock");
+  // The response (and its session cookie) has arrived before delivery can start.
+  if (unlock && result.session?.active === true && typeof window !== "undefined") {
+    window.dispatchEvent(new Event("storywalker-vault-unlocked"));
+  }
   return result as T;
 }
 

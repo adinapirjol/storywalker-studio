@@ -10,6 +10,10 @@ class Heart(Contract):
     # Research plausibility envelope, not a clinical alarm threshold.
     value: FiniteFloat = Field(gt=0, le=300)
     unit: Literal['bpm'] = 'bpm'
+class Sleep(Contract):
+    kind: Literal['sleep'] = 'sleep'
+    stage: Literal['inBed', 'awake', 'asleep', 'core', 'deep', 'rem']
+
 class Activity(Contract):
     kind: Literal['activity'] = 'activity'
     label: str = Field(max_length=100)
@@ -27,7 +31,7 @@ class Listening(Contract):
 class Marker(Contract):
     kind: Literal['marker'] = 'marker'
     label: str = Field(max_length=200)
-Payload = Annotated[Heart | Activity | Location | Listening | Marker, Field(discriminator='kind')]
+Payload = Annotated[Heart | Sleep | Activity | Location | Listening | Marker, Field(discriminator='kind')]
 class Observation(Contract):
     schema_version: Literal[1] = 1
     id: str = Field(min_length=1, max_length=100)

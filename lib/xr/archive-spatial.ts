@@ -19,3 +19,9 @@ export function sourceWindowPlanes(windows:WindowEvidence[],position:Point,page:
  const start=Math.max(0,Math.min(Math.floor(page),Math.max(0,Math.ceil(windows.length/4)-1)))*4;
  return windows.slice(start,start+4).map((window,i,subset)=>({window,index:start+i,x:position.x+(i-(subset.length-1)/2)*.8,z:position.z-.3-windowDepth(window.durationHours,window.approximate),width:.68,height:1.9}));
 }
+
+/** Open the browsed window on this page, or the first visible window in the group. */
+export function approachWindow(members:readonly number[],page:number,browsed:number|null){
+ const visible=members.slice(Math.max(0,page)*4,Math.max(0,page)*4+4);
+ return browsed!==null&&visible.includes(browsed)?browsed:visible[0];
+}

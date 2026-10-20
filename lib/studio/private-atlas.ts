@@ -1,3 +1,5 @@
+import { isRetrievableRecord as isAtlasSource } from "@/lib/vault/record-policy";
+export { isArchivedEvidence, isRetrievableRecord as isAtlasSource } from "@/lib/vault/record-policy";
 import { xrSceneSchema } from "@/lib/xr/xr-scene";
 import { episodeSpaces } from "@/lib/xr/journey-experience";
 import { evidenceMatchAttached } from "@/lib/xr/xr-evidence";
@@ -20,13 +22,6 @@ export type AtlasNow = {
   whatChanged: AtlasChange[]; convergences: AtlasConvergence[]; needsYou: AtlasNeed[]; placeReadings: AtlasPlaceReading[]; placeCoverage: { timelineWindows: number; windowsWithCandidates: number; directTimelineLabels: number }; caveat: string;
 };
 
-/** Archive identities are deliberately narrow: retain ordinary reference records. */
-export function isArchivedEvidence(record: Pick<VaultRecord, "id">) {
-  return record.id.startsWith("xr:spatial-draft:before-") || record.id.startsWith("xr:spatial-draft:archive:") || record.id.startsWith("lastfm:before-") || record.id.startsWith("arena:private-rehearsal:v1:archive:");
-}
-export function isAtlasSource(record: Pick<VaultRecord, "id" | "kind">) {
-  return !record.id.startsWith("native:") && !record.id.startsWith("health:stage:") && !isArchivedEvidence(record) && !record.id.startsWith("xr:spatial-draft:") && !["recovery-document", "retrieval-index", "atlas", "scenario-studio", "public-draft"].includes(record.kind);
-}
 function sourceCoverage(rows: unknown[]) {
   const dated = rows.flatMap(row => {
     const r = asRecord(row); if (!r) return [];
@@ -80,7 +75,7 @@ function importRecord(record: VaultRecord): AtlasImport | undefined {
   const retained = Array.isArray(document?.records) ? document.records.length : Array.isArray(snapshot?.occurrences) ? snapshot.occurrences.length : typeof document?.recordCount === "number" ? document.recordCount : typeof summary?.retained === "number" ? summary.retained : 0;
   const playlistName = typeof snapshot?.playlist?.name === "string" ? snapshot.playlist.name : undefined;
   const playlistId = typeof snapshot?.playlist?.id === "string" ? snapshot.playlist.id : undefined;
-  const label = source === "spotify-playlist" && playlistName && playlistId ? `Spotify playlist: ${playlistName} (${playlistId})` : undefined;
+  const label = source === "spotify-playlist" && playlistName && playlistId ? `Spotify playlist: ${playlistName} (${playlistId})` : source === "private-candidate-bundle" && typeof content.title === "string" ? `Candidate bundle: ${content.title}` : undefined;
   return { id: record.id, source, label, importedAt: typeof importedAt === "string" ? importedAt : record.capturedAt, retained, coverage: sourceCoverage(document?.records ?? snapshot?.occurrences ?? []) };
 }
 

@@ -13,7 +13,7 @@ export function receiverRecovery(code:unknown){
   case 'VAULT_LOCKED':return 'Your Vault session expired. Click Go live to unlock and resume.';
   case 'PAIRING_REQUIRED':return 'No saved pairing is available. Open Automatic iPhone → Mac delivery below, create a Selected HealthKit queue pairing, and import it on your iPhone.';
   case 'HEALTHKIT_PAIRING_REQUIRED':return 'The saved pairing uses fictional data. Create a Selected HealthKit queue pairing below and import it on your iPhone.';
-  case 'ADDRESS_CHANGED':return 'The Mac’s network address changed. Check local addresses below, create a new HealthKit pairing, and import it on your iPhone.';
+  case 'ADDRESS_CHANGED':return 'The Mac’s network address changed. Check local addresses below, choose Update saved pairing for this address, then download and import the current pairing on your iPhone.';
   case 'PORT_BUSY':return 'Another process is using receiver port 8766. Stop the other receiver before trying again.';
   case 'HEALTHKIT_RECEIVER_REQUIRED':return 'The HealthKit receiver stopped. Click Go live to resume your saved pairing.';
   default:return 'Could not start the Mac receiver. Check Automatic iPhone → Mac delivery below and try again.';

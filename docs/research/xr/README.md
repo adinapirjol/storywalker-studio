@@ -377,3 +377,162 @@ after cancellation, and hidden-page, reset, mode and consent changes stop locati
 Snapshots exclude raw coordinates, relative distances and audio. Refusals inhibit
 re-entry triggers until the session is reset. A browser location provider may still
 fail; simulation remains usable without permissions.
+
+
+### Fictional head perspective
+
+Aurora Coast's TIME corridor and evidence chambers have an optional **Head
+perspective** control. Enable it, face the camera to establish a centre, then lean
+gently. Recenter establishes a new centre; Freeze stops the camera while holding
+the view; Reset restores neutral. The camera-free lean slider previews the effect.
+Tracking starts off, including for reduced-motion users. Normal navigation remains
+available. Head movement changes only a temporary rendering camera, with a bounded
+12 cm offset and a four-metre focal plane; it never walks, crosses a portal, changes
+sound, edits evidence, or records an Author decision.
+
+Frames are resized and processed in a local worker, with one frame in flight and
+at most ten inferences per second. The pinned MediaPipe runtime and model are
+served from public/vendor/head-tracking (sources, hashes and licence included).
+No camera frames or positions are uploaded, stored, or included in scene exports.
+Freeze, view departure, window blur, tab hiding, failure and unmount release the
+camera and worker. Resuming requires another click. Missing or multiple faces
+hold the view still.
+
+Validation: 71 XR tests passed, including focal-plane anchoring, differential
+parallax, bounded offsets and navigation-camera immutability. Safari rendered the
+controls and exercised the preview/reset; the actual bundled worker successfully
+processed a blank image without camera access. Live face tracking still needs a
+user camera trial. Type checking and targeted lint were also run.
+
+
+Air gestures also offers **Hand swipe browsing**. Switching mode stops the camera;
+choose Enable hand swipes to start the local hand detector. Hold one open palm
+until the visible Ready indicator appears (250 ms hold). Move horizontally about
+12% of the camera width; the progress dot shows the remaining travel. Ready does
+not expire while still. A sweep can take up to 1.8 seconds after movement begins.
+Then pause for 1.2 seconds and hold again. Physical left advances; right goes back.
+Vertical sweeps, closed/multiple/missing hands and frame gaps over 800 ms do not browse.
+Each gesture opens one source window, across episode boundaries, without entering
+a chamber or changing evidence. Previous/Next window buttons use the same action.
+The pinned hand model is served locally alongside the face detector.
+
+Hand extension validation: 10 targeted gesture/projection/archive tests passed;
+typecheck and targeted lint passed. Safari's actual hand worker processed a blank
+image without camera access. Live hand-swipe responsiveness requires a user trial.
+
+Gesture usability regression: tests cover waiting while ready, 450 ms frame spacing,
+slow sweeps, visible progress and success retained through cooldown. These are
+synthetic input checks; live camera responsiveness still needs user verification.
+
+
+Finger browsing replaces the open-palm input. Select **Finger swipe browsing**.
+A small mirrored, local camera preview shows all detected hand landmarks and a
+yellow index fingertip. The overlay is drawn on the exact frame used for inference.
+Only one hand with an extended index can browse; other fingers may be curled.
+The tracked fingertip needs 8% horizontal frame travel after Ready, so the wrist
+can remain still. Stop, blur, hiding the page and unmount remove the preview and
+release the stream. No camera frame or landmark is persisted or exported.
+Eight synthetic gesture tests passed, including index-only motion with a fixed
+wrist, curled other fingers, invalid/multiple hands, readiness and cooldown.
+Live finger detection and preview alignment still require a user camera trial.
+
+
+Finger swipes now continuously slide the current rendered view and its neighbouring
+source window. A bounded frame-rate independent follow interpolates the detector
+samples at display refresh rate. Partial swipes reverse or settle back when tracking
+is lost, stopped or cancelled. Crossing the swipe threshold settles the next view
+fully before navigation changes; hit testing and walking pause during the slide.
+At the first/last window a short resisted drag returns to the boundary. Reduced
+motion uses direct follow without extra interpolation. Camera/source geometry and
+Author decisions remain unchanged by the temporary visual offset.
+
+
+Updated rehearsal: the Aurora Coast route now uses the expanded deterministic
+fixture (38 windows, 10 groups). The original 18-window fixture remains available
+to existing callers. Added scenarios include a nine-window group, a fourteen-hour
+sparse interval, twelve attached mixed artefacts requiring pagination, four
+ambiguous candidates, long text and return visits to the same public city anchors.
+No personal data, new imports, or live services are involved.
+
+Browsing and opening are separate: swipes preserve corridor viewing distance and
+outline the selected source window. Neither the moving neighbour preview nor the
+completed swipe opens its evidence surface. Hold fingertips together briefly,
+then spread them into an open palm to draw the selected window closer. An open
+palm alone does nothing. Missing/multiple hands cancel preparation; cooldown
+prevents repeated opening. The Open selected window button is the fallback.
+Gesture arbitration suppresses swipe input while gathering/opening. Live gesture
+recognition remains a user acceptance check, distinct from synthetic tests.
+
+
+Reverse opening gesture: while a surface or chamber is open, hold an open palm
+briefly and gather the fingertips to return to the corridor. The same held-pose
+sequence recognizer is reversed, with missing-hand cancellation and one action
+per cooldown. Returning restores the stored corridor camera and retains the
+selected window for continued browsing. The explicit Return to browsing button
+is also available in Air gestures. Live recognition remains to be user-tested.
+
+
+Air gestures now runs face and hand tracking together under one opt-in button,
+with no camera-mode dropdown. The head offset is 0.6 scene units (previously 0.12),
+with the same off-axis focal plane and no changes to the navigation camera.
+Recenter lean remains available. Both local detectors process the same frame
+sequentially in the worker; the one-frame-in-flight limit remains in effect.
+
+Zoom now follows normalized fingertip spread continuously. Hold gathered fingertips
+to engage from the corridor, or hold an open palm from an enlarged surface. Spread
+and close gradually to control surface position and size; partial values can reverse
+without committing a new gesture. Lowering the hand releases control and holds the
+current zoom. The corridor returns only after the displayed amount settles to zero.
+The progress meter shows detected openness. Swipe input is suppressed during zoom.
+
+Validation: 15 gesture, zoom and projection tests passed. Both actual detector
+models also processed the same blank image in Safari, returning no hands and no
+face without camera access. Live combined performance still needs a user trial.
+
+## Listening Again · hand-shaped sound prototype (19 October 2026)
+
+Inside a journey room, choose **Shape sound · 148 BPM**. This replaces archive
+navigation temporarily, releasing its camera and locator tones. Choose the local
+148 BPM WAV sketch (1–60 seconds, mono/stereo, under 16 MB), then press **Play
+sketch**. The file is decoded only in the tab; no private audio is bundled, served
+from private storage or uploaded. The source must already be at 148 BPM: this
+prototype preserves its rate and does not detect or convert tempo.
+
+The IOANA-based local sketch is a **private experiment, with public use on hold**.
+No clearance is documented. Do not use its result in a public XR demo, CTM talk,
+DJ set, upload, recorded/streamed presentation or release until written permissions
+cover the intended use of both the recording and underlying music/lyrics. If those
+permissions are unavailable, the public version uses original or appropriately
+licensed replacement sound. Loading a file locally is not a clearance check.
+
+**Enable hand shaping** reuses the local XR camera worker. Two palm centres moving
+apart stretch the ribbon and open a low-pass filter; finger openness controls
+folding and the amount of beat-timed echo. Echo feedback and output gain are
+bounded. The input is a whole mixed sketch, not isolated stems or granular
+time-stretching. Missing hands hold the last shape. Sliders provide the same
+controls without a camera. Hand shaping does not browse or open archive windows.
+
+**Let nearby sound influence the form** requests the microphone separately. Its
+short-lived level ripples the ribbon, with adjustable influence. It does not alter
+tempo, classify music/emotion, measure physical vibration, transcribe speech or
+retain samples. The microphone graph has zero output gain; it cannot play the
+microphone back. Headphones help distinguish room sound from the sketch, which
+the microphone may otherwise hear through speakers.
+
+Stop everything, Escape, blur, hiding the tab, returning to the passage or
+unmounting releases inputs and stops playback. Pending permissions and audio
+startup are cancelled; a late device stream is stopped. Inputs never resume
+automatically. Versions and microphone data are not saved to the scene or Vault.
+
+This is a browser instrument within the existing XR room, not a headset or
+physical haptic surface. Automated mapping and resource-lifecycle checks are
+separate from a human test of live hand response and microphone behaviour.
+
+Verification on 19 October: 112 XR/browser-boundary tests passed, along with type
+checking, lint, production build, public-source audit, client/prerender privacy
+audit and deployment-trace audit. Browser checks loaded and played the original
+25.95-second sketch, changed the shape with keyboard sliders, received live hand
+readings and reached an active microphone connection. The ribbon remains visible
+while scrolling its controls. In a separate live trial, the Author confirmed that
+both hand shaping and nearby-sound ripples worked. This is first-person acceptance
+of the prototype, not a measured tracking-accuracy or latency study.

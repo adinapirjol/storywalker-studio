@@ -55,3 +55,11 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+
+# Study 04: Apple Health exports and explicit private clinician downloads
+**/export.xml
+**/export_cda.xml
+**/export.zip
+**/apple_health_export/
+**/health-exports/
+**/storywalker-health-*.txt
