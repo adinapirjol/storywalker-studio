@@ -23,7 +23,7 @@ const TIMELINE_RECORD_ID = "import:google-timeline:v1";
 const TIMELINE_CHUNK_PREFIX = `${TIMELINE_RECORD_ID}:chunk:`;
 const TIMELINE_CHUNK_SIZE = 256;
 
-export type VaultKind = "recovery-document" | "moment" | "journey" | "journey-proposal" | "thread" | "playlist-source" | "capture" | "reference" | "import" | "editorial-cut" | "editorial-draft" | "retrieval-index" | "atlas" | "scenario-studio" | "public-draft";
+export type VaultKind = "nova-loop" | "recovery-document" | "moment" | "journey" | "journey-proposal" | "thread" | "playlist-source" | "capture" | "reference" | "import" | "editorial-cut" | "editorial-draft" | "retrieval-index" | "atlas" | "scenario-studio" | "public-draft";
 export type VaultRecord = { id: string; kind: VaultKind; capturedAt: string; payload: unknown };
 
 export type OpenVault = { database: SqlDatabase; key: Buffer; storagePath?: string };
@@ -185,7 +185,7 @@ export function vaultRecordHeaders(vault: OpenVault) {
 /** Timeline chunks are intentionally omitted from general derived views. They
  * are decrypted one small chunk at a time when Atlas needs a place reading. */
 export function readVaultRecords(vault: OpenVault, includeTimelineChunks = false) {
-  const query = includeTimelineChunks ? "SELECT ciphertext, iv, auth_tag FROM vault_records WHERE record_id NOT LIKE 'native:%' AND record_id NOT LIKE 'health:stage:%' ORDER BY captured_at DESC, record_id ASC" : "SELECT ciphertext, iv, auth_tag FROM vault_records WHERE record_id NOT LIKE 'native:%' AND record_id NOT LIKE 'health:stage:%' AND record_id NOT LIKE ? ORDER BY captured_at DESC, record_id ASC";
+  const query = includeTimelineChunks ? "SELECT ciphertext, iv, auth_tag FROM vault_records WHERE record_id NOT LIKE 'nova:%' AND record_id NOT LIKE 'native:%' AND record_id NOT LIKE 'health:stage:%' ORDER BY captured_at DESC, record_id ASC" : "SELECT ciphertext, iv, auth_tag FROM vault_records WHERE record_id NOT LIKE 'nova:%' AND record_id NOT LIKE 'native:%' AND record_id NOT LIKE 'health:stage:%' AND record_id NOT LIKE ? ORDER BY captured_at DESC, record_id ASC";
   const selected = rows(vault.database, query, includeTimelineChunks ? [] : [`${TIMELINE_CHUNK_PREFIX}%`]) as Array<{ ciphertext: Uint8Array; iv: Uint8Array; auth_tag: Uint8Array }>;
   return selected.map((row) => decrypt(vault.key, row) as VaultRecord);
 }

@@ -7,5 +7,5 @@ export function isArchivedEvidence(record: Pick<VaultRecord, "id">) {
 
 /** Shared by Atlas, search, evidence packs (including Director) and local indexes. */
 export function isRetrievableRecord(record: Pick<VaultRecord, "id" | "kind">) {
-  return !record.id.startsWith("automation:") && !record.id.startsWith("native:") && !record.id.startsWith("health:stage:") && !record.id.startsWith("import:google-timeline:v1:chunk:") && !isArchivedEvidence(record) && !record.id.startsWith("xr:spatial-draft:") && !["recovery-document", "retrieval-index", "atlas", "scenario-studio", "public-draft"].includes(record.kind);
+  return !record.id.startsWith("nova:") && !record.id.startsWith("automation:") && !record.id.startsWith("native:") && !record.id.startsWith("health:stage:") && !record.id.startsWith("import:google-timeline:v1:chunk:") && !isArchivedEvidence(record) && !record.id.startsWith("xr:spatial-draft:") && !["recovery-document", "retrieval-index", "atlas", "scenario-studio", "public-draft"].includes(record.kind);
 }
