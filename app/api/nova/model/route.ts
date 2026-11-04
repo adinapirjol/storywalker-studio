@@ -7,6 +7,7 @@ import { assertVaultSnapshotCurrent } from "@/lib/vault/private-vault";
 import { modelRequestSchema } from "@/lib/nova/model-contract";
 import { prepareModelPacket, validateModelOutput, modelHypothesis } from "@/lib/nova/model-packet";
 import { requestModel, ModelConfigurationError } from "@/lib/nova/model-transport";
+import { issueModelPreviewPermit, verifyModelPreviewPermit } from "@/lib/nova/model-permit";
 import { loopView, writeLoopState } from "@/lib/nova/store";
 import { forbidden, LoopConflict, LoopInputError } from "@/lib/nova/engine";
 
@@ -23,12 +24,16 @@ export async function POST(request: NextRequest) {
   catch { return json({ error: "Invalid model request or missing one-request consent." }, 422); }
   let reservedId: string | undefined;
   try {
-    if (command.action === "preview") return await withBrowserVault(token, vault => json(prepareModelPacket(vault, command.selection).preview));
+    if (command.action === "preview") return await withBrowserVault(token, vault => {
+      const preview = prepareModelPacket(vault, command.selection).preview;
+      return json({ ...preview, ...issueModelPreviewPermit(vault.key, preview.requestId, preview.snapshotHash) });
+    });
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) throw new LoopInputError("No model key is configured. Nothing was sent. Your saved observation remains local.");
     const generate = command;
-    const response = await withBrowserVault(token, async vault => {
+    const body = await withBrowserVault(token, async vault => {
       request.signal.throwIfAborted();
+      if (!verifyModelPreviewPermit(vault.key, generate, Date.now())) throw new LoopInputError("This preview expired or changed. Prepare a fresh preview before consenting.");
       const packet = prepareModelPacket(vault, generate.selection);
       if (packet.snapshotHash !== generate.snapshotHash) throw new LoopConflict("The preview is stale. Prepare it again before consenting.");
       const state = packet.view.state, now = new Date().toISOString();
@@ -42,8 +47,11 @@ export async function POST(request: NextRequest) {
       assertVaultSnapshotCurrent(vault);
       assertVaultSessionActive(token);
       request.signal.throwIfAborted();
-      return requestModel(packet.body, apiKey, request.signal);
+      return packet.body;
     });
+    assertVaultSessionActive(token);
+    request.signal.throwIfAborted();
+    const response = await requestModel(body, apiKey, request.signal);
     return await withBrowserVault(token, vault => {
       request.signal.throwIfAborted();
       const packet = prepareModelPacket(vault, { ...generate.selection, expectedRevision: generate.selection.expectedRevision + 1 });

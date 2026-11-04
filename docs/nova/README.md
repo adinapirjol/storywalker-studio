@@ -143,8 +143,12 @@ Each connection offers **My observation · CTM editorial reading**. Saving creat
 one encrypted, Author-stated research snapshot through the existing Vault
 research-session API (`study: refusal`, `mode: live`). It preserves the proposal,
 source IDs and revisions, verbatim observation, and separate editorial reading.
-This is evidence of a present response; it does not change the hypothesis verdict
-or verify listening, attendance, or artist intent. Saved readings can be reloaded
-beside the connection. The client rereads the saved record before reporting it
-verified. Retries reuse the snapshot identifier; changed wording creates a new
-snapshot. No private reading is included in this documentation or test fixtures.
+Proposal wording stays in the Nova record; the snapshot keeps a reference and
+does not copy the proposed interpretation into Author-stated text. Nova editorial
+snapshots stay available to this loop but are excluded from generic Vault retrieval
+to prevent feedback into other interpreters. This records a present response; it
+does not change the hypothesis verdict or verify listening, attendance, or artist
+intent. Saved readings can be reloaded beside the connection. The client rereads
+the saved record before reporting it verified. Retries reuse the snapshot
+identifier; changed wording creates a new snapshot. No private reading is
+included in this documentation or test fixtures.

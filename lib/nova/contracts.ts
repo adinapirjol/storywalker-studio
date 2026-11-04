@@ -35,7 +35,7 @@ export const stateSchema = z.object({
   hypotheses: z.array(hypothesisSchema).max(1000), decisions: z.array(decisionSchema).max(2000),
   lastAnalysis: z.string().nullable(), metricsEnabled: z.boolean(),
   metrics: z.record(z.string(), z.number()),
-  modelAttempts: z.array(z.object({ id: z.string(), packetHash: z.string(), at: z.string(), status: z.enum(["pending", "completed", "no-proposal", "failed"]), hypothesisId: z.string().optional(), summary: z.string().max(2000).optional() })).max(50).default([]),
+  modelAttempts: z.array(z.object({ id: z.string(), packetHash: z.string(), at: z.string(), status: z.enum(["pending", "outcome-unknown", "completed", "no-proposal", "failed"]), hypothesisId: z.string().optional(), summary: z.string().max(2000).optional() })).max(50).default([]),
 });
 export type LoopState = z.infer<typeof stateSchema>;
 export const initialState = (): LoopState => ({ schemaVersion: 1, revision: 0, enabled: false, paused: false, sourceIds: [], hypotheses: [], decisions: [], lastAnalysis: null, metricsEnabled: false, metrics: {}, modelAttempts: [] });

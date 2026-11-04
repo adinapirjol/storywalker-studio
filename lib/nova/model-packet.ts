@@ -4,7 +4,7 @@ import { researchSessionSchema } from "@/lib/research/research-session";
 import { loopView } from "./store";
 import { normalize, digest } from "./normalize";
 import { forbidden, LoopConflict, LoopInputError } from "./engine";
-import type { ModelSelection, ModelPreview, ModelOutput } from "./model-contract";
+import type { ModelSelection, ModelPreviewDraft, ModelPreview, ModelOutput } from "./model-contract";
 import type { Hypothesis } from "./contracts";
 
 export const MODEL_INSTRUCTIONS = `You are an Editor in Hypothesis Hyperloop. The participant is the Author.
@@ -56,7 +56,7 @@ export function prepareModelPacket(vault: OpenVault, selection: ModelSelection) 
   // advances it once; the immutable content fingerprint must survive that write.
   const snapshotHash = digest({ body, refs, original, decisions: state.decisions });
   assertVaultSnapshotCurrent(vault);
-  return { view, original, reading, refs, items, sources, packetHash, snapshotHash, body, preview: { body, items, requestId: randomUUID(), snapshotHash, configured: !!process.env.OPENAI_API_KEY, provider: "OpenAI" as const, model } };
+  return { view, original, reading, refs, items, sources, packetHash, snapshotHash, body, preview: { body, items, requestId: randomUUID(), snapshotHash, configured: !!process.env.OPENAI_API_KEY, provider: "OpenAI" as const, model } satisfies ModelPreviewDraft };
 }
 export function validateModelOutput(output: ModelOutput, packet: ReturnType<typeof prepareModelPacket>) {
   if (output.outcome === "no-proposal" && !output.rationale.trim()) throw new LoopInputError("The model did not explain why it could not propose a direction.");

@@ -9,9 +9,10 @@ export function connectionEditorial(h: Hypothesis, observation: string, reading:
     mode: "live",
     title: "CTM · Hypothesis Hyperloop · Author observation",
     sourceContext: JSON.stringify({
-      hypothesisId: h.id, relationship: h.relationship, refs: h.refs,
-      proposedInterpretation: h.interpretation, observedCue: h.observation,
-      boundary: "Snapshot of a proposal. This reading does not approve it or verify listening, attendance, artist identity or intent.",
+      origin: "nova-hypothesis-loop",
+      hypothesisId: h.id,
+      refs: h.refs,
+      boundary: "This Author response is linked to a proposal; it does not approve that proposal or verify listening, attendance, artist identity or intent.",
     }),
     note: observation,
     entries: [

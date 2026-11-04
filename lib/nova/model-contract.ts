@@ -11,7 +11,7 @@ export const modelSelectionSchema = z.object({
 export type ModelSelection = z.infer<typeof modelSelectionSchema>;
 export const modelRequestSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("preview"), selection: modelSelectionSchema }).strict(),
-  z.object({ action: z.literal("generate"), selection: modelSelectionSchema, requestId: z.string().uuid(), snapshotHash: z.string().length(64), consent: z.literal(true) }).strict(),
+  z.object({ action: z.literal("generate"), selection: modelSelectionSchema, requestId: z.string().uuid(), snapshotHash: z.string().length(64), requestSignature: z.string().regex(/^[a-f0-9]{64}$/), expiresAt: z.string().datetime({ offset: true }), consent: z.literal(true) }).strict(),
 ]);
 export const modelOutputSchema = z.object({
   outcome: z.enum(["proposal", "no-proposal"]),
@@ -23,9 +23,10 @@ export const modelOutputSchema = z.object({
   grounds: z.array(z.object({ source: z.string().max(40), quote: z.string().min(1).max(1000) }).strict()).max(6),
 }).strict();
 export type ModelOutput = z.infer<typeof modelOutputSchema>;
-export type ModelPreview = {
+export type ModelPreviewDraft = {
   requestId: string; snapshotHash: string; configured: boolean;
   provider: "OpenAI"; model: string;
   items: Array<{ source: string; kind: string; text: string }>;
   body: { model: string; store: false; instructions: string; input: string; max_output_tokens: number; text: { format: { type: "json_schema"; name: string; strict: true; schema: Record<string, unknown> } } };
 };
+export type ModelPreview = ModelPreviewDraft & { requestSignature: string; expiresAt: string };

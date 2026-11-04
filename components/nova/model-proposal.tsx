@@ -30,7 +30,7 @@ export function ModelProposal({ h, record, revision, evidence, canPropose, dispa
     try {
       if (send && (!preview || !selected.current || !consent)) return;
       const selection: ModelSelection = send ? selected.current! : { expectedRevision: revision, hypothesisId: targetId!, readingId: record.id, observationExcerpt: observation, editorialExcerpt: editorial, includeOriginal, evidenceIds: ids };
-      const body = send ? { action: "generate", selection, requestId: preview!.requestId, snapshotHash: preview!.snapshotHash, consent: true } : { action: "preview", selection };
+      const body = send ? { action: "generate", selection, requestId: preview!.requestId, snapshotHash: preview!.snapshotHash, requestSignature: preview!.requestSignature, expiresAt: preview!.expiresAt, consent: true } : { action: "preview", selection };
       if (send) setConsent(false);
       const response = await vaultFetch("/api/nova/model", { method: "POST", signal: abort.signal, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const result = await response.json();

@@ -7,6 +7,7 @@ import { LoopConflict, LoopInputError, reconcile, transition } from "./engine";
 import { reconsiderReading } from "./reconsider";
 const loopSupported = (r: Parameters<typeof supportedSource>[0]) => supportedSource(r) && r.id !== "import:spotify-history:v1";
 const RECORD = "nova:loop:v1";
+const MODEL_OUTCOME_TIMEOUT_MS = 120_000;
 const limitations = [
   "Initial cues are local and deterministic. Richer model interpretation requires a saved observation, an exact preview and separate one-request consent. Spatial proximity, verified entities and automatic contradiction detection remain unsupported.",
   "Calendar requires individual-event authorization; bulk calendar, HEALTH and native records are unavailable to this adapter.",
@@ -37,6 +38,14 @@ function evidenceFor(vault: OpenVault, ids: string[]) {
 }
 export function loopView(vault: OpenVault, message = "Inspect selected evidence; analyze explicitly to consider new connections."): LoopView {
   const state = saved(vault);
+  // A provider may have received the request even if the session expires before
+  // its result can be saved. Surface that ambiguity instead of leaving "pending"
+  // forever or implying that the request failed.
+  const now = Date.now();
+  state.modelAttempts = state.modelAttempts.map(attempt => {
+    if (attempt.status !== "pending" || now - Date.parse(attempt.at) < MODEL_OUTCOME_TIMEOUT_MS) return attempt;
+    return { ...attempt, status: "outcome-unknown", summary: "The session ended before the result was saved. The provider may have received this request; inspect before making a new preview." };
+  });
   const { evidence, gaps } = evidenceFor(vault, state.enabled ? state.sourceIds : []);
   const inventory = vaultRecordHeaders(vault).filter(r => isAtlasSource(r) && !r.id.startsWith("nova:")).slice(0, 500).map(r => {
     // The guarded source picker may display a capture's title/date before inference

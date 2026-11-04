@@ -91,3 +91,25 @@ it("round-trips encrypted decisions, isolates retrieval, rejects stale snapshots
     api.closeVault(vault); expect(existsSync(file)).toBe(true);
   } finally { cwd.mockRestore(); rmSync(dir, { recursive: true, force: true }); }
 });
+
+it("shows timed-out pending provider attempts as outcome unknown without rewriting history", async () => {
+  const root = process.cwd(), dir = mkdtempSync(path.join(tmpdir(), "nova-outcome-test-"));
+  symlinkSync(path.join(root, "node_modules"), path.join(dir, "node_modules"));
+  const cwd = vi.spyOn(process, "cwd").mockReturnValue(dir);
+  try {
+    vi.resetModules();
+    const api = await import("@/lib/vault/private-vault");
+    const loop = await import("./store");
+    const { initialState } = await import("./contracts");
+    await api.initialiseVault("Fictional stale request credential");
+    const vault = await api.openVault("Fictional stale request credential");
+    const state = initialState();
+    state.modelAttempts = [{ id: "fictional-attempt", packetHash: "a".repeat(64), at: new Date(Date.now() - 180_000).toISOString(), status: "pending" }];
+    loop.writeLoopState(vault, state);
+    const view = loop.loopView(vault);
+    expect(view.state.modelAttempts[0]).toMatchObject({ status: "outcome-unknown" });
+    expect(view.state.modelAttempts[0].summary).toContain("provider may have received");
+    expect(api.readVaultRecord(vault, "nova:loop:v1")?.payload).toMatchObject({ modelAttempts: [{ status: "pending" }] });
+    api.closeVault(vault);
+  } finally { cwd.mockRestore(); rmSync(dir, { recursive: true, force: true }); }
+});
