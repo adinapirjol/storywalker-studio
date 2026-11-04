@@ -23,7 +23,7 @@ export const installVaultUnlock = gate.install;
 export const requestVaultUnlock = gate.request;
 
 const protectedRoutes = new Set([
-  "/api/vault", "/api/private-review", "/api/vault-demo", "/api/arena-rehearsal",
+  "/api/nova", "/api/nova/model", "/api/vault", "/api/private-review", "/api/vault-demo", "/api/arena-rehearsal",
   "/api/context-health", "/api/context-native", "/api/context-receiver", "/api/context-summary",
   "/api/private-sync", "/api/health-rehearsal", "/api/health-research",
   "/api/connectors/spotify/selection", "/api/connectors/spotify/playlists", "/api/connectors/spotify/import",
@@ -64,7 +64,7 @@ export function vaultFetch(input: RequestInfo | URL, init?: RequestInit) {
 }
 
 const returnPaths = new Set([
-  "/", "/atlas", "/director", "/field-trace", "/voice", "/scenario-studio", "/private-review", "/research",
+  "/", "/nova", "/atlas", "/director", "/field-trace", "/voice", "/scenario-studio", "/private-review", "/research",
   "/research/xr", "/research/xr/body", "/research/xr/aurora-coast", "/research/arena-field", "/research/refusal",
   "/research/echo-lab", "/research/linz",
 ]);
