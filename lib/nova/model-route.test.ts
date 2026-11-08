@@ -67,6 +67,26 @@ it("reserves once, rechecks after the model, and saves a pending proposal", asyn
   expect(mocks.view().state.modelAttempts[0].status).toBe("completed");
   expect(response.headers.get("cache-control")).toBe("no-store");
 });
+it("releases the Vault during the provider call and preserves pending when the session expires", async () => {
+  let vaultOpen = false;
+  mocks.withVault.mockImplementation(async (_token, work) => {
+    if (!mocks.active()) throw new Error("fictional session expired");
+    vaultOpen = true;
+    try { return await work({ key: modelKey }); }
+    finally { vaultOpen = false; }
+  });
+  mocks.model.mockImplementation(async () => {
+    expect(vaultOpen).toBe(false);
+    mocks.active.mockReturnValue(false);
+    return { outcome: "proposal" };
+  });
+
+  const response = await POST(request(command));
+  expect(response.status).toBe(422);
+  expect(mocks.model).toHaveBeenCalledOnce();
+  expect(mocks.write).toHaveBeenCalledOnce();
+  expect(mocks.view().state.modelAttempts[0].status).toBe("pending");
+});
 it("discards results when the snapshot changes during generation", async () => {
   mocks.model.mockImplementation(async () => { mocks.prepare().snapshotHash = "c".repeat(64); return { outcome: "proposal" }; });
   expect((await POST(request(command))).status).toBe(409);
