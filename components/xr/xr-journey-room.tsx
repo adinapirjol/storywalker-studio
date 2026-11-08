@@ -41,7 +41,7 @@ export function XRJourneyRoom({ allowHeadPerspective = false, scene, decisions, 
   return <div className={styles.journey}>
     <div className={styles.actions} role="group" aria-label="XR space mode">
       <button aria-pressed={!instrumentOpen} onClick={() => setInstrumentOpen(false)}>Walk the archive</button>
-      <button aria-pressed={instrumentOpen} onClick={() => { onEnterInstrument?.(); setInstrumentOpen(true); }}>Shape sound · 148 BPM</button>
+      <button aria-pressed={instrumentOpen} onClick={() => { onEnterInstrument?.(); setInstrumentOpen(true); }}>Shape sound · music + words</button>
     </div>
     {showBodyStudy&&<p><a href="#context-body-composition">BODY · open the fictional spherical companion study above</a></p>}
     {instrumentOpen ? <XRSoundInstrument onLeave={() => setInstrumentOpen(false)} /> : <XREpisodeExperience allowHeadPerspective={allowHeadPerspective} onBody={bodyStudy ? () => { onEnterBody?.(); setBodyOpen(true); } : undefined} scene={scene} decisions={decisions} activated={activated} onChange={onChange} onInspect={i=>{choose(i);setEvidenceOpen(true);requestAnimationFrame(()=>{const desk=document.getElementById("xr-source-desk");desk?.scrollIntoView({block:"start"});desk?.focus();});}} onCalibrate={()=>setCalibration(v=>!v)} />}

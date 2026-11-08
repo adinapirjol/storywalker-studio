@@ -26,12 +26,13 @@ export function shapeFromHands(hands: HandPoint[][], previous: SoundShape): Soun
   return { stretch: unit((Math.hypot(a.x - b.x, a.y - b.y) - 0.12) / 0.55), fold: unit(fold) };
 }
 
-export function soundParameters(shape: SoundShape) {
+export function soundParameters(shape: SoundShape, bpm = SKETCH_BPM) {
+  const gridBpm = Number.isFinite(bpm) ? Math.max(60, Math.min(200, bpm)) : SKETCH_BPM;
   return {
     cutoff: 450 * Math.pow(32, unit(shape.stretch)),
     echo: unit(shape.fold) * 0.32,
-    delay: 60 / SKETCH_BPM / 2,
-    // The source rate never follows hand distance: the groove remains at 148 BPM.
+    delay: 60 / gridBpm / 2,
+    // Echo grid only. Neither hand distance nor this value changes source speed/pitch.
     playbackRate: 1,
   };
 }
