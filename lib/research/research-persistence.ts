@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { putVaultRecords, readVaultRecord, type OpenVault } from "@/lib/vault/private-vault";
+import { putVaultRecords, readVaultRecord, vaultRecordHeaders, type OpenVault, type VaultRecord } from "@/lib/vault/private-vault";
 import { isNovaEditorialSnapshot } from "@/lib/vault/record-policy";
 import { researchPayload, researchSessionSchema, type ResearchSession } from "./research-session";
 
@@ -18,4 +18,26 @@ export function saveResearchSnapshot(vault: OpenVault, input: ResearchSession, s
   const savedAt = new Date().toISOString();
   putVaultRecords(vault, [{ id, kind: "capture", capturedAt: savedAt, payload: researchPayload(session, savedAt) }]);
   return { id, savedAt, duplicate: false };
+}
+
+/**
+ * On explicit deletion of Nova-derived history, preserve Author-authored notes
+ * while removing model text copied into legacy Nova snapshot metadata.
+ */
+export function sanitizedLegacyNovaSnapshots(vault: OpenVault): VaultRecord[] {
+  return vaultRecordHeaders(vault)
+    .filter(header => header.kind === "capture" && header.id.startsWith("research-session:") && !header.id.startsWith("research-session:nova:"))
+    .map(header => readVaultRecord(vault, header.id))
+    .filter((record): record is VaultRecord => !!record && isNovaEditorialSnapshot(record))
+    .map(record => {
+      const payload = researchSessionSchema.parse(record.payload);
+      const safeSession = {
+        ...payload,
+        sourceContext: JSON.stringify({
+          origin: "nova-hypothesis-loop",
+          boundary: "This Author response is linked to a proposal; it does not approve that proposal or verify listening, attendance, artist identity or intent.",
+        }),
+      };
+      return { ...record, payload: researchPayload(safeSession, record.capturedAt) };
+    });
 }

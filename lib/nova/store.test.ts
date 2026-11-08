@@ -140,6 +140,12 @@ it("hides legacy Nova editorial snapshots from its source picker and rejects man
     expect(view.inventory.map(item => item.id)).not.toContain("research-session:legacy-nova");
     expect(view.inventory.map(item => item.id)).toContain("research-session:ordinary");
     expect(() => loop.executeLoop(vault, { action: "configure", expectedRevision: view.state.revision, sourceIds: ["research-session:legacy-nova"], consent: true })).toThrow("unsupported source");
+    loop.executeLoop(vault, { action: "delete-derived", expectedRevision: view.state.revision });
+    const cleaned = api.readVaultRecord(vault, "research-session:legacy-nova")?.payload as Record<string, unknown>;
+    expect(cleaned.note).toBe("An Author-authored fictional observation.");
+    expect(cleaned.evidence).toContain("An Author-authored fictional observation.");
+    expect(JSON.stringify(cleaned)).not.toContain("Fictional old model wording");
+    expect(JSON.stringify(cleaned)).not.toContain("Fictional old model cue");
     api.closeVault(vault);
   } finally { cwd.mockRestore(); rmSync(dir, { recursive: true, force: true }); }
 });

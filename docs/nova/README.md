@@ -103,8 +103,9 @@ retrieval. This conservative boundary prevents older snapshots that copied a
 model proposal into their metadata from being reintroduced as Author evidence.
 The Author's own note remains available in the original connection view; it is
 not separately indexed by Atlas, search, Director or the generic retrieval index.
-Older snapshots remain encrypted and preserved in place; the application does
-not rewrite or delete them during unlock.
+Older snapshots remain encrypted and preserved in place during unlock. If the
+Author explicitly deletes Nova-derived history, the same atomic Vault write
+removes copied model wording from those snapshots while preserving their notes.
 
 **Current model-assisted flow:** Save an observation, preview the exact outbound
 selection, then explicitly consent to one model request. The generic local prompt

@@ -6,6 +6,7 @@ import { sourceLabel } from "./source-label";
 import { normalize, supportedSource, sourceRevoked } from "./normalize";
 import { LoopConflict, LoopInputError, reconcile, transition } from "./engine";
 import { reconsiderReading } from "./reconsider";
+import { sanitizedLegacyNovaSnapshots } from "@/lib/research/research-persistence";
 const loopSupported = (r: Parameters<typeof supportedSource>[0]) => supportedSource(r) && r.id !== "import:spotify-history:v1";
 const RECORD = "nova:loop:v1";
 const MODEL_OUTCOME_TIMEOUT_MS = 120_000;
@@ -66,11 +67,11 @@ export function executeLoop(vault: OpenVault, command: Command, now = new Date()
   const state = saved(vault);
   if (command.expectedRevision !== state.revision) throw new LoopConflict("Reload the latest review before saving.");
   if (command.action === "delete-derived") {
-    // Replace the one encrypted record, preserving a monotonic revision against stale clients.
-    // Sources are never deleted. All decisions/boundaries/metrics are erased explicitly.
+    // Preserve Author notes in older Nova snapshots, but remove copied model text
+    // while deleting decisions, boundaries and metrics in the same Vault write.
     const clean = { ...initialState(), revision: state.revision + 1 };
-    replaceVaultRecords(vault, [{ id: RECORD, kind: "nova-loop", capturedAt: now, payload: clean }], [RECORD]);
-    return loopView(vault, "All Nova derived data and boundaries erased; processing disabled. Original sources unchanged.");
+    replaceVaultRecords(vault, [{ id: RECORD, kind: "nova-loop", capturedAt: now, payload: clean }, ...sanitizedLegacyNovaSnapshots(vault)], [RECORD]);
+    return loopView(vault, "Nova decisions and boundaries erased; older Author notes are preserved with copied model wording removed.");
   }
   const selected = command.action === "configure" ? command.sourceIds : state.sourceIds;
   if (command.action === "configure") {
