@@ -2,6 +2,7 @@ import { expect, it, vi } from "vitest";
 import { mkdtempSync, symlinkSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { researchPayload } from "@/lib/research/research-session";
 
 it("persists an observation-driven proposal and keeps the response if inference is paused", async () => {
   const root = process.cwd(), dir = mkdtempSync(path.join(tmpdir(), "hyperloop-observation-test-"));
@@ -20,6 +21,7 @@ it("persists an observation-driven proposal and keeps the response if inference 
     let view = loop.executeLoop(vault, { action: "configure", expectedRevision: 0, sourceIds: ["capture:a", "capture:b"], consent: true, analyze: true }, at);
     const original = view.state.hypotheses[0];
     const saved = saveResearchSnapshot(vault, connectionEditorial(original, "A fictional doorway, not an arrival.", "", at), "fictional-observation");
+    expect(saved.id).toBe("research-session:nova:fictional-observation");
     const command = { action: "reconsider-reading" as const, expectedRevision: view.state.revision, hypothesisId: original.id, readingId: saved.id, consent: true as const };
     view = loop.executeLoop(vault, command, at);
     expect(view.state.hypotheses[1]).toMatchObject({ status: "proposed", readingId: saved.id, alternativeTo: original.id });
@@ -110,6 +112,34 @@ it("shows timed-out pending provider attempts as outcome unknown without rewriti
     expect(view.state.modelAttempts[0]).toMatchObject({ status: "outcome-unknown" });
     expect(view.state.modelAttempts[0].summary).toContain("provider may have received");
     expect(api.readVaultRecord(vault, "nova:loop:v1")?.payload).toMatchObject({ modelAttempts: [{ status: "pending" }] });
+    api.closeVault(vault);
+  } finally { cwd.mockRestore(); rmSync(dir, { recursive: true, force: true }); }
+});
+
+it("hides legacy Nova editorial snapshots from its source picker and rejects manual selection", async () => {
+  const root = process.cwd(), dir = mkdtempSync(path.join(tmpdir(), "nova-picker-test-"));
+  symlinkSync(path.join(root, "node_modules"), path.join(dir, "node_modules"));
+  const cwd = vi.spyOn(process, "cwd").mockReturnValue(dir);
+  try {
+    vi.resetModules();
+    const api = await import("@/lib/vault/private-vault");
+    const loop = await import("./store");
+    await api.initialiseVault("Fictional picker fixture credential");
+    const vault = await api.openVault("Fictional picker fixture credential");
+    const at = "2026-10-20T12:00:00.000Z";
+    const legacy = researchPayload({
+      study: "refusal", mode: "live", title: "CTM · Hypothesis Hyperloop · Author observation",
+      sourceContext: JSON.stringify({ proposedInterpretation: "Fictional old model wording", observedCue: "Fictional old model cue" }),
+      note: "An Author-authored fictional observation.", entries: [],
+    }, at);
+    api.putVaultRecords(vault, [
+      { id: "research-session:legacy-nova", kind: "capture", capturedAt: at, payload: legacy },
+      { id: "research-session:ordinary", kind: "capture", capturedAt: at, payload: researchPayload({ study: "refusal", mode: "live", title: "Ordinary fictional research", sourceContext: "", note: "A separate observation.", entries: [] }, at) },
+    ]);
+    const view = loop.loopView(vault);
+    expect(view.inventory.map(item => item.id)).not.toContain("research-session:legacy-nova");
+    expect(view.inventory.map(item => item.id)).toContain("research-session:ordinary");
+    expect(() => loop.executeLoop(vault, { action: "configure", expectedRevision: view.state.revision, sourceIds: ["research-session:legacy-nova"], consent: true })).toThrow("unsupported source");
     api.closeVault(vault);
   } finally { cwd.mockRestore(); rmSync(dir, { recursive: true, force: true }); }
 });

@@ -2,6 +2,7 @@ import { expect, it } from "vitest";
 import { connectionEditorial } from "./editorial";
 import { researchPayload } from "@/lib/research/research-session";
 import { buildLocalRetrievalIndex } from "@/lib/vault/private-retrieval-index";
+import { isNovaEditorialSnapshot } from "@/lib/vault/record-policy";
 import type { Hypothesis } from "./contracts";
 
 it("preserves a live Author reading as evidence without changing the hypothesis verdict", () => {
@@ -38,4 +39,6 @@ it("excludes legacy Nova editorial snapshots from generic retrieval", () => {
   }, "2026-10-20T12:01:00.000Z");
   const index = buildLocalRetrievalIndex([{ id: "research-session:legacy-fixture", kind: "capture", capturedAt: "2026-10-20T12:01:00.000Z", payload: legacy }]);
   expect(index.records).toEqual([]);
+  expect(isNovaEditorialSnapshot({ id: "research-session:nova:new-fixture", kind: "capture" })).toBe(true);
+  expect(isNovaEditorialSnapshot({ id: "research-session:incomplete-header", kind: "capture" })).toBe(true);
 });

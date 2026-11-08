@@ -22,7 +22,7 @@ Architecture and integration boundaries: [architecture.md](architecture.md).
 ## Implemented boundary
 
 - Supported sources: existing `capture:*` Author captures, minimised Last.fm
-  history, live Author research responses and selected Spotify playlist snapshots.
+  history, non-Nova live Author research responses and selected Spotify playlist snapshots.
   Spotify playback history is excluded. Exact source IDs are selected, never wildcarded.
 - Adapter reads event timestamps, never import/save times. Unknown timestamps,
   absent locations, unverified artist identities and missing provenance remain
@@ -95,6 +95,16 @@ private source records should be supplied to a reviewer. The working tree alread
 contained unrelated changes before this task; review Nova's added modules plus
 its small Vault/retrieval/Director integration edits separately.
 # Author observations and CTM readings
+
+Nova-linked response snapshots are stored as encrypted records with a dedicated
+header identity. The Author can reopen them from the connection that created
+them, but they are excluded from Nova's general source picker and generic Vault
+retrieval. This conservative boundary prevents older snapshots that copied a
+model proposal into their metadata from being reintroduced as Author evidence.
+The Author's own note remains available in the original connection view; it is
+not separately indexed by Atlas, search, Director or the generic retrieval index.
+Older snapshots remain encrypted and preserved in place; the application does
+not rewrite or delete them during unlock.
 
 **Current model-assisted flow:** Save an observation, preview the exact outbound
 selection, then explicitly consent to one model request. The generic local prompt

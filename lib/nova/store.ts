@@ -1,5 +1,6 @@
 import { assertVaultSnapshotCurrent, replaceVaultRecords, putVaultRecords, readVaultRecord, vaultRecordHeaders, type OpenVault } from "@/lib/vault/private-vault";
 import { isAtlasSource } from "@/lib/studio/private-atlas";
+import { isNovaEditorialSnapshot } from "@/lib/vault/record-policy";
 import { initialState, stateSchema, type Command, type LoopView, type Evidence } from "./contracts";
 import { sourceLabel } from "./source-label";
 import { normalize, supportedSource, sourceRevoked } from "./normalize";
@@ -47,15 +48,17 @@ export function loopView(vault: OpenVault, message = "Inspect selected evidence;
     return { ...attempt, status: "outcome-unknown", summary: "The session ended before the result was saved. The provider may have received this request; inspect before making a new preview." };
   });
   const { evidence, gaps } = evidenceFor(vault, state.enabled ? state.sourceIds : []);
-  const inventory = vaultRecordHeaders(vault).filter(r => isAtlasSource(r) && !r.id.startsWith("nova:")).slice(0, 500).map(r => {
+  const inventory = vaultRecordHeaders(vault).filter(r => !r.id.startsWith("nova:")).slice(0, 500).map(r => {
     // The guarded source picker may display a capture's title/date before inference
     // consent. Do not decrypt large imports or unsupported records for their labels.
     const capture = loopSupported(r) && (r.kind === "capture" || r.id.startsWith("import:spotify-playlist:")) ? readVaultRecord(vault, r.id) : undefined;
+    if (!isAtlasSource(capture ?? r)) return null;
+    if (capture && isNovaEditorialSnapshot(capture)) return null;
     const revoked = capture ? sourceRevoked(capture) : false;
     const supported = loopSupported(r) && !revoked && ((!r.id.startsWith("research-session:") && !r.id.startsWith("import:spotify-playlist:")) || !!(capture && normalize(capture).evidence.length));
     const label = revoked ? { title: "Unavailable saved note", description: "Source access was revoked or the record was rejected." } : sourceLabel(r, capture);
     return { id: r.id, kind: r.kind, ...label, supported, selected: state.sourceIds.includes(r.id) };
-  });
+  }).filter((item): item is NonNullable<typeof item> => item !== null);
   assertVaultSnapshotCurrent(vault);
   return { state: reconcile(state, evidence), evidence, inventory, gaps: [...gaps, ...limitations, "Inventory shows at most 500 source headers; each selected import shows at most 160 recent unique observations."], message };
 }
@@ -72,7 +75,12 @@ export function executeLoop(vault: OpenVault, command: Command, now = new Date()
   const selected = command.action === "configure" ? command.sourceIds : state.sourceIds;
   if (command.action === "configure") {
     const headers = vaultRecordHeaders(vault);
-    if (selected.some(id => !headers.some(h => h.id === id && loopSupported(h)))) throw new LoopInputError("Selection contains an unavailable or unsupported source.");
+    if (selected.some(id => {
+      const header = headers.find(h => h.id === id);
+      if (!header || !loopSupported(header)) return true;
+      const record = header.kind === "capture" ? readVaultRecord(vault, id) : undefined;
+      return !isAtlasSource(record ?? header) || !!(record && isNovaEditorialSnapshot(record));
+    })) throw new LoopInputError("Selection contains an unavailable or unsupported source.");
   }
   const { evidence } = evidenceFor(vault, selected);
   if ((command.action === "propose-reading" || command.action === "reconsider-reading")) {

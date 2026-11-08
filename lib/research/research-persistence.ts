@@ -1,11 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { putVaultRecords, readVaultRecord, type OpenVault } from "@/lib/vault/private-vault";
+import { isNovaEditorialSnapshot } from "@/lib/vault/record-policy";
 import { researchPayload, researchSessionSchema, type ResearchSession } from "./research-session";
 
 /** Reuse the Vault's stable-record persistence. A retry never overwrites a saved reading. */
 export function saveResearchSnapshot(vault: OpenVault, input: ResearchSession, snapshotId: string = randomUUID()) {
   const session = researchSessionSchema.parse(input);
-  const id = `research-session:${snapshotId}`;
+  const isNovaEditorial = isNovaEditorialSnapshot({ id: "research-session:candidate", kind: "capture", payload: session });
+  const id = `research-session:${isNovaEditorial ? "nova:" : ""}${snapshotId}`;
   const existing = readVaultRecord(vault, id);
   if (existing) {
     if (JSON.stringify(researchSessionSchema.parse(existing.payload)) !== JSON.stringify(session)) {
