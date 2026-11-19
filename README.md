@@ -1,51 +1,66 @@
 # Storywalker Studio
 
-## Turn fragmented digital traces into an author-controlled journey.
+## Walk the archive. Shape the sound.
 
-Storywalker Studio is an author-controlled system for reconstructing personal journeys from fragmented digital traces. It correlates music history and life events while preserving uncertainty, privacy, provenance, and human editorial control.
+Storywalker Studio is a creative technology studio for walking through a revisable archive and shaping the sound around it. Its fictional Aurora Coast rehearsal brings **WORLD / TIME / MEMORY** into a visual journey; **Shape sound** opens a hands-on music instrument inside that same space. Private sources stay separate from the invented public demonstration.
 
 [![CI](https://github.com/adinapirjol/storywalker-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/adinapirjol/storywalker-studio/actions/workflows/ci.yml)
 
-![Storywalker Studio showing the fictional Aurora Coast route and Author-review workspace](docs/screenshots/storywalker-studio-hero.png)
-
-The system is deliberately deterministic first. It does not claim that a song explains an event because their timestamps are close. It proposes a connection, shows the temporal evidence and its uncertainty, and waits for an Author to confirm or reject it.
+Aurora Coast is a visual and spatial rehearsal, not a reconstruction of a real person's history. Walk between invented places and time windows, inspect their evidence, then open **Shape sound · music + words** to play original generated tracks, stack layers and shape the form with hand or room input.
 
 > **Fictional demonstration data:** Aurora Coast is invented for this public repository. Every song, artist, person, event, note, identifier, and timestamp in the committed demo is fictional.
 
+## Walk the Archive · Aurora Coast
+
+The archive moves through a fictional coastline and a route across Europe. **TIME** makes source windows into thresholds; **MEMORY** lays elapsed time over a geographic ghost. The journey is deliberately composed: proximity and listening remain evidence to review, never proof of attendance or meaning.
+
+| TIME · enter through a window | MEMORY · move through elapsed time |
+| --- | --- |
+| ![Aurora Coast's chronological passage: source windows open into a fictional episode](docs/screenshots/aurora-xr-time.jpg) | ![Aurora Coast's memory view: fictional episodes held across a geographic field](docs/screenshots/aurora-xr-memory.jpg) |
+
+## Shape Sound · hands, layers and surroundings
+
+The sound instrument belongs to the same Aurora Coast space, but treats music as a present composition rather than evidence in the archive. Its **Track deck** plays generated WAV layers independently; **Shape** loads a chosen layer for tone and echo controls. Optional hand input modulates the rendered sound, and optional nearby-sound input adds ripples to the visual form. Tempo and source audio remain independent of those gestures.
+
+The shape prototype is a browser-based rehearsal, not headset tracking or a performance capture system. Phrase recognition and automatic lyric alignment are not implemented; word and beat cues are authored. Camera and microphone use are opt in, remain local to the tab and stop when the view is left.
+
+Open `/research/xr/aurora-coast` on your local server and choose
+**Shape sound · music + words**. Use **Load a local WAV** with an original or
+cleared recording. The Track deck and Python source previews use the optional
+generated sketch library on the local machine. Its files stay outside Git.
+
 ## Listening Again: The Right to Revise
 
-If the Author can reshape a musical fragment, can they also revise or refuse the
-meaning an AI Editor proposes around it? **Listening Again** explores that question
-through music-making and a browser instrument in the existing XR space.
-The traveller is the Author; the AI is the Editor.
+**Who Edits the Afterbeat?** was the title of the CTM 2027 Research Networking Day
+application submitted on 24 October 2026. I am learning to compose by taking apart
+sounds I want to inhabit: privately working with Romanian hip-hop samples, then
+cutting, looping and displacing vocal fragments into contrasting electronic
+contexts. The traveller is the Author; the AI is the Editor.
 
-**Working in the local prototype:**
+Learning Ableton with an AI collaborator puts the ear back in charge. The
+machine can suggest an arrangement quickly. I decide whether a transition
+holds, the vocal keeps its force, or two layers belong together. One study
+pushes toward 148 BPM industrial techno and acid textures. A second tries
+another electronic direction closer to the source. Both stay available to
+compare, revise and return to.
 
-- **Hand-shaped sound.** With camera access enabled, hand separation changes ribbon
-  width and tone; finger openness changes folds and echoes. Sliders provide the
-  same controls. An optional microphone-level input creates visual ripples.
-- **A rejectable Editor reading.** A selected local score separates source words
-  from prepared interpretations. The Author can accept, rewrite, refuse or leave
-  a reading unresolved. Refusal withholds its spatial and sound treatment while
-  keeping the source music and hand controls available. A downloaded score keeps
-  dated revisions; the instrument does not record hand or voice performances.
+**Working now.** Hand separation and finger opening change tone and echo on a
+rendered mix. Singing along can animate the ribbon through microphone level.
+The local score also lets the Author refuse a prepared Editor reading while the
+audio continues.
 
-The instrument plays a locally selected rendered mix. It does not automatically
-recognise lyrics, infer personal meaning or generate interpretations from the
-microphone. Camera and microphone inputs are opt-in and temporary.
+**Proposed for CTM.** Bring the musical revisions, the hand shaping and the
+refusal into one live rehearsal with original or cleared audio. The question is
+how the process makes room for the ear, the body and a changing mind.
 
-**Next rehearsal:** compare two retained musical directions—a 148 BPM industrial
-techno study and another electronic approach—then refuse one labelled Editor
-reading while the music continues. Both versions remain available for return and
-revision. This complete Author-led presentation is proposed; the working controls
-do not establish a completed performance or a finding about other listeners.
-
-To try the local instrument, open `/research/xr/aurora-coast`, choose
-**Shape sound · music + words**, and select an original or appropriately licensed
-WAV. See the [sound instrument and scene-score guide](docs/research/xr/README.md#listening-again--hand-shaped-sound-prototype-19-october-2026).
+IOANA's **“Acasă, Oriunde”** is a private experiment and is not included in this
+repository. The CTM proposal describes using original or cleared audio in public.
+No sampled result will be played, uploaded or released without permission from
+the relevant artist and recording and composition rights holders. If clearance is
+not available, the demonstration uses original or appropriately licensed sound.
 Private recordings, lyrics, field notes and Vault records are not bundled here.
-Public demonstrations use fictional material and original or cleared audio;
-uncleared sampled experiments remain private.
+
+See the [sound instrument and scene-score guide](docs/research/xr/README.md#listening-again--hand-shaped-sound-prototype-19-october-2026) for the working controls and the proposed scene boundary.
 
 ## Current research: Spatial Rehearsal
 

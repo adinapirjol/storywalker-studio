@@ -31,6 +31,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
 button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 main { min-height: 100vh; overflow: hidden; }
+.studio-home { min-height: 100svh; display: flex; flex-direction: column; }
+.studio-home > footer { margin-top: auto; }
 
 .site-header {
   height: 72px;

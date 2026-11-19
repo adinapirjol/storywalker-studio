@@ -492,12 +492,18 @@ face without camera access. Live combined performance still needs a user trial.
 ## Listening Again · hand-shaped sound prototype (19 October 2026)
 
 Inside a journey room, choose **Shape sound · music + words**. This replaces archive
-navigation temporarily, releasing its camera and locator tones. Choose the local
-WAV sketch or phrase (1–60 seconds, mono/stereo, under 16 MB), then press **Play
-sketch**. The file is decoded only in the tab; no private audio is bundled, served
-from private storage or uploaded. The echo grid defaults to 148 BPM and can be
-changed before playback. It controls delay timing only; the prototype preserves
-source speed/pitch and does not detect or convert tempo.
+navigation temporarily, releasing its camera and locator tones. Open **Load a
+local WAV**, choose an original or cleared sketch (1–60 seconds, mono/stereo,
+under 16 MB), then press **Play**. The selected file is decoded in the tab.
+**Echo BPM** defaults to 148 and controls delay timing while preserving source
+speed and pitch.
+
+The **Track deck** can loop several generated sketches at once with individual
+gain controls. **Shape** loads one of them into the instrument's tone and echo
+path. The optional **Music library** previews the same WAVs and displays their
+Python generators as text. The local server reads those allowlisted files from
+the ignored `private-data/music-sketches/` directory. A fresh checkout can use the
+WAV picker before those assets are present.
 
 The IOANA-based local sketch is a **private experiment, with public use on hold**.
 No clearance is documented. Do not use its result in a public XR demo, CTM talk,
@@ -506,21 +512,21 @@ cover the intended use of both the recording and underlying music/lyrics. If tho
 permissions are unavailable, the public version uses original or appropriately
 licensed replacement sound. Loading a file locally is not a clearance check.
 
-**Enable hand shaping** reuses the local XR camera worker. Two palm centres moving
+**Enable camera** reuses the local XR camera worker. Two palm centres moving
 apart stretch the ribbon and open a low-pass filter; finger openness controls
 folding and the amount of beat-timed echo. Echo feedback and output gain are
 bounded. The input is a whole mixed sketch, not isolated stems or granular
-time-stretching. Missing hands hold the last shape. Sliders provide the same
+time-stretching. Missing hands hold the last shape. Knobs provide the same
 controls without a camera. Hand shaping does not browse or open archive windows.
 
-**Let nearby sound influence the form** requests the microphone separately. Its
+**Enable microphone** requests the microphone separately. Its
 short-lived level ripples the ribbon, with adjustable influence. It does not alter
 tempo, classify music/emotion, measure physical vibration, transcribe speech or
 retain samples. The microphone graph has zero output gain; it cannot play the
 microphone back. Headphones help distinguish room sound from the sketch, which
 the microphone may otherwise hear through speakers.
 
-Stop everything, Escape, blur, hiding the tab, returning to the passage or
+**Stop all**, Escape, blur, hiding the tab, returning to the passage or
 unmounting releases inputs and stops playback. Pending permissions and audio
 startup are cancelled; a late device stream is stopped. Inputs never resume
 automatically. Versions and microphone data are not saved to the scene or Vault.

@@ -172,7 +172,7 @@ export function StorywalkerStudio() {
   ) : null;
 
   return (
-    <main>
+    <main className="studio-home">
       <header className="site-header">
         <a className="wordmark" href="#top" aria-label="Storywalker Studio home">
           <span className="wordmark-mark">S</span>
