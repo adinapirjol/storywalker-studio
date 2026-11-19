@@ -59,6 +59,22 @@ describe('local 148 BPM sketch playback', () => {
     expect(await pending).toBe(false); expect(playing.source.start).not.toHaveBeenCalled();
     expect(playing.context.close).toHaveBeenCalledOnce();
   });
+  it('plays with the context prepared during the Shape click and uses the selected tempo', async () => {
+    const decode = contextFixture(), playing = contextFixture();
+    const create = vi.fn().mockReturnValue(decode.context);
+    const audio = new SoundShapeAudio(create);
+    await audio.load(wav());
+    expect(await audio.play(INITIAL_SHAPE, 0.3, {
+      bpm: 132,
+      preparedContext: playing.context as unknown as AudioContext,
+    })).toBe(true);
+    expect(create).toHaveBeenCalledOnce();
+    expect(playing.context.resume).not.toHaveBeenCalled();
+    expect(playing.source.start).toHaveBeenCalledOnce();
+    expect(playing.delay.delayTime.value).toBeCloseTo(60 / 132 / 2);
+    audio.stop();
+    expect(playing.context.close).toHaveBeenCalledOnce();
+  });
   it('discards an in-flight decode after leaving the instrument', async () => {
     const f = contextFixture();
     let resolve!: (value: { duration: number; numberOfChannels: number }) => void;

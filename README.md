@@ -1,51 +1,70 @@
 # Storywalker Studio
 
-## Turn fragmented digital traces into an author-controlled journey.
+## Walk the archive. Shape the sound.
 
-Storywalker Studio is an author-controlled system for reconstructing personal journeys from fragmented digital traces. It correlates music history and life events while preserving uncertainty, privacy, provenance, and human editorial control.
+Storywalker Studio is a creative technology studio for walking through a revisable archive and shaping the sound around it. Its fictional Aurora Coast rehearsal brings **WORLD / TIME / MEMORY** into a visual journey. **Shape Sound** opens an instrument in the same space.
+
+The practice behind it is [**Who Edits the Afterbeat?**](#listening-again-the-right-to-revise), my submitted CTM 2027 proposal about composing, listening again, and refusing an interpretation while the music keeps playing.
 
 [![CI](https://github.com/adinapirjol/storywalker-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/adinapirjol/storywalker-studio/actions/workflows/ci.yml)
 
-![Storywalker Studio showing the fictional Aurora Coast route and Author-review workspace](docs/screenshots/storywalker-studio-hero.png)
-
-The system is deliberately deterministic first. It does not claim that a song explains an event because their timestamps are close. It proposes a connection, shows the temporal evidence and its uncertainty, and waits for an Author to confirm or reject it.
+Aurora Coast is a visual and spatial rehearsal, not a reconstruction of a real person's history. Walk between invented places and time windows, inspect their evidence, then open **Shape sound · music + words** to play original generated tracks, stack layers and shape the form with hand or room input.
 
 > **Fictional demonstration data:** Aurora Coast is invented for this public repository. Every song, artist, person, event, note, identifier, and timestamp in the committed demo is fictional.
 
+## Walk the Archive · Aurora Coast
+
+The archive moves through a fictional coastline and a route across Europe. **TIME** makes source windows into thresholds; **MEMORY** lays elapsed time over a geographic ghost. The journey is deliberately composed: proximity and listening remain evidence to review, never proof of attendance or meaning.
+
+| TIME · enter through a window | MEMORY · move through elapsed time |
+| --- | --- |
+| ![Aurora Coast's chronological passage: source windows open into a fictional episode](docs/screenshots/aurora-xr-time.jpg) | ![Aurora Coast's memory view: fictional episodes held across a geographic field](docs/screenshots/aurora-xr-memory.jpg) |
+
+## Shape Sound · hands, layers and surroundings
+
+The ribbon carries the title and dates of the episode you just left. In the **Track deck**, preview the original WAVs and listen across revisions. **Shape** plays a chosen track through Tone and Echo. Hands can move both controls, and the optional **Mic ripple** control lets a voice or nearby sound animate the ribbon.
+
+The shape prototype is a browser-based rehearsal, not headset tracking or a performance capture system. Phrase recognition and automatic lyric alignment are not implemented; word and beat cues are authored. Camera and microphone use are opt in, remain local to the tab and stop when the view is left.
+
+Open `/research/xr/aurora-coast` on your local server and choose
+**Shape sound · music + words**. Use **Load a local WAV** with an original or
+cleared recording. The Track deck and Python source previews use the optional
+sketch library on the local machine. The WAVs are synthesized in Python and
+stay outside Git.
+
 ## Listening Again: The Right to Revise
 
-If the Author can reshape a musical fragment, can they also revise or refuse the
-meaning an AI Editor proposes around it? **Listening Again** explores that question
-through music-making and a browser instrument in the existing XR space.
-The traveller is the Author; the AI is the Editor.
+### Who Edits the Afterbeat? · CTM 2027 proposal
 
-**Working in the local prototype:**
+I submitted **Who Edits the Afterbeat?** to CTM Research Networking Day on
+24 October 2026. I am learning to compose by taking apart sounds I want to
+inhabit. I work privately with Romanian hip-hop vocals, cutting and looping
+fragments while listening for how their phrasing changes in a new rhythm.
 
-- **Hand-shaped sound.** With camera access enabled, hand separation changes ribbon
-  width and tone; finger openness changes folds and echoes. Sliders provide the
-  same controls. An optional microphone-level input creates visual ripples.
-- **A rejectable Editor reading.** A selected local score separates source words
-  from prepared interpretations. The Author can accept, rewrite, refuse or leave
-  a reading unresolved. Refusal withholds its spatial and sound treatment while
-  keeping the source music and hand controls available. A downloaded score keeps
-  dated revisions; the instrument does not record hand or voice performances.
+In Ableton, the AI can suggest an arrangement faster than I can judge it.
+Judging it is the work. Does a transition hold? Does the vocal keep its force?
+Do the layers belong together? One study pushes the phrasing into 148 BPM
+industrial techno with acid textures. A second tries an electronic direction
+closer to the source. I keep both so I can compare them and return to either.
 
-The instrument plays a locally selected rendered mix. It does not automatically
-recognise lyrics, infer personal meaning or generate interpretations from the
-microphone. Camera and microphone inputs are opt-in and temporary.
+Aurora Coast's separate Python sketches let me rehearse those listening
+decisions with original sound. I can compare the dry and saturated Acid
+Pressure versions, then shape one through the browser instrument.
 
-**Next rehearsal:** compare two retained musical directions—a 148 BPM industrial
-techno study and another electronic approach—then refuse one labelled Editor
-reading while the music continues. Both versions remain available for return and
-revision. This complete Author-led presentation is proposed; the working controls
-do not establish a completed performance or a finding about other listeners.
+**Working now.** Hand separation and finger opening change tone and echo on a
+rendered mix. Singing along can animate the ribbon through microphone level.
+The local score also lets the Author refuse a prepared Editor reading while the
+audio continues.
 
-To try the local instrument, open `/research/xr/aurora-coast`, choose
-**Shape sound · music + words**, and select an original or appropriately licensed
-WAV. See the [sound instrument and scene-score guide](docs/research/xr/README.md#listening-again--hand-shaped-sound-prototype-19-october-2026).
-Private recordings, lyrics, field notes and Vault records are not bundled here.
-Public demonstrations use fictional material and original or cleared audio;
-uncleared sampled experiments remain private.
+**Proposed for CTM.** I want to show three decisions in one passage: which
+version I choose for that moment, what my hands do to its tone and echo, and
+which Editor reading I refuse while the beat keeps going. I’ll use original or
+cleared audio in public. The sampled vocal studies stay private unless the
+relevant rights holders clear the intended use.
+
+The traveller is the Author. The AI is the Editor.
+
+See the [sound instrument and scene-score guide](docs/research/xr/README.md#listening-again--hand-shaped-sound-prototype-19-october-2026) for the working controls and the proposed scene boundary.
 
 ## Current research: Spatial Rehearsal
 
@@ -361,7 +380,7 @@ The local review route is intentionally separate from Aurora Coast. It keeps evi
 
 ## Research Lab — CTM 2027 preparation
 
-`/research` is a restrained, public practice-based artistic-research layer. It tracks verified CTM 2027 call facts (checked 23 August 2026), separates those facts from working inferences, and keeps the current question provisional:
+`/research` records earlier preparation for CTM 2027. The August checkpoint includes this working question:
 
 > **Refusal Is an Editorial Act: Who Gets to Author the Memory?**
 

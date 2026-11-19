@@ -14,8 +14,8 @@ import { headPerspective, NEUTRAL_HEAD, type HeadPosition } from '@/lib/xr/head-
 import {XRGeographicAtlas} from './xr-geographic-atlas';
 import {XRRehearsalModes} from './xr-rehearsal-modes';
 
-type Props={allowHeadPerspective?:boolean;onBody?:()=>void;scene:XRScene;decisions:Record<string,Decision>;activated:boolean;onChange:(scene:XRScene)=>void;onInspect:(index:number)=>void;onCalibrate:()=>void};
-export function XREpisodeExperience({allowHeadPerspective=false,scene,decisions,activated,onChange,onInspect,onCalibrate,onBody}:Props){
+type Props={allowHeadPerspective?:boolean;onBody?:()=>void;scene:XRScene;decisions:Record<string,Decision>;activated:boolean;onChange:(scene:XRScene)=>void;onInspect:(index:number)=>void;onCalibrate:()=>void;onSoundFocus?:(label:string)=>void};
+export function XREpisodeExperience({allowHeadPerspective=false,scene,decisions,activated,onChange,onInspect,onCalibrate,onBody,onSoundFocus}:Props){
  const fingerZoom=useRef<{target:number;shown:number}|null>(null);
  const browsedWindow=useRef<number|null>(null);
  const head=useRef<HeadPosition>(NEUTRAL_HEAD);
@@ -38,6 +38,11 @@ export function XREpisodeExperience({allowHeadPerspective=false,scene,decisions,
 
  const [selected,setSelected]=useState(0),[inspecting,setInspecting]=useState(false),[immersive,setImmersive]=useState(false),[moving,setMoving]=useState(false),[message,setMessage]=useState(''),[near,setNear]=useState(false),[sounding,setSounding]=useState(false);
  const index=Math.min(selected,spaces.length-1),current=spaces[index],position=spacePosition(current,regime,memoryBase);
+ const timeZone = scene.journeyLayout!.timeZone;
+ const formatDate = useMemo(() => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone }), [timeZone]);
+ const dates = `${formatDate.format(new Date(current.start))} — ${formatDate.format(new Date(current.end))}`;
+ const soundFocus = `${current.label} · ${dates}`;
+ useEffect(() => { onSoundFocus?.(soundFocus); }, [onSoundFocus, soundFocus]);
  const root=useRef<HTMLDivElement>(null),canvas=useRef<HTMLCanvasElement>(null),camera=useRef<WalkCamera>({x:4,z:2,yaw:-.46,eye:1.7}),keys=useRef(new Set<string>()),hits=useRef<Hit[]>([]);
  const gesture=useRef<LookGesture|null>(null),redraw=useRef<()=>void>(()=>{});
  const engine=useRef<{context:AudioContext;voices:{cueId:string;spaceId:string;osc:OscillatorNode;gain:GainNode;panner:PannerNode}[]}|null>(null);
@@ -192,7 +197,7 @@ export function XREpisodeExperience({allowHeadPerspective=false,scene,decisions,
    onPointerUp={e=>{const g=gesture.current;gesture.current=null;if(!g)return;if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);if(advanceLook(g,e.clientX,e.clientY).gesture.dragged)return;const rect=e.currentTarget.getBoundingClientRect(),hit=pickArchiveHit(hits.current,e.clientX-rect.left,e.clientY-rect.top,archive.current.phase);if(hit?.windowId){setSelected(hit.index);selectWindow(hit.windowId);}else if(hit){setSelected(hit.index);setWindowPage(0);setInspecting(false);}}} />
   <div className={css.compass} aria-hidden="true">{regime==='WORLD'?'GEOGRAPHIC CALIBRATION':regime==='TIME'?(archiveView.phase==='chamber'?'ARCHIVAL COMPOSITION / NOT A PLACE RECONSTRUCTION':archiveView.phase==='surface'?'SOURCE-SUPPORTED EVIDENCE SURFACE':'CHRONOLOGICAL PASSAGE'):`AUTHOR COMPOSITION / FROM ${memoryBase}`}<span>+ </span></div>
   <div className={`${css.bottom} ${archiveView.phase!=='corridor'?css.archiveBottom:''}`}>
-   <div className={css.focus}><span className={css.eyebrow}>{current.author?'AUTHOR EPISODE':'PROPOSED EPISODE CONTAINER'} / {current.transit?'TRANSIT':'STAY WINDOWS'}</span><h3>{current.label}</h3><p>{new Date(current.start).toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:scene.journeyLayout!.timeZone})} — {new Date(current.end).toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:scene.journeyLayout!.timeZone})} · {near?'Within reach':'Approach to discover'}</p></div>
+   <div className={css.focus}><span className={css.eyebrow}>{current.author?'AUTHOR EPISODE':'PROPOSED EPISODE CONTAINER'} / {current.transit?'TRANSIT':'STAY WINDOWS'}</span><h3>{current.label}</h3><p>{dates} · {near?'Within reach':'Approach to discover'}</p></div>
    <div className={css.navigation}><button onClick={()=>focus(index-1)} disabled={index===0}>← Previous</button><button onClick={openSelectedWindow}>Approach</button><button onClick={()=>focus(index+1)} disabled={index===spaces.length-1}>Next →</button>{regime!=='TIME'&&<button onClick={()=>setInspecting(!inspecting)}>{inspecting?'Close evidence':'Discover'}</button>}</div>
   </div>
   <div className={css.tools}>
