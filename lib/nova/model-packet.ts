@@ -25,7 +25,11 @@ export function prepareModelPacket(vault: OpenVault, selection: ModelSelection) 
   if (state.revision !== selection.expectedRevision) throw new LoopConflict("Review changed. Prepare a fresh preview.");
   if (!state.enabled || state.paused) throw new LoopInputError("Resume Hyperloop before requesting a model.");
   const original = state.hypotheses.find(h => h.id === selection.hypothesisId);
-  if (!original || original.status === "rejected" || forbidden(state, original)) throw new LoopInputError("This connection is unavailable or constrained by a decision.");
+  // A historical or invalidated proposal may depend on revoked, deleted, or
+  // unselected evidence. Never export its interpretation even when an Author
+  // has saved a separate observation linked to it.
+  if (!original || !["proposed", "approved", "modified"].includes(original.status) || forbidden(state, original))
+    throw new LoopInputError("This connection is no longer active or is constrained by a decision. Review the current evidence before requesting a model.");
   const record = readVaultRecord(vault, selection.readingId);
   const reading = record && normalize(record).evidence[0];
   const session = record && researchSessionSchema.safeParse(record.payload);
