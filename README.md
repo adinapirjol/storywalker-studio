@@ -24,6 +24,8 @@ The archive moves through a fictional coastline and a route across Europe. **TIM
 
 The ribbon carries the title and dates of the episode you just left. In the **Track deck**, preview the original WAVs and listen across revisions. **Shape** plays a chosen track through Tone and Echo. Hands can move both controls, and the optional **Mic ripple** control lets a voice or nearby sound animate the ribbon.
 
+[See Shape Sound in Aurora Coast](#research-lab--ctm-2027-preparation).
+
 The shape prototype is a browser-based rehearsal, not headset tracking or a performance capture system. Phrase recognition and automatic lyric alignment are not implemented; word and beat cues are authored. Camera and microphone use are opt in, remain local to the tab and stop when the view is left.
 
 Open `/research/xr/aurora-coast` on your local server and choose
@@ -379,6 +381,12 @@ The ledger is the source of truth. Companion files are staged as provenance and 
 The local review route is intentionally separate from Aurora Coast. It keeps evidence decisions, proposal refusals, exclusions, contradictions, and unknowns private; accepting evidence does not accept an editorial proposal or canonise a Moment, Journey, Thread, or Episode. To remove staged data safely, stop the local server and delete only the specific ignored `private-data/storywalker/` recovery file you no longer need. `npm run audit` checks committable paths and, when a staged recovery is present, also verifies that its IDs and source phrases do not appear in public files.
 
 ## Research Lab — CTM 2027 preparation
+
+![Aurora Coast’s Shape Sound view with the Afterlight Fields episode label, a suspended ribbon, the Acid Pressure track deck, and Tone, Echo, and Mic ripple controls](docs/screenshots/aurora-xr-shape-sound.jpg)
+
+*Shape Sound in the fictional Afterlight Fields episode. The deck is previewing
+the original **Acid Pressure · concrete room** sketch. Tone and Echo are set
+with the knobs, with the camera and microphone off.*
 
 `/research` records earlier preparation for CTM 2027. The August checkpoint includes this working question:
 
