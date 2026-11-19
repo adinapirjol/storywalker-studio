@@ -13,7 +13,13 @@ type Voice = {
   preserveWords: boolean;
 };
 
-type PlaybackOptions = { bpm?: number; loop?: boolean; preserveWords?: boolean; onEnded?: () => void };
+type PlaybackOptions = {
+  bpm?: number;
+  loop?: boolean;
+  preserveWords?: boolean;
+  onEnded?: () => void;
+  preparedContext?: AudioContext;
+};
 
 /** Owns one selected in-memory loop. Never fetches, uploads or persists audio. */
 export class SoundShapeAudio {
@@ -73,9 +79,14 @@ export class SoundShapeAudio {
 
   async play(shape: SoundShape, volume: number, options: PlaybackOptions = {}): Promise<boolean> {
     this.stop();
-    if (!this.buffer) return false;
+    if (!this.buffer) {
+      if (options.preparedContext && options.preparedContext.state !== 'closed') {
+        void options.preparedContext.close().catch(() => {});
+      }
+      return false;
+    }
     const ticket = this.generation;
-    const context = this.createContext();
+    const context = options.preparedContext ?? this.createContext();
     try {
       const source = context.createBufferSource(), filter = context.createBiquadFilter();
       const wet = context.createGain(), master = context.createGain();
@@ -102,7 +113,7 @@ export class SoundShapeAudio {
         if (context.state !== 'closed') void context.close().catch(() => {});
         options.onEnded?.();
       };
-      await context.resume();
+      if (!options.preparedContext || context.state !== 'running') await context.resume();
       if (ticket !== this.generation) return false;
       this.update(shape, volume);
       voice.startedAt = context.currentTime;

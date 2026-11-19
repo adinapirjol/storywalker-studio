@@ -10,7 +10,7 @@ import { cueAt, matchesScoreAudio, sceneFrame, type LinguisticScore } from '@/li
 import { XRLinguisticScore, scoreTime } from './xr-linguistic-score';
 import { XRPhraseTimeline } from './xr-phrase-timeline';
 import { XRGeneratedMusicLibrary } from './xr-generated-music-library';
-import { XR_GENERATED_MUSIC_SAMPLES } from './xr-generated-music-samples';
+import { XR_GENERATED_MUSIC_SAMPLES, type GeneratedMusicSample } from './xr-generated-music-samples';
 import { visualAccentAt } from '@/lib/xr/sound-accent';
 import css from './xr-sound-instrument.module.css';
 
@@ -44,7 +44,9 @@ function RotaryControl({ label, value, onChange }: { label: string; value: numbe
   </div>;
 }
 
-export function XRSoundInstrument() {
+type SelectedClip = { duration: number | null; fingerprint: string | null; bpm: number };
+
+export function XRSoundInstrument({ archiveFocus }: { archiveFocus?: string }) {
   const [audio] = useState(() => new SoundShapeAudio());
   const [microphone] = useState(() => new SoundShapeMicrophone());
   const [shape, setShape] = useState<SoundShape>(INITIAL_SHAPE);
@@ -53,12 +55,14 @@ export function XRSoundInstrument() {
   const [duration, setDuration] = useState<number | null>(null);
   const [fingerprint, setFingerprint] = useState<string | null>(null);
   const [score, setScore] = useState<LinguisticScore | null>(null);
+  const scoreRef = useRef<LinguisticScore | null>(null);
   const [selectedCue, setSelectedCue] = useState(0);
   const [follow, setFollow] = useState(false);
   const [previewReadings, setPreviewReadings] = useState(false);
   const [position, setPosition] = useState(0);
   const [bpm, setBpm] = useState(148);
   const [loading, setLoading] = useState(false);
+  const [pendingSampleId, setPendingSampleId] = useState<string | null>(null);
   const [selectedSampleId, setSelectedSampleId] = useState('');
   const [playingLayers, setPlayingLayers] = useState<Set<string>>(() => new Set());
   const [layerVolumes, setLayerVolumes] = useState<Record<string, number>>({});
@@ -66,8 +70,8 @@ export function XRSoundInstrument() {
   const [starting, setStarting] = useState(false);
   const [handsOn, setHandsOn] = useState(false);
   const [micState, setMicState] = useState<'off' | 'asking' | 'on'>('off');
-  const [message, setMessage] = useState('Choose a local WAV sketch or phrase to begin.');
-  const [handMessage, setHandMessage] = useState('Camera off · sliders work too');
+  const [message, setMessage] = useState('Choose Shape on a track or load a WAV.');
+  const [handMessage, setHandMessage] = useState('Camera off · knobs ready');
   const [level, setLevel] = useState(0);
   const canvas = useRef<HTMLCanvasElement>(null), preview = useRef<HTMLCanvasElement>(null);
   const shapeRef = useRef(shape), influenceRef = useRef(influence);
@@ -77,6 +81,7 @@ export function XRSoundInstrument() {
   const playTurn = useRef(0), micTurn = useRef(0), fileTurn = useRef(0);
   const micTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const matched = score ? matchesScoreAudio(score, duration, fingerprint) : false;
+  const echoBpm = matched && score ? score.gridBpm : bpm;
   const cueIndex = score && follow && matched ? cueAt(score, position) : score ? Math.min(selectedCue, score.cues.length - 1) : 0;
   const cue = matched ? score?.cues[cueIndex] : undefined;
   const currentFrame = cue ? sceneFrame(cue, previewReadings) : null;
@@ -100,13 +105,22 @@ export function XRSoundInstrument() {
     }
     setPlayingLayers(new Set());
   }
+  function stopLayer(sampleId: string) {
+    const player = layerAudio.current.get(sampleId);
+    if (!player || player.paused) return;
+    player.pause();
+    player.currentTime = 0;
+    setPlayingLayers(current => {
+      const next = new Set(current);
+      next.delete(sampleId);
+      return next;
+    });
+  }
   async function toggleLayer(sampleId: string) {
     const player = layerAudio.current.get(sampleId);
     if (!player) return;
     if (!player.paused) {
-      player.pause();
-      player.currentTime = 0;
-      setPlayingLayers(current => { const next = new Set(current); next.delete(sampleId); return next; });
+      stopLayer(sampleId);
       return;
     }
     player.loop = true;
@@ -125,31 +139,54 @@ export function XRSoundInstrument() {
     setHandMessage('Camera off · last hand shape held');
   }
   function stopAll() {
+    libraryLoad.current?.abort();
     stopPlayback(); stopLayers(); stopInputs();
     setMessage('Stopped · sound, camera and microphone are off.');
   }
-  async function load(file?: File, sampleId = '') {
+  async function load(file?: File, sample?: GeneratedMusicSample): Promise<SelectedClip | undefined> {
     if (!file) return;
-    if (!sampleId) libraryLoad.current?.abort();
-    setSelectedSampleId(sampleId);
+    if (!sample) libraryLoad.current?.abort();
+    setSelectedSampleId('');
     stopPlayback();
     const ticket = ++fileTurn.current;
     setLoading(true); setDuration(null); setFingerprint(null); setMessage('Opening your sketch in this tab…');
     try {
       const seconds = await audio.load(file);
-      if (ticket !== fileTurn.current) return;
+      if (ticket !== fileTurn.current || !seconds) return;
+      const clip = { duration: seconds, fingerprint: audio.selectedFingerprint(), bpm: sample?.bpm ?? bpm };
       setDuration(seconds);
-      setFingerprint(audio.selectedFingerprint());
-      setMessage(seconds ? 'Local sketch ready · press Play. Nothing uploaded or saved.' : 'Choose the sketch again.');
+      setFingerprint(clip.fingerprint);
+      setSelectedSampleId(sample?.id ?? '');
+      if (sample) setBpm(sample.bpm);
+      return clip;
     } catch {
       if (ticket === fileTurn.current) setMessage('Could not open that file. Choose a mono/stereo WAV, 1–60 seconds, under 16 MB.');
     } finally { if (ticket === fileTurn.current) setLoading(false); }
   }
+  async function loadLocalFile(file?: File) {
+    if (await load(file)) setMessage('WAV ready · press Play shaped.');
+  }
   async function loadGeneratedSample(sampleId: string) {
-    libraryLoad.current?.abort();
+    if (libraryLoad.current || loading || starting) return;
+    const sample = XR_GENERATED_MUSIC_SAMPLES.find(item => item.id === sampleId);
+    if (!sample) return;
+    if (selectedSampleId === sampleId && duration) {
+      if (!audio.isPlaying()) await play();
+      return;
+    }
     const controller = new AbortController();
     libraryLoad.current = controller;
+    setPendingSampleId(sampleId);
+    let preparedContext: AudioContext | null = null;
+    function releaseContext() {
+      if (preparedContext && preparedContext.state !== 'closed') void preparedContext.close().catch(() => {});
+      preparedContext = null;
+    }
+    controller.signal.addEventListener('abort', releaseContext, { once: true });
     try {
+      // Request playback during the click, before the fetch and decode lose user activation.
+      preparedContext = new AudioContext();
+      void preparedContext.resume().catch(() => {});
       const response = await fetch(assetUrlForSample(sampleId), {
         cache: 'no-store',
         credentials: 'same-origin',
@@ -158,29 +195,49 @@ export function XRSoundInstrument() {
       if (!response.ok) throw new Error('Local sample unavailable');
       const blob = await response.blob();
       if (blob.size > 16 * 1024 * 1024) throw new Error('Sample is too large');
-      if (!controller.signal.aborted) await load(new File([blob], sampleId + '.wav', { type: 'audio/wav' }), sampleId);
+      if (controller.signal.aborted) return;
+      const clip = await load(new File([blob], sampleId + '.wav', { type: 'audio/wav' }), sample);
+      if (!clip || controller.signal.aborted) return;
+      stopLayer(sampleId);
+      if (preparedContext?.state === 'running') {
+        const context = preparedContext;
+        preparedContext = null;
+        await play(clip, context);
+      } else {
+        setMessage('Track selected · press Play shaped to start.');
+      }
     } catch {
       if (!controller.signal.aborted) setMessage('Could not load that local library WAV. Your current sketch remains selected.');
     } finally {
-      if (libraryLoad.current === controller) libraryLoad.current = null;
+      controller.signal.removeEventListener('abort', releaseContext);
+      releaseContext();
+      if (libraryLoad.current === controller) {
+        libraryLoad.current = null;
+        setPendingSampleId(null);
+      }
     }
   }
-  async function play() {
+  async function play(clip: SelectedClip = { duration, fingerprint, bpm }, preparedContext?: AudioContext) {
     const ticket = ++playTurn.current;
+    const activeScore = scoreRef.current;
+    const preserveWords = !!activeScore && matchesScoreAudio(activeScore, clip.duration, clip.fingerprint);
     setStarting(true);
     try {
       setPosition(0);
       const started = await audio.play(shapeRef.current, volume, {
-        bpm, loop: !matched, preserveWords: matched,
+        bpm: preserveWords && activeScore ? activeScore.gridBpm : clip.bpm,
+        loop: !preserveWords,
+        preserveWords,
+        preparedContext,
         onEnded: () => {
           if (ticket !== playTurn.current) return;
-          setPlaying(false); setPosition(duration ?? 0);
+          setPlaying(false); setPosition(clip.duration ?? 0);
           setMessage('Scene finished · your words, cue decisions and revisions remain in this tab.');
         },
       });
       if (ticket !== playTurn.current) return;
       setPlaying(started);
-      setMessage(started ? matched ? 'Playing one scene · original speed, open tone and subtle echoes. No extra backing layer.' : 'Playing · stretch opens the tone; folding adds beat-timed echoes.' : 'Choose the WAV sketch first.');
+      setMessage(started ? preserveWords ? 'Playing scene · gentle tone and echo' : 'Playing shaped · move your hands or use the knobs.' : 'Choose the WAV sketch first.');
     } catch {
       if (ticket === playTurn.current) setMessage('Playback could not start. Your sketch is still selected; try Play again.');
     } finally { if (ticket === playTurn.current) setStarting(false); }
@@ -203,7 +260,7 @@ export function XRSoundInstrument() {
         });
         setHandMessage(hands.length === 2 ? 'Two hands · move apart to stretch; curl fingers to fold' : 'One hand · open or curl fingers to fold; add a second hand to stretch');
       },
-      onError: () => { setHandsOn(false); setHandMessage('Camera unavailable or permission declined · use the sliders'); },
+      onError: () => { setHandsOn(false); setHandMessage('Camera unavailable · use the knobs'); },
     });
   }
   async function toggleMicrophone() {
@@ -268,6 +325,7 @@ export function XRSoundInstrument() {
     const players = Array.from(layerAudio.current.values());
     const pause = () => {
       playTurn.current++; micTurn.current++; clearTimeout(micTimer.current);
+      libraryLoad.current?.abort();
       audio.stop(); stopLayers(); microphone.stop(); stopHands.current(); stopHands.current = () => {};
       setPlaying(false); setStarting(false); setHandsOn(false); setMicState('off'); setLevel(0);
       setHandMessage('Camera off · last hand shape held');
@@ -280,6 +338,7 @@ export function XRSoundInstrument() {
     return () => {
       fileTurn.current++; playTurn.current++; micTurn.current++;
       libraryLoad.current?.abort();
+      libraryLoad.current = null;
       for (const player of players) player.pause();
       clearTimeout(micTimer.current); stopHands.current(); audio.dispose(); microphone.stop();
       window.removeEventListener('blur', pause); window.removeEventListener('keydown', escape);
@@ -290,49 +349,68 @@ export function XRSoundInstrument() {
   return <section className={css.instrument} aria-label="Listening Again sound instrument">
     <header className={css.header}>
       <div><p className={css.eyebrow}>LISTENING AGAIN</p><h2>Shape the sound</h2></div>
-      <div className={css.headerActions}><span className={css.tempo}>{bpm} <small>BPM</small></span></div>
+      <div className={css.headerActions}><span className={css.tempo}>{echoBpm} <small>ECHO BPM</small></span></div>
     </header>
     <div className={css.visual}>
       <canvas ref={canvas} aria-label="A suspended sound ribbon. Stretch changes its width and tone; fold changes its curl and echoes; optional microphone level adds ripples." />
-      <div className={css.sceneNote}><span>HANDS SHAPE · ROOM RIPPLES</span><p>{cue ? <>{cue.title}<br />{currentFrame ? `${cue.decision === 'unresolved' ? 'Preview' : 'Your choice'} · ${currentFrame.formation}` : playing ? 'Reading withheld · music continues' : 'Reading withheld · press Play'}</> : null}</p></div>
-      <div className={css.sceneReadout} aria-hidden="true"><span>STRETCH {Math.round(shape.stretch * 100)}%</span><span>FOLD {Math.round(shape.fold * 100)}%</span><span>{micState === 'on' ? 'ROOM LISTENING' : 'ROOM OFF'}</span></div>
-      {duration && <XRPhraseTimeline position={position} duration={duration} playing={playing} starting={starting} score={matched ? score : null} activeCue={cueIndex} onTogglePlayback={() => playing ? stopPlayback() : void play()} />}
+      <div className={css.sceneNote}>
+        {archiveFocus && <span>{archiveFocus}</span>}
+        {cue && <p>{cue.title}<br />{currentFrame ? `${cue.decision === 'unresolved' ? 'Preview' : 'Your choice'} · ${currentFrame.formation}` : playing ? 'Reading withheld · music continues' : 'Reading withheld · press Play shaped'}</p>}
+      </div>
+      <div className={css.sceneReadout} aria-hidden="true"><span>TONE {Math.round(shape.stretch * 100)}%</span><span>ECHO {Math.round(shape.fold * 100)}%</span><span>{micState === 'on' ? 'MIC RIPPLES' : 'MIC OFF'}</span></div>
+      {duration && <XRPhraseTimeline position={position} duration={duration} playing={playing} starting={starting || !!pendingSampleId} score={matched ? score : null} activeCue={cueIndex} onTogglePlayback={() => playing ? stopPlayback() : void play()} />}
     </div>
     <div className={css.desk}>
       <section className={css.trackColumn} aria-label="Track deck">
         <section className={css.generatedPicker} aria-label="Generated track deck">
-          <div className={css.deckHeading}><div><span>TRACKS · 148 BPM SESSION</span><h3>Track deck</h3></div><span>{playingLayers.size} ON</span></div>
+          <div className={css.deckHeading}>
+            <div><h3>Track deck</h3><p>Preview a mix as rendered. Use Shape to play it through Tone and Echo.</p></div>
+            <span>{playingLayers.size + (playing && selectedSampleId ? 1 : 0)} ON</span>
+          </div>
           <div className={css.generatedOptions}>
-            {XR_GENERATED_MUSIC_SAMPLES.map((sample, index) => <div key={sample.id} className={playingLayers.has(sample.id) ? css.sampleStripPlaying : css.sampleStrip}>
-              <span className={css.trackNumber}>{String(index + 1).padStart(2, '0')}</span>
-              <button type="button" className={playingLayers.has(sample.id) ? css.layerStop : css.layerPlay} aria-label={(playingLayers.has(sample.id) ? 'Stop ' : 'Play ') + sample.title} onClick={() => void toggleLayer(sample.id)}>{playingLayers.has(sample.id) ? '■' : '▶'}</button>
-              <span className={css.stripInfo}><strong>{sample.title}</strong><small>{sample.bpm} BPM · {sample.length}</small></span>
-              <label className={css.trackGain}><span>GAIN</span><input aria-label={sample.title + ' layer volume'} type="range" min="0" max="1" step="0.01" value={layerVolumes[sample.id] ?? 0.72} onChange={event => {
-                const next = unit(Number(event.target.value));
-                setLayerVolumes(current => ({ ...current, [sample.id]: next }));
-                const player = layerAudio.current.get(sample.id);
-                if (player) player.volume = next * 0.72;
-              }} /></label>
-              <button type="button" className={selectedSampleId === sample.id ? css.loadedTrack : css.loadTrack} aria-label={selectedSampleId === sample.id ? `Loaded for shaping: ${sample.title}` : `Load ${sample.title} for shaping`} title={selectedSampleId === sample.id ? 'Currently shaped by the hands controls' : 'Select this track for hand shaping'} disabled={loading || starting} onClick={() => void loadGeneratedSample(sample.id)}>{selectedSampleId === sample.id ? 'Shaping' : 'Shape'}</button>
-              <audio ref={element => { if (element) layerAudio.current.set(sample.id, element); else layerAudio.current.delete(sample.id); }} src={assetUrlForSample(sample.id)} preload="none" />
-            </div>)}
+            {XR_GENERATED_MUSIC_SAMPLES.map((sample, index) => {
+              const selected = selectedSampleId === sample.id;
+              const active = selected ? playing : playingLayers.has(sample.id);
+              const action = active ? 'Stop' : selected ? 'Play shaped' : 'Preview';
+              return <div key={sample.id} className={active ? css.sampleStripPlaying : css.sampleStrip}>
+                <span className={css.trackNumber}>{String(index + 1).padStart(2, '0')}</span>
+                <button type="button" className={active ? css.layerStop : css.layerPlay} aria-label={`${action} ${sample.title}`}
+                  title={action} disabled={selected && (starting || !!pendingSampleId)} onClick={() => {
+                    if (!selected) void toggleLayer(sample.id);
+                    else if (playing) stopPlayback();
+                    else void play();
+                  }}>{active ? '■' : '▶'}</button>
+                <span className={css.stripInfo}><strong>{sample.title}</strong><small>{sample.bpm} BPM · {sample.length}</small></span>
+                <label className={css.trackGain}><span>GAIN</span><input aria-label={sample.title + ' preview gain'} type="range" min="0" max="1" step="0.01" disabled={selected} value={layerVolumes[sample.id] ?? 0.72} onChange={event => {
+                  const next = unit(Number(event.target.value));
+                  setLayerVolumes(current => ({ ...current, [sample.id]: next }));
+                  const player = layerAudio.current.get(sample.id);
+                  if (player) player.volume = next * 0.72;
+                }} /></label>
+                <button type="button" className={selected ? css.loadedTrack : css.loadTrack}
+                  aria-label={selected && playing ? `Shaping ${sample.title}` : `Shape and play ${sample.title}`}
+                  disabled={loading || starting || !!pendingSampleId || (selected && playing)}
+                  onClick={() => void loadGeneratedSample(sample.id)}>{pendingSampleId === sample.id ? 'Loading…' : selected && playing ? 'Shaping' : 'Shape'}</button>
+                <audio ref={element => { if (element) layerAudio.current.set(sample.id, element); else layerAudio.current.delete(sample.id); }} src={assetUrlForSample(sample.id)} preload="none" />
+              </div>;
+            })}
           </div>
         </section>
         <details className={css.localFile}>
           <summary>Load a local WAV</summary>
-          <label>Choose WAV<input type="file" accept=".wav,audio/wav,audio/x-wav" onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; void load(file); }} /></label>
+          <label>Choose WAV<input type="file" accept=".wav,audio/wav,audio/x-wav" onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; void loadLocalFile(file); }} /></label>
           <p>Stays in this tab. Use audio you have permission to work with.</p>
         </details>
       </section>
       <section className={css.controlSurface} aria-label="Playback and shaping controls">
         <div className={css.transport}>
-          <div className={css.actions}><button className={css.play} disabled={!duration || loading || starting} onClick={() => playing ? stopPlayback() : void play()}>{starting ? 'Starting…' : playing ? 'Stop' : 'Play'}</button><button onClick={stopAll}>Stop all</button><span className={css.position} aria-label="Playback position">{scoreTime(position)}{duration ? ` / ${scoreTime(duration)}` : ''}</span></div>
-          <label className={css.slider}>Echo BPM <input aria-label="Echo grid BPM" type="number" min="60" max="200" value={bpm} disabled={playing || starting || matched} onChange={event => {
+          <div className={css.actions}><button className={css.play} disabled={!duration || loading || starting || !!pendingSampleId} onClick={() => playing ? stopPlayback() : void play()}>{starting ? 'Starting…' : playing ? 'Stop shaped' : 'Play shaped'}</button><button onClick={stopAll}>Stop all</button><span className={css.position} aria-label="Playback position">{scoreTime(position)}{duration ? ` / ${scoreTime(duration)}` : ''}</span></div>
+          <label className={css.slider}>Echo BPM <input aria-label="Echo grid BPM" type="number" min="60" max="200" value={echoBpm} disabled={playing || starting || matched || !!pendingSampleId} onChange={event => {
             const value = Number(event.target.value);
             if (Number.isFinite(value)) setBpm(Math.max(60, Math.min(200, value)));
           }} /></label>
-          <label className={css.slider}>Volume <output>{Math.round(volume * 100)}%</output><input aria-label="Sketch volume" type="range" min="0" max="1" step="0.01" value={volume} onChange={event => setVolume(unit(Number(event.target.value)))} /></label>
-          <p className={css.transportStatus} role="status">{loading ? 'Loading WAV…' : duration ? `${matched ? 'Scene' : selectedSampleId ? 'Generated loop' : 'Local loop'} ready` : 'Choose a track'}</p>
+          <label className={css.slider}>Shaped volume <output>{Math.round(volume * 100)}%</output><input aria-label="Shaped volume" type="range" min="0" max="1" step="0.01" value={volume} onChange={event => setVolume(unit(Number(event.target.value)))} /></label>
+          <p className={css.transportStatus} role="status">{loading || pendingSampleId ? 'Loading WAV…' : message}</p>
         </div>
         <div className={css.handControls}>
           <h3>Hands</h3>
@@ -345,24 +423,24 @@ export function XRSoundInstrument() {
           </div>
         </div>
         <div className={css.roomControls}>
-          <h3>Room</h3>
+          <h3>Microphone</h3>
           <button role="switch" aria-label="Let nearby sound influence the visual form" aria-checked={micState !== 'off'} onClick={() => void toggleMicrophone()}>{micState === 'on' ? 'Mic on · turn off' : micState === 'asking' ? 'Cancel mic access' : 'Enable microphone'}</button>
-          <p className={css.controlStatus}>Sound level adds visual ripples.</p>
-          <RotaryControl label="Room" value={influence} onChange={setInfluence} />
+          <p className={css.controlStatus}>Visual ripples only.</p>
+          <RotaryControl label="Mic ripple" value={influence} onChange={setInfluence} />
           <label className={css.meter}>Input <meter aria-label="Nearby sound level" min={0} max={1} value={micState === 'on' ? level : 0} /></label>
           <details className={css.privacy}><summary>Privacy</summary><p>Camera and microphone are opt in and stay local. Nothing is recorded or saved; leaving stops both.</p></details>
         </div>
       </section>
     </div>
-    <XRGeneratedMusicLibrary onLoadSample={loadGeneratedSample} />
+    <XRGeneratedMusicLibrary onLoadSample={loadGeneratedSample} shapingBusy={loading || starting || !!pendingSampleId} />
     <XRLinguisticScore score={score} matched={matched} index={cueIndex} position={position} playing={playing} follow={follow} preview={previewReadings}
       onScore={next => {
         if (score?.source.sha256 !== next?.source.sha256 || !next) {
           stopPlayback(); setSelectedCue(0); setFollow(false); setPreviewReadings(false);
         }
-        if (next) setBpm(next.gridBpm);
+        scoreRef.current = next;
         setScore(next);
       }} onSelect={setSelectedCue} onFollow={next => { if (!next) setSelectedCue(cueIndex); setFollow(next); }} onPreview={setPreviewReadings} />
-    <footer className={css.footer}><p role="status">{message}</p><p>Tabula-inspired prototype · musical choices do not accept an AI interpretation. No IOANA sample is bundled.</p></footer>
+    <footer className={css.footer}><p>Tabula-inspired sound study.</p></footer>
   </section>;
 }

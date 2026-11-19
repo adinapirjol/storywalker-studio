@@ -8,7 +8,7 @@ function assetUrl(id: string, asset: 'audio' | 'source') {
   return '/api/xr/music-library?sample=' + encodeURIComponent(id) + '&asset=' + asset;
 }
 
-export function XRGeneratedMusicLibrary({ onLoadSample }: { onLoadSample: (sampleId: string) => Promise<void> }) {
+export function XRGeneratedMusicLibrary({ onLoadSample, shapingBusy }: { onLoadSample: (sampleId: string) => Promise<void>; shapingBusy: boolean }) {
   const [activeSource, setActiveSource] = useState<GeneratedMusicSample | null>(null);
   const [sourceText, setSourceText] = useState('');
   const [sourceState, setSourceState] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -50,7 +50,7 @@ export function XRGeneratedMusicLibrary({ onLoadSample }: { onLoadSample: (sampl
         <p className={css.eyebrow}>LOCAL GENERATIVE SKETCHES</p>
         <h3 id="xr-generated-library-title">Music library</h3>
       </div>
-      <p>Original WAVs made with Python. Nothing here uses the linked recording or the IOANA material.</p>
+      <p>Original sketches synthesized in Python.</p>
     </div>
     <ul className={css.list}>
       {XR_GENERATED_MUSIC_SAMPLES.map(sample => <li key={sample.id} className={css.item}>
@@ -63,7 +63,7 @@ export function XRGeneratedMusicLibrary({ onLoadSample }: { onLoadSample: (sampl
           Your browser does not support audio playback.
         </audio>
         <div className={css.actions}>
-          <button type="button" onClick={() => void onLoadSample(sample.id)}>Load into hand-shaping</button>
+          <button type="button" disabled={shapingBusy} onClick={() => void onLoadSample(sample.id)}>Shape &amp; play</button>
           <button type="button" className={css.sourceLink} onClick={() => setActiveSource(sample)}>Open Python code</button>
         </div>
       </li>)}

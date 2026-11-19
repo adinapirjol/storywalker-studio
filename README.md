@@ -2,7 +2,9 @@
 
 ## Walk the archive. Shape the sound.
 
-Storywalker Studio is a creative technology studio for walking through a revisable archive and shaping the sound around it. Its fictional Aurora Coast rehearsal brings **WORLD / TIME / MEMORY** into a visual journey; **Shape sound** opens a hands-on music instrument inside that same space. Private sources stay separate from the invented public demonstration.
+Storywalker Studio is a creative technology studio for walking through a revisable archive and shaping the sound around it. Its fictional Aurora Coast rehearsal brings **WORLD / TIME / MEMORY** into a visual journey. **Shape Sound** opens an instrument in the same space.
+
+The practice behind it is [**Who Edits the Afterbeat?**](#listening-again-the-right-to-revise), my submitted CTM 2027 proposal about composing, listening again, and refusing an interpretation while the music keeps playing.
 
 [![CI](https://github.com/adinapirjol/storywalker-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/adinapirjol/storywalker-studio/actions/workflows/ci.yml)
 
@@ -20,45 +22,47 @@ The archive moves through a fictional coastline and a route across Europe. **TIM
 
 ## Shape Sound · hands, layers and surroundings
 
-The sound instrument belongs to the same Aurora Coast space, but treats music as a present composition rather than evidence in the archive. Its **Track deck** plays generated WAV layers independently; **Shape** loads a chosen layer for tone and echo controls. Optional hand input modulates the rendered sound, and optional nearby-sound input adds ripples to the visual form. Tempo and source audio remain independent of those gestures.
+The ribbon carries the title and dates of the episode you just left. In the **Track deck**, preview the original WAVs and listen across revisions. **Shape** plays a chosen track through Tone and Echo. Hands can move both controls, and the optional **Mic ripple** control lets a voice or nearby sound animate the ribbon.
 
 The shape prototype is a browser-based rehearsal, not headset tracking or a performance capture system. Phrase recognition and automatic lyric alignment are not implemented; word and beat cues are authored. Camera and microphone use are opt in, remain local to the tab and stop when the view is left.
 
 Open `/research/xr/aurora-coast` on your local server and choose
 **Shape sound · music + words**. Use **Load a local WAV** with an original or
 cleared recording. The Track deck and Python source previews use the optional
-generated sketch library on the local machine. Its files stay outside Git.
+sketch library on the local machine. The WAVs are synthesized in Python and
+stay outside Git.
 
 ## Listening Again: The Right to Revise
 
-**Who Edits the Afterbeat?** was the title of the CTM 2027 Research Networking Day
-application submitted on 24 October 2026. I am learning to compose by taking apart
-sounds I want to inhabit: privately working with Romanian hip-hop samples, then
-cutting, looping and displacing vocal fragments into contrasting electronic
-contexts. The traveller is the Author; the AI is the Editor.
+### Who Edits the Afterbeat? · CTM 2027 proposal
 
-Learning Ableton with an AI collaborator puts the ear back in charge. The
-machine can suggest an arrangement quickly. I decide whether a transition
-holds, the vocal keeps its force, or two layers belong together. One study
-pushes toward 148 BPM industrial techno and acid textures. A second tries
-another electronic direction closer to the source. Both stay available to
-compare, revise and return to.
+I submitted **Who Edits the Afterbeat?** to CTM Research Networking Day on
+24 October 2026. I am learning to compose by taking apart sounds I want to
+inhabit. I work privately with Romanian hip-hop vocals, cutting and looping
+fragments while listening for how their phrasing changes in a new rhythm.
+
+In Ableton, the AI can suggest an arrangement faster than I can judge it.
+Judging it is the work. Does a transition hold? Does the vocal keep its force?
+Do the layers belong together? One study pushes the phrasing into 148 BPM
+industrial techno with acid textures. A second tries an electronic direction
+closer to the source. I keep both so I can compare them and return to either.
+
+Aurora Coast's separate Python sketches let me rehearse those listening
+decisions with original sound. I can compare the dry and saturated Acid
+Pressure versions, then shape one through the browser instrument.
 
 **Working now.** Hand separation and finger opening change tone and echo on a
 rendered mix. Singing along can animate the ribbon through microphone level.
 The local score also lets the Author refuse a prepared Editor reading while the
 audio continues.
 
-**Proposed for CTM.** Bring the musical revisions, the hand shaping and the
-refusal into one live rehearsal with original or cleared audio. The question is
-how the process makes room for the ear, the body and a changing mind.
+**Proposed for CTM.** I want to show three decisions in one passage: which
+version I choose for that moment, what my hands do to its tone and echo, and
+which Editor reading I refuse while the beat keeps going. I’ll use original or
+cleared audio in public. The sampled vocal studies stay private unless the
+relevant rights holders clear the intended use.
 
-IOANA's **“Acasă, Oriunde”** is a private experiment and is not included in this
-repository. The CTM proposal describes using original or cleared audio in public.
-No sampled result will be played, uploaded or released without permission from
-the relevant artist and recording and composition rights holders. If clearance is
-not available, the demonstration uses original or appropriately licensed sound.
-Private recordings, lyrics, field notes and Vault records are not bundled here.
+The traveller is the Author. The AI is the Editor.
 
 See the [sound instrument and scene-score guide](docs/research/xr/README.md#listening-again--hand-shaped-sound-prototype-19-october-2026) for the working controls and the proposed scene boundary.
 
@@ -376,7 +380,7 @@ The local review route is intentionally separate from Aurora Coast. It keeps evi
 
 ## Research Lab — CTM 2027 preparation
 
-`/research` is a restrained, public practice-based artistic-research layer. It tracks verified CTM 2027 call facts (checked 23 August 2026), separates those facts from working inferences, and keeps the current question provisional:
+`/research` records earlier preparation for CTM 2027. The August checkpoint includes this working question:
 
 > **Refusal Is an Editorial Act: Who Gets to Author the Memory?**
 
