@@ -491,12 +491,13 @@ face without camera access. Live combined performance still needs a user trial.
 
 ## Listening Again · hand-shaped sound prototype (19 October 2026)
 
-Inside a journey room, choose **Shape sound · 148 BPM**. This replaces archive
+Inside a journey room, choose **Shape sound · music + words**. This replaces archive
 navigation temporarily, releasing its camera and locator tones. Choose the local
-148 BPM WAV sketch (1–60 seconds, mono/stereo, under 16 MB), then press **Play
+WAV sketch or phrase (1–60 seconds, mono/stereo, under 16 MB), then press **Play
 sketch**. The file is decoded only in the tab; no private audio is bundled, served
-from private storage or uploaded. The source must already be at 148 BPM: this
-prototype preserves its rate and does not detect or convert tempo.
+from private storage or uploaded. The echo grid defaults to 148 BPM and can be
+changed before playback. It controls delay timing only; the prototype preserves
+source speed/pitch and does not detect or convert tempo.
 
 The IOANA-based local sketch is a **private experiment, with public use on hold**.
 No clearance is documented. Do not use its result in a public XR demo, CTM talk,
@@ -536,3 +537,74 @@ readings and reached an active microphone connection. The ribbon remains visible
 while scrolling its controls. In a separate live trial, the Author confirmed that
 both hand shaping and nearby-sound ripples worked. This is first-person acceptance
 of the prototype, not a measured tracking-accuracy or latency study.
+
+### Optional linguistic scene score (20 October)
+
+**Choose private scene score** opens a selected JSON file in this instrument only.
+It contains the Author's transcript, separate proposed readings, clip-relative cue
+times and a fingerprint of its matching WAV. The importer is strict and bounded
+to 128 KB, 32 cues and 128 dated revisions. Duplicate/out-of-order cue times,
+unknown fields, public/canonical scores and mismatched audio fail closed. No
+private score, transcript or sample is imported into source code, fetched from
+private storage, put in browser storage or sent to a model. A file fingerprint
+identifies the selected bytes; it does not verify lyrics, clearance or meaning.
+
+Manual cue selection is the default. **Follow cue times** explicitly enables the
+score's proposed/Author-adjusted schedule, clocked from audio playback time. This
+is not transcription or forced alignment. **Mark phrase start now** and editable
+start times allow the Author to correct boundaries while preserving order. The
+first cue stays at zero. Matched scenes play once; ordinary sketches still loop.
+
+The ribbon keeps a large **source-time clock** and one-second ruler visible during
+playback, alongside a smaller clip-elapsed clock. For a selected source excerpt,
+the ruler uses original-recording times rather than starting again at zero. Its
+playhead follows the audio clock at approximately ten visual updates per second;
+numbered dots show proposed or Author-marked phrase starts. Dashed dots remain
+proposals. The clock is not word alignment and does not compensate for listening
+reaction time or device output latency. It helps the Author identify and report
+phrase boundaries while keeping the ribbon and hands in view.
+The clock also has a play/replay control, so starting another pass does not
+require scrolling away from the time ruler.
+
+Selected scores may now attach a short visual accent to a word, beat or drop
+marker. Its kind, reaction, duration (0.25–1.5 seconds), strength and uncertainty
+note stay in the selected private score. The optional fields preserve earlier
+score compatibility. A working label can coexist with alternative hearings;
+choosing a label or supplying a time does not accept the associated reading.
+Original transcript, local score versions and dated revisions remain separate.
+
+With **Follow cue times** and an enabled reading/explicit unresolved preview,
+gather, ripple, compress, burst, release and halo responses follow the audio
+clock. They decay back into the held hand shape; a later marker supersedes an
+overlapping accent. No timer queue, semantic recognition, beat detection, new
+audio voice or source-speed change is involved. The drawing uses a bounded number
+of rings, rays or points. Stop/blur/leave and refusal suppress transient effects.
+Reduced-motion mode omits these pulses while retaining the clock and marker
+information. Accent type, reaction, duration and strength can be revised in the
+existing reading editor or set to None. A revised effect is still an Author
+composition, not a finding about what a word means.
+
+The microphone can also respond to the present performer singing along while
+the selected recording plays through headphones. This uses the same short-lived
+level-to-ripple mapping: it neither recognises lyrics nor scores karaoke pitch,
+separates singers or retains a vocal recording. A reported live-singing trial
+belongs in the private research record as Author self-report; it is separate from
+automated checks and is not evidence of wellbeing or an access outcome.
+
+Readings begin unresolved and their effects remain off. An explicit preview can
+audition unresolved readings without accepting them. Accept, revise, refuse and
+leave unresolved are separate decisions. Refusal withholds that reading's
+constellation and additional tone/echo parameters while source playback and
+volume continue; hand controls still work. Six visual nodes gather, travel, open
+or orbit according to the chosen score. This is a bounded compositional drawing
+inside the existing room, not semantic understanding, physical tracking or a new
+headset environment. Phrase mode limits echo and keeps the tone relatively open;
+it uses the complete mixed recording and adds no accompaniment or isolated stems.
+
+The original transcript/excerpts remain separate from revised readings. Dated
+before-values preserve disagreement in tab memory. **Keep revised score locally**
+requests an unencrypted private JSON download; it is an explicit local copy, not
+Vault ingestion. Removing the score or leaving the instrument discards unsaved
+decisions. Camera/microphone lifecycle rules above still apply. Automated and
+browser checks of these controls do not establish musical quality, precise word
+timing or Author acceptance of a full scene.

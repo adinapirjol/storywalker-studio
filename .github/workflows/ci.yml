@@ -25,6 +25,8 @@ jobs:
 
       - name: Verify change selection
         run: node --test scripts/ci-scope.test.mjs
+      - name: Verify CodeQL severity gate
+        run: node --test scripts/check-codeql-sarif.test.mjs
 
       - name: Select checks from the complete PR diff
         id: scope

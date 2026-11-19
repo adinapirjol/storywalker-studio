@@ -35,6 +35,8 @@ jobs:
           node-version: 22
       - name: Verify change selection
         run: node --test scripts/ci-scope.test.mjs
+      - name: Verify CodeQL severity gate
+        run: node --test scripts/check-codeql-sarif.test.mjs
       - name: Select checks from the complete PR diff
         id: scope
         run: node scripts/ci-scope.mjs
@@ -112,7 +114,29 @@ jobs:
         run: swift test --package-path research/body-context-native --scratch-path "$RUNNER_TEMP/storywalker-swift-tests"
 
       - name: Analyze
+        id: codeql
         if: steps.selection.outputs.enabled == 'true'
         uses: github/codeql-action/analyze@f3c49fd1ef3281abc41069b3dd22807a60c963f6 # v4
         with:
           category: /language:${{ matrix.language }}
+          post-processed-sarif-path: ${{ runner.temp }}/codeql-gate-sarif
+
+      - name: Enforce CodeQL severity gate
+        if: steps.selection.outputs.enabled == 'true'
+        run: node scripts/check-codeql-sarif.mjs "${{ runner.temp }}/codeql-gate-sarif"
+
+  security-gate:
+    name: security-gate
+    needs: [changes, analyze]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require successful selection and all applicable CodeQL scans
+        env:
+          SCOPE_STATUS: ${{ needs.changes.result }}
+          ANALYSIS_STATUS: ${{ needs.analyze.result }}
+        run: |
+          test "$SCOPE_STATUS" = success
+          test "$ANALYSIS_STATUS" = success
+          echo 'Every selected language passed CodeQL and the severity gate.' >> "$GITHUB_STEP_SUMMARY"

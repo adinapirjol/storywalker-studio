@@ -8,6 +8,20 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
+## Real-data-first development
+
+For Nova and future Career DNA / Content Intelligence integrations, validate the
+smallest working path against actual, explicitly authorized evidence before
+designing public fictional demonstrations. A locked Vault or missing consent is
+a real blocker to report, never permission to bypass access controls or conceal
+missing functionality with simulated records.
+
+Use deterministic fictional fixtures for automated tests. Keep real records out
+of Git, CI, logs, public exports and unapproved model requests. Build public
+Aurora examples only after validating the real workflow, using genuinely
+fictional material rather than pseudonymized private records. Preserve existing
+experiments and their separate permissions. Nova proposes; the Author decides.
+
 ## BODY / Watch resumption boundary
 
 Preserve security repairs, private evidence and useful source resources.

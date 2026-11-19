@@ -5,9 +5,10 @@ import { INITIAL_SHAPE } from './sound-shape';
 function contextFixture() {
   const parameter = () => ({ value: 0, setTargetAtTime: vi.fn() });
   const node = () => ({ connect: vi.fn().mockReturnThis() });
-  const source = { ...node(), buffer: null, loop: false, playbackRate: parameter(), start: vi.fn(), stop: vi.fn() };
+  const source = { ...node(), buffer: null, loop: false, playbackRate: parameter(), start: vi.fn(), stop: vi.fn(), onended: null as (() => void) | null };
   const filter = { ...node(), type: '', Q: parameter(), frequency: parameter() };
   const gains: ReturnType<typeof parameter>[] = [];
+  const delay = { ...node(), delayTime: parameter() };
   const context = {
     state: 'running', sampleRate: 44100, currentTime: 0,
     resume: vi.fn().mockResolvedValue(undefined),
@@ -15,11 +16,11 @@ function contextFixture() {
     decodeAudioData: vi.fn().mockResolvedValue({ duration: 25.9459, numberOfChannels: 1 }),
     createBufferSource: () => source, createBiquadFilter: () => filter,
     createGain: () => { const gain = parameter(); gains.push(gain); return { ...node(), gain }; },
-    createDelay: () => ({ ...node(), delayTime: parameter() }),
+    createDelay: () => delay,
     createDynamicsCompressor: () => ({ ...node(), threshold: parameter(), knee: parameter(), ratio: parameter() }),
     destination: {},
   };
-  return { context, source, filter, gains };
+  return { context, source, filter, gains, delay };
 }
 function wav() {
   const bytes = new Uint8Array(44), view = new DataView(bytes.buffer);
@@ -76,5 +77,50 @@ describe('local 148 BPM sketch playback', () => {
     const second = new SoundShapeAudio(() => long.context as unknown as AudioContext);
     await expect(second.load(wav())).rejects.toThrow('60 seconds');
     expect(long.context.close).toHaveBeenCalledOnce();
+  });
+  it('plays one phrase at its original speed, clocks from audio time, and finishes once', async () => {
+    const decode = contextFixture(), playing = contextFixture(), ended = vi.fn();
+    const create = vi.fn().mockReturnValueOnce(decode.context).mockReturnValueOnce(playing.context);
+    const audio = new SoundShapeAudio(create);
+    await audio.load(wav());
+    expect(audio.selectedFingerprint()).toMatch(/^[a-f0-9]{64}$/);
+    expect(await audio.play(INITIAL_SHAPE, 0.3, { bpm: 115, loop: false, preserveWords: true, onEnded: ended })).toBe(true);
+    expect(playing.source.loop).toBe(false); expect(playing.source.playbackRate.value).toBe(1);
+    expect(playing.delay.delayTime.value).toBeCloseTo(60 / 115 / 2);
+    playing.context.currentTime = 7.25;
+    expect(audio.position()).toBe(7.25); expect(audio.isPlaying()).toBe(true);
+    audio.update({ stretch: 0, fold: 1 }, 0.3, { formation: 'orbit', openness: 1, echo: 1 });
+    expect(playing.filter.frequency.setTargetAtTime).toHaveBeenLastCalledWith(14400, 7.25, 0.08);
+    expect(playing.gains[0].setTargetAtTime.mock.lastCall![0]).toBeLessThanOrEqual(0.12);
+    const gainWithReading = playing.gains[1].setTargetAtTime.mock.lastCall![0];
+    // Refusing the reading means no frame; transport and source gain are untouched.
+    audio.update({ stretch: 0, fold: 1 }, 0.3, null);
+    expect(playing.filter.frequency.setTargetAtTime.mock.lastCall![0]).toBeGreaterThanOrEqual(6000);
+    expect(playing.gains[1].setTargetAtTime.mock.lastCall![0]).toBe(gainWithReading);
+    expect(playing.source.stop).not.toHaveBeenCalled();
+    playing.source.onended!(); playing.source.onended!();
+    expect(ended).toHaveBeenCalledOnce(); expect(audio.isPlaying()).toBe(false);
+    expect(playing.context.close).toHaveBeenCalledOnce();
+  });
+  it('ignores an ended event from a stopped voice and clears the fingerprint on disposal', async () => {
+    const decode = contextFixture(), playing = contextFixture(), ended = vi.fn();
+    const audio = new SoundShapeAudio(vi.fn().mockReturnValueOnce(decode.context).mockReturnValueOnce(playing.context));
+    await audio.load(wav()); await audio.play(INITIAL_SHAPE, 0.3, { loop: false, onEnded: ended });
+    audio.dispose(); playing.source.onended!();
+    expect(ended).not.toHaveBeenCalled(); expect(audio.selectedFingerprint()).toBeNull();
+    expect(audio.position()).toBe(0);
+  });
+  it('identifies the selected file before the decoder detaches its bytes', async () => {
+    const f = contextFixture();
+    const file = wav();
+    const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+    const expected = Array.from(new Uint8Array(digest), value => value.toString(16).padStart(2, '0')).join('');
+    f.context.decodeAudioData.mockImplementation(async (bytes: ArrayBuffer) => {
+      structuredClone(bytes, { transfer: [bytes] });
+      return { duration: 22, numberOfChannels: 2 };
+    });
+    const audio = new SoundShapeAudio(() => f.context as unknown as AudioContext);
+    expect(await audio.load(file)).toBe(22);
+    expect(audio.selectedFingerprint()).toBe(expected);
   });
 });

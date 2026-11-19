@@ -1,11 +1,16 @@
 import { unit, type SoundShape } from './sound-shape';
+import type { SceneFrame } from './linguistic-score';
+import { accentedShape, type VisualAccent } from './sound-accent';
 
 /** A compositional object in the existing room; no evidence or health encoding. */
 export function drawSoundRibbon(
   ctx: CanvasRenderingContext2D, width: number, height: number,
   shape: SoundShape, ambient: number, seconds: number, reducedMotion: boolean,
+  scene: SceneFrame | null = null,
+  accent: VisualAccent | null = null,
 ) {
-  const stretch = unit(shape.stretch), fold = unit(shape.fold), ripple = unit(ambient);
+  const drawnShape = accentedShape(shape, accent, reducedMotion);
+  const stretch = unit(drawnShape.stretch), fold = unit(drawnShape.fold), ripple = unit(ambient);
   const time = reducedMotion ? 0 : seconds;
   ctx.clearRect(0, 0, width, height);
   const background = ctx.createRadialGradient(width * 0.5, height * 0.45, 0, width * 0.5, height * 0.45, width * 0.7);
@@ -52,5 +57,56 @@ export function drawSoundRibbon(
     const p = point(t, 0);
     ctx.fillStyle = '#c8f3df'; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = '#c8f3df44'; ctx.beginPath(); ctx.arc(p.x, p.y, 12, 0, Math.PI * 2); ctx.stroke();
+  }
+  if (scene) drawSceneConstellation(ctx, width, height, scene, stretch, time);
+  if (accent && !reducedMotion) drawAccent(ctx, width, height, accent);
+}
+
+function drawAccent(ctx: CanvasRenderingContext2D, width: number, height: number, accent: VisualAccent) {
+  const amount = unit(accent.intensity), phase = unit(accent.progress);
+  const cx = width / 2, cy = height * 0.43;
+  const radius = Math.min(width * 0.24, height * 0.36);
+  ctx.save(); ctx.globalAlpha = amount;
+  ctx.strokeStyle = '#f0c995'; ctx.fillStyle = '#c9edce'; ctx.lineWidth = 1.8;
+  if (accent.reaction === 'compress') {
+    const gap = radius * (0.8 - amount * 0.3);
+    for (const side of [-1, 1]) {
+      const x = cx + side * gap;
+      ctx.beginPath(); ctx.moveTo(x + side * 12, cy - 28); ctx.lineTo(x, cy - 28);
+      ctx.lineTo(x, cy + 28); ctx.lineTo(x + side * 12, cy + 28); ctx.stroke();
+    }
+  } else if (accent.reaction === 'burst') {
+    for (let index = 0; index < 8; index++) {
+      const angle = index / 8 * Math.PI * 2;
+      const reach = radius * (0.25 + phase * 0.8);
+      ctx.beginPath(); ctx.moveTo(cx + Math.cos(angle) * reach * 0.6, cy + Math.sin(angle) * reach * 0.45);
+      ctx.lineTo(cx + Math.cos(angle) * reach, cy + Math.sin(angle) * reach * 0.75); ctx.stroke();
+    }
+  } else if (accent.reaction === 'gather') {
+    for (let index = 0; index < 6; index++) {
+      const angle = index / 6 * Math.PI * 2, reach = radius * (0.25 + phase * 0.6);
+      ctx.beginPath(); ctx.arc(cx + Math.cos(angle) * reach, cy + Math.sin(angle) * reach * 0.45, 3, 0, Math.PI * 2); ctx.fill();
+    }
+  } else {
+    const rings = accent.reaction === 'ripple' ? 3 : 2;
+    for (let index = 0; index < rings; index++) {
+      const reach = radius * (0.2 + phase * 0.9 + index * 0.14);
+      ctx.beginPath(); ctx.ellipse(cx, cy, reach, reach * (accent.reaction === 'release' ? 0.55 : 0.3), 0, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function drawSceneConstellation(ctx: CanvasRenderingContext2D, width: number, height: number, scene: SceneFrame, stretch: number, time: number) {
+  const radius = width * (0.08 + scene.openness * 0.12 + stretch * 0.04);
+  const centreX = width * 0.5 + (scene.formation === 'carry' ? Math.sin(time * 0.3) * width * 0.08 : 0);
+  ctx.strokeStyle = '#d4b78d88'; ctx.fillStyle = '#e9cfaa'; ctx.lineWidth = 1.2;
+  for (let index = 0; index < 6; index++) {
+    const angle = index / 6 * Math.PI * 2 + (scene.formation === 'orbit' ? time * 0.15 : 0);
+    const x = centreX + Math.cos(angle) * radius;
+    const y = height * 0.46 + Math.sin(angle) * radius * 0.35;
+    ctx.beginPath(); ctx.moveTo(centreX, height * 0.46);
+    if (scene.formation !== 'open') { ctx.lineTo(x, y); ctx.stroke(); }
+    ctx.beginPath(); ctx.arc(x, y, scene.formation === 'gather' ? 5 : 3, 0, Math.PI * 2); ctx.fill();
   }
 }
